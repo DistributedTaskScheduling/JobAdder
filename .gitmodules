@@ -1,0 +1,3 @@
+[submodule "doctools"]
+	path = doctools
+	url = https://github.com/DistributedTaskScheduling/doctools

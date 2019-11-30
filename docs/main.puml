@@ -1,0 +1,8 @@
+@startuml
+
+skinparam monochrome false
+scale 2
+
+!include ../build/project.puml
+
+@enduml
