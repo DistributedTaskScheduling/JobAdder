@@ -1,4 +1,4 @@
-all:
+all: gmodules uml doxygen
 
 gmodules:
 	git submodule update --init --recursive
@@ -10,4 +10,5 @@ uml:
 	plantuml docs/main.puml -o ../build/
 
 doxygen:
-	#TODO
+	doxygen doctools/Doxyfile
+	make --directory=./build/latex
