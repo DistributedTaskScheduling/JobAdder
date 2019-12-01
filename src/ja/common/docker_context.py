@@ -1,5 +1,7 @@
 '''
-Contains definitions of the docker context of a job.
+Contains definitions of the various Docker-related attributes of a job.
+These include, but are not limited to, mount points, program environment
+and hardware constraints.
 '''
 from abc import ABC, abstractmethod
 from typing import List
@@ -8,15 +10,15 @@ from typing import List
 class MountPoint:
     '''
     A mount point consists of:
-    1. A directory to be mounted.
+    1. A directory to be mounted(@source_path).
     2. The target path in the Docker container where the directory needs to be
-    mounted.
+    mounted(@mount_path).
     '''
-    def __init__(self, source: str, target: str):
+    def __init__(self, source_path: str, mount_path: str):
         '''
         Initializes a new mount point.
-        @source The directory to be mounted.
-        @target The target path in the container to mount at.
+        @param source_path The host directory to be mounted.
+        @param mount_path The target path in the container to mount at.
         '''
 
     @property
@@ -49,4 +51,38 @@ class IDockerContext(ABC):
     def get_mount_points(self) -> List[MountPoint]:
         '''
         @return A list of all mount points for the job.
+        '''
+
+
+class DockerConstraints:
+    '''
+    A list of constraints of the docker container.
+    '''
+    def __init__(self, cpu_threads: int = -1, memory: int = 1):
+        '''
+        Create a new set of Docker constraints.
+        @param cpu_threads Initial value of @cpu_threads.
+        @param memory The value of @memory.
+        '''
+
+    @property
+    def cpu_threads(self) -> int:
+        '''
+        The maximum number of CPU threads the docker container can have.
+        -1 means that the amount of threads is not set, in which case the
+        number of threads will be determined when scheduling the job.
+        '''
+
+    @cpu_threads.setter
+    def cpu_threads(self, count_threads: int) -> None:
+        '''
+        Set the number of CPU threads.
+        If the number of cpu threads is already set(i.e it is not equal to -1),
+        this will raise a RuntimeError.
+        '''
+
+    @property
+    def memory(self) -> int:
+        '''
+        The maximum amount of RAM in MB to allocate for this container.
         '''
