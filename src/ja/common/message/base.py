@@ -19,3 +19,17 @@ class Message(Serializable):
     A base class for all messages which can be transferred between the
     components of JobAdder.
     """
+
+
+class Command(Message):
+    """
+    A base class for messages which are sent with the intent of performing an
+    action on the remote component.
+    """
+
+
+class Response(Message):
+    """
+    A base class for messages which are sent as a response to Commands. They
+    indicate the result of the action on the remote component.
+    """
