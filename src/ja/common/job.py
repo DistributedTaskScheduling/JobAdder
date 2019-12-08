@@ -1,6 +1,7 @@
 """
 This module contains the definition of the Job class and related structures.
 """
+from typing import List
 from enum import Enum
 from ja.common.docker_context import DockerConstraints, IDockerContext
 
@@ -28,6 +29,36 @@ class JobPriority(Enum):
     URGENT = 3
 
 
+class JobSchedulingConstraints:
+    """
+    JobConstraints is a collection of job properties which affect how it is
+    scheduled.
+    """
+    def __init__(self,
+                 priority: JobPriority,
+                 preemtible: bool,
+                 special_resources: List[str]):
+        pass
+
+    @property
+    def priority(self) -> JobPriority:
+        """!
+        @return The priority of the job.
+        """
+
+    @property
+    def is_preemptible(self) -> bool:
+        """!
+        @return Whether the job can be preempted.
+        """
+
+    @property
+    def get_special_resources(self) -> List[str]:
+        """!
+        @return A list of special resources used by the job.
+        """
+
+
 class Job:
     """!
     Represents a job with all of its attributes.
@@ -38,15 +69,10 @@ class Job:
     """
     def __init__(self,
                  owner_id: int,
-                 priority: JobPriority,
+                 constraints: JobSchedulingConstraints,
                  ctx: IDockerContext,
-                 constraints: DockerConstraints):
-        self._uid = None
-        self._status = JobStatus.NEW
-        self._priority = priority
-        self._ownerid = owner_id
-        self._ctx = ctx
-        self._constraints = constraints
+                 docker_constraints: DockerConstraints):
+        pass
 
     @property
     def uid(self) -> str:
@@ -71,9 +97,9 @@ class Job:
         """
 
     @property
-    def priority(self) -> JobPriority:
+    def scheduling_constraints(self) -> JobSchedulingConstraints:
         """!
-        @return The job priority.
+        @return The scheduling constraints of the job.
         """
 
     @property
