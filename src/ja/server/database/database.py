@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import List
 from ja.common.job import Job
-from ja.server.database.types import WorkMachine, DatabaseJobEntry
+from ja.server.database.types.job_entry import DatabaseJobEntry
+from ja.server.database.types.work_machine import WorkMachine
 
 
 class ServerDatabase:

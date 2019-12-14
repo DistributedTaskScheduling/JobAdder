@@ -1,4 +1,4 @@
-from ja.common.workmachine import ResourceAllocation
+from ja.common.work_machine import ResourceAllocation
 
 
 class RunningWorkMachineResources:

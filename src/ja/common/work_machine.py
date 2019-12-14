@@ -3,7 +3,7 @@ from ja.common.message.base import Serializable
 
 class ResourceAllocation(Serializable):
     """
-    Represents a group of on a work machine.
+    Represents a group of resources on a work machine.
     """
     def __init__(self, cpu_threads: int, memory: int, swap: int):
         """!
