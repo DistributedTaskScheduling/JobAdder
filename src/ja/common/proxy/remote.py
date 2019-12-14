@@ -1,14 +1,15 @@
-from abc import ABC
-
-
-class Remote(ABC):
+class Remote(object):
     """
-    Abstract base class for remote objects accessed by Proxy objects.
+    Class for remote objects accessed by Proxy objects.
     Remotes are single-class command line programs.
 
-    Remotes receive a Message object represented by a YAML string on stdin.
-    Remotes then convert the YAML string to a Message object. Remotes then pass
-    on the Message object to a MessageHandler object via a socket. Remotes then
-    listen for a response (YAML string) on a socket. The response is then
-    written to stdout.
+    Receives a Command object represented by a YAML string on stdin. Asserts
+    that the user specified in the YAML document is the user calling the
+    Remote. Passes on the YAML string to a CommandHandler object via a socket.
+    Listens for a Response (as YAML string) on the same socket. Writes the
+    Response YAML string to stdout.
     """
+    def __init__(self, socket: str):
+        """!
+        @param socket: The Unix named socket to write the Command to.
+        """

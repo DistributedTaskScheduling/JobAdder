@@ -1,4 +1,5 @@
 from abc import ABC
+from ja.common.proxy.ssh import SSHConfig
 
 
 class Proxy(ABC):
@@ -8,6 +9,11 @@ class Proxy(ABC):
     sends a Command object to Remote. Proxy then receives a Response object
     from Remote to determine the result of the Command message.
     """
+    def __init__(self, ssh_config: SSHConfig, remote: str):
+        """!
+        @param ssh_config: Config for paramiko.
+        @param remote: The name of the Remote to execute on the host.
+        """
 
 
 class SingleMessageProxy(Proxy):
