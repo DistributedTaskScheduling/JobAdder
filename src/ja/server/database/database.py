@@ -64,8 +64,7 @@ class ServerDatabase(ABC):
     def get_current_schedule(self) -> JobDistribution:
         """!
         Generate a list of all jobs which are in state NEW, QUEUED, PAUSED and
-        RUNNING, as well as jobs which are KILLED but still have an assigned
-        work machine.
+        RUNNING, as well as jobs which still have an assigned work machine.
 
         Each job is paired with its assigned work machine, if such a machine
         exists.
