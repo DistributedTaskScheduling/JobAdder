@@ -1,0 +1,8 @@
+ja.common.docker_context.IDockerContext *-- "*" ja.common.docker_context.MountPoint
+ja.common.job.JobStatus "1" --* ja.common.job.Job
+ja.common.job.JobPriority "1" --* ja.common.job.JobSchedulingConstraints
+
+ja.common.job.JobSchedulingConstraints "1" --* ja.common.job.Job
+
+ja.common.job.Job *-- "1" ja.common.docker_context.IDockerContext
+ja.common.job.Job *-- "1" ja.common.docker_context.DockerConstraints
