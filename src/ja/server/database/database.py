@@ -33,7 +33,7 @@ class ServerDatabase(ABC):
         """
 
     @abstractmethod
-    def assing_job_machine(self, job: Job, machine: WorkMachine) -> None:
+    def assign_job_machine(self, job: Job, machine: WorkMachine) -> None:
         """!
         Update the job's assigned work machine in the database.
         This will cause a RuntimeError if the job is not in the database.
