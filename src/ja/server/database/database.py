@@ -1,25 +1,18 @@
+from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import List
+from typing import List, Callable
 from ja.common.job import Job
 from ja.server.database.types.job_entry import DatabaseJobEntry
 from ja.server.database.types.work_machine import WorkMachine
 
 
-class ServerDatabase:
+class ServerDatabase(ABC):
     """!
-    ServerDatabase is a convenience class which enables other components of
-    JobAdder to access and modify the database, without invoking it directly.
+    ServerDatabase is the interface which a database used by JobAdder needs to
+    implement.
     """
 
-    def __init__(self, host: str, user: str, password: str):
-        """!
-        Create the ServerDatabase object and connect to the given database.
-
-        @param host The host of the database to connect to.
-        @param user The username to use for the connection.
-        @param passowrd The password to use for the connection.
-        """
-
+    @abstractmethod
     def find_job_by_id(self, job_id: str) -> Job:
         """!
         Load a job from the database by its id.
@@ -29,6 +22,7 @@ class ServerDatabase:
           found.
         """
 
+    @abstractmethod
     def update_job(self, job: Job) -> None:
         """!
         Update the job in the database.
@@ -38,6 +32,7 @@ class ServerDatabase:
         @param job The job to update stored data for.
         """
 
+    @abstractmethod
     def assing_job_machine(self, job: Job, machine: WorkMachine) -> None:
         """!
         Update the job's assigned work machine in the database.
@@ -47,6 +42,7 @@ class ServerDatabase:
         @param machine The work machine the job is assigned to, or None.
         """
 
+    @abstractmethod
     def update_work_machine(self, machine: WorkMachine) -> None:
         """!
         Update the stored data about the given work machine.
@@ -56,12 +52,16 @@ class ServerDatabase:
         @param machine The machine to update data for.
         """
 
+    @abstractmethod
     def get_work_machines(self) -> List[WorkMachine]:
         """!
         @return A list of online work machines.
         """
 
-    def get_current_schedule(self) -> List[DatabaseJobEntry]:
+    JobDistribution = List[DatabaseJobEntry]
+
+    @abstractmethod
+    def get_current_schedule(self) -> JobDistribution:
         """!
         Generate a list of all jobs which are in state NEW, QUEUED, PAUSED and
         RUNNING, as well as jobs which are KILLED but still have an assigned
@@ -74,8 +74,8 @@ class ServerDatabase:
           assigned work machines.
         """
 
-    def query_jobs(self,
-                   since: datetime,
+    @abstractmethod
+    def query_jobs(self, since: datetime,
                    user_id: int) -> List[DatabaseJobEntry]:
         """!
         Generate a list of all jobs belonging to @user_id since @since.
@@ -85,4 +85,16 @@ class ServerDatabase:
           all users.
 
         @return A list of the jobs which fall into the criteria above.
+        """
+
+    RescheduleCallback = Callable[['ServerDatabase'], None]
+
+    @abstractmethod
+    def set_scheduler_callback(self,
+                               callback: RescheduleCallback) -> None:
+        """!
+        Set a function which will be called whenever the database is updated
+        and this update makes rescheduling necessary.
+
+        @param callback The callback to execute when rescheduling is necessary.
         """
