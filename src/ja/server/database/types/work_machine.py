@@ -71,6 +71,7 @@ class WorkMachine:
     (XXX: is the above ok?)
     """
     def __init__(self,
+                 uid: int,
                  is_online: bool = False,
                  resources: RunningWorkMachineResources = None,
                  connection: WorkMachineConnectionDetails = None):
@@ -80,9 +81,16 @@ class WorkMachine:
         stored. Otherwise, the work machine also tracks available resources
         and connection details.
 
+        @param uid The unique ID of the machine.
         @param is_online Whether the work machine is online.
         @param resources The available resources on the work machine.
         @param connection The connection informatino about the work machine.
+        """
+
+    @property
+    def uid(self) -> int:
+        """!
+        @return The UID of the work machine.
         """
 
     @property

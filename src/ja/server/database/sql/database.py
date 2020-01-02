@@ -40,7 +40,8 @@ class SQLDatabase(ServerDatabase):
         pass
 
     def query_jobs(self, since: datetime,
-                   user_id: int) -> List[DatabaseJobEntry]:
+                   user_id: int,
+                   work_machine: WorkMachine) -> List[DatabaseJobEntry]:
         pass
 
     def set_scheduler_callback(self, callback:

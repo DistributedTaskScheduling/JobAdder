@@ -75,13 +75,17 @@ class ServerDatabase(ABC):
 
     @abstractmethod
     def query_jobs(self, since: datetime,
-                   user_id: int) -> List[DatabaseJobEntry]:
+                   user_id: int,
+                   work_machine: WorkMachine) -> List[DatabaseJobEntry]:
         """!
-        Generate a list of all jobs belonging to @user_id since @since.
+        Generate a list of all jobs belonging to @user_id since @since which
+        are or have been running on @workmachine.
 
         @param since Date and time of the oldest interesting job.
         @param user_id The user to query jobs for, or -1 if the query is for
           all users.
+        @param work_machine The work machine to query jobs for, or None if the
+          query is for all work machines.
 
         @return A list of the jobs which fall into the criteria above.
         """
