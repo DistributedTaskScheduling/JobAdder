@@ -20,7 +20,8 @@ class RunningWorkMachineResources:
     @property
     def total_resources(self) -> ResourceAllocation:
         """!
-        @return The maximum resources available on the work machine.
+        @return The total amount resources available on the work machine (both
+        free and allocated resources).
         """
 
     @property
@@ -42,6 +43,17 @@ class RunningWorkMachineResources:
           allocated.
         @return True if the allocation or the test was successful, False
           otherwise.
+        """
+
+    def deallocate(self,
+                   allocation: ResourceAllocation) -> bool:
+        """!
+        Mark the given resources as free.
+
+        @param allocation The amount of resources to free.
+        @return True if there are at least as @allocation resources allocated,
+          False if the amount of resources to be freed exceeds the total amount
+          of allocated resources.
         """
 
 
