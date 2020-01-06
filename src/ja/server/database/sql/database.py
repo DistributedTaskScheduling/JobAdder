@@ -8,8 +8,7 @@ from ja.server.database.database import ServerDatabase
 
 class SQLDatabase(ServerDatabase):
     """!
-    SQL Database is the actual implementation of the database used by default
-    in JobAdder.
+    SQL Database is the actual implementation of the database used by default in JobAdder.
     """
 
     def __init__(self, host: str, user: str, password: str):
@@ -39,11 +38,11 @@ class SQLDatabase(ServerDatabase):
     def get_current_schedule(self) -> ServerDatabase.JobDistribution:
         pass
 
-    def query_jobs(self, since: datetime,
-                   user_id: int,
-                   work_machine: WorkMachine) -> List[DatabaseJobEntry]:
+    def query_jobs(self, since: datetime, user_id: int, work_machine: WorkMachine) -> List[DatabaseJobEntry]:
         pass
 
-    def set_scheduler_callback(self, callback:
-                               ServerDatabase.RescheduleCallback) -> None:
+    def set_scheduler_callback(self, callback: ServerDatabase.RescheduleCallback) -> None:
+        pass
+
+    def set_job_status_callback(self, callback: ServerDatabase.JobStatusCallback) -> None:
         pass
