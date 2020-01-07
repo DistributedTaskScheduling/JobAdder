@@ -1,7 +1,7 @@
 from ja.common.work_machine import ResourceAllocation
 
 
-class RunningWorkMachineResources:
+class WorkMachineResources:
     """
     Represents the resources of a work machine which is currently connected to
     the central server.
@@ -67,13 +67,12 @@ class WorkMachineConnectionDetails:
 class WorkMachine:
     """
     Represents the data stored about a work machine in the database.
-    Each work machine is uniquely determined by its IP address.
-    (XXX: is the above ok?)
+    Each work machine is uniquely determined by its UID.
     """
     def __init__(self,
                  uid: int,
                  is_online: bool = False,
-                 resources: RunningWorkMachineResources = None,
+                 resources: WorkMachineResources = None,
                  connection: WorkMachineConnectionDetails = None):
         """!
         Construct a new work machine object.
@@ -84,7 +83,7 @@ class WorkMachine:
         @param uid The unique ID of the machine.
         @param is_online Whether the work machine is online.
         @param resources The available resources on the work machine.
-        @param connection The connection informatino about the work machine.
+        @param connection The connection information about the work machine.
         """
 
     @property
@@ -101,7 +100,7 @@ class WorkMachine:
         """
 
     @property
-    def resources(self) -> RunningWorkMachineResources:
+    def resources(self) -> WorkMachineResources:
         """!
         @return The resources of the work machine, if it is online,
           otherwise None.

@@ -12,12 +12,9 @@ class JobRuntimeStatistics:
                  started: datetime,
                  running_time: int):
         """!
-        @param added The date and time when the job was first added in the
-          database.
-        @param started The date and time when the job was first started, or
-          None if the job has never been started.
-        @param running_time The length of the time when the job has been
-          running, in seconds.
+        @param added The date and time when the job was first added in the database.
+        @param started The date and time when the job was first started, or None if the job has never been started.
+        @param The amount of time that the job has been running for, in seconds.
         """
 
     @property
@@ -36,8 +33,7 @@ class JobRuntimeStatistics:
     @property
     def running_time(self) -> int:
         """!
-        @return The length of time during which the job has been running, in
-           seconds.
+        @return The amount of time that the job has been running for, in seconds.
         """
 
 
@@ -53,8 +49,7 @@ class DatabaseJobEntry:
         Construct a new database job entry.
 
         @param job The job stored in the database entry.
-        @param stats The statistics about the job runtime stored in the
-          database.
+        @param stats The statistics about the job runtime stored in the database.
         @param machine The work machine this job has been assigned to, if any.
         """
 
@@ -73,6 +68,5 @@ class DatabaseJobEntry:
     @property
     def assigned_machine(self) -> WorkMachine:
         """!
-        @return The assigned work machine of the job, or None if the job is not
-          currently running on any machine.
+        @return The assigned work machine of the job, or None if the job is not currently running on any machine.
         """

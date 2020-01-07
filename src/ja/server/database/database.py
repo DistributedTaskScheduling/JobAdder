@@ -72,7 +72,8 @@ class ServerDatabase(ABC):
         """!
         Generate a list of all jobs belonging to @user_id since @since which are or have been running on @workmachine.
 
-        @param since Date and time of the oldest interesting job.
+        @param since Date and time of the oldest interesting job, or None if the query is not limited to any given
+          interval of time.
         @param user_id The user to query jobs for, or -1 if the query is for all users.
         @param work_machine The work machine to query jobs for, or None if the query is for all work machines.
 
@@ -85,8 +86,6 @@ class ServerDatabase(ABC):
     def set_scheduler_callback(self, callback: RescheduleCallback) -> None:
         """!
         Set a function which will be called whenever the database is updated and this update makes rescheduling
-        necessary.
-
         @param callback The callback to execute when rescheduling is necessary.
         """
 
