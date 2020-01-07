@@ -3,6 +3,6 @@ python: 3.6
 
 install: "pip3 install flake8 mypy"
 script:
-  - flake8 src/ --ignore F821 --config max-line-length 120
+  - flake8 src/ --ignore F821 --max-line-length=120
   - ./.travis/check_init_py.sh src/
   - MYPYPATH=$(pwd)/src mypy -p ja --no-strict-optional --strict
