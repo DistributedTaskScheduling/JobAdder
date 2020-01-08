@@ -8,7 +8,7 @@ class Scheduler:
     distribution whenever the database changes.
 
     Internally it uses a SchedulingAlgorithm to determine how to schedule
-    jobs which are "alive".
+    jobs which are still runnable.
     """
 
     def __init__(self, algorithm: SchedulingAlgorithm):
