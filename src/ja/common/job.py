@@ -63,12 +63,14 @@ class Job:
     """!
     Represents a job with all of its attributes.
     @param owner_id The unix user id of the user who owns this job.
+    @param email The email of the user who created the job, or None.
     @param priority The priority of the job.
     @param ctx The docker context of the job.
     @param constraints The docker constraints of the job.
     """
     def __init__(self,
                  owner_id: int,
+                 email: str,
                  constraints: JobSchedulingConstraints,
                  ctx: IDockerContext,
                  docker_constraints: DockerConstraints):
@@ -94,6 +96,12 @@ class Job:
     def owner_id(self) -> int:
         """!
         @return The id of the user who owns the job.
+        """
+
+    @property
+    def email(self) -> str:
+        """!
+        @return The email of the user who owns the job, or None if no email was specified.
         """
 
     @property
