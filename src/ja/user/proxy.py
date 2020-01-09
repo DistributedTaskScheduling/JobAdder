@@ -2,7 +2,7 @@ from ja.common.proxy.proxy import SingleMessageProxy
 from ja.common.message.server import ServerResponse
 from ja.common.proxy.ssh import SSHConfig
 from ja.user.config.add import AddCommandConfig
-from ja.user.config.kill import CancelCommandConfig
+from ja.user.config.cancel import CancelCommandConfig
 from ja.user.config.query import QueryCommandConfig
 
 
