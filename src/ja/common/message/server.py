@@ -1,20 +1,29 @@
 """
-This module provides the interfaces for Messages passed between the user client
-and the central server.
+This module provides the interfaces for Messages sent to the central server.
 """
+from abc import ABC
 from ja.common.message.base import Command, Response
+from ja.server.database.database import ServerDatabase
 
 
-class ServerCommand(Command):
+class ServerCommand(Command, ABC):
     """
-    A base class for all server commands. A server command is an action which
-    is sent by the user client and performed on the server. ServerCommands
-    typically operate on the server database.
+    Base class for all server commands. A server command is an action which is
+    sent by a user client or the worker client and performed on the server.
+    ServerCommands typically operate on the server database.
     """
 
+    def execute(self, database: ServerDatabase) -> "ServerResponse":
+        """!
+        Executes a ServerCommand object on the server and generates a
+        ServerResponse object to be sent back in return.
+        @param database: The ServerDatabase object to execute the ServerCommand
+        on.
+        @return: The ServerResponse to be sent back.
+        """
 
-class ServerResponse(Response):
+
+class ServerResponse(Response, ABC):
     """
-    A base class for all server responses. A server response is a Response
-    retrieved by the user client from the central server.
+    Corresponding Response class for ServerCommand.
     """
