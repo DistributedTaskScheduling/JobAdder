@@ -23,11 +23,11 @@ class StatisticsWebServer:
     Creates a web server which enables external applications to obtain statistics about JobAdder.
     """
 
-    def __init__(self, host: str, port: int, database: ServerDatabase):
+    def __init__(self, server_name: str, server_port: int, database: ServerDatabase):
         """!
         Initialize the web server.
 
-        @param host The host for the server.
-        @param port The port for the server.
+        @param host The server name for the server, see http.server.HTTPServer.
+        @param port The server port for the server, see http.server.HTTPServer.
         @param database The database to get information from when serving requests.
         """
