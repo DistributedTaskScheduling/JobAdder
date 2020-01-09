@@ -15,7 +15,7 @@ class CostFunction(ABC):
         """!
         Calculate the cost of a job.
 
-        The cost of a job is an integer. Higher values mean higher priority for
+        The cost of a job is a float. Lower values mean higher priority for
         the job when considering which jobs to schedule.
 
         @param job The job whose cost should be calculated.
@@ -26,7 +26,7 @@ class CostFunction(ABC):
     @property
     def blocking_threshold(self) -> float:
         """!
-        @return The minimum cost a job can have so that it can block further
+        @return The maximum cost a job can have so that it can block further
           jobs with smaller cost from being scheduled.
         """
 
@@ -34,8 +34,8 @@ class CostFunction(ABC):
     @property
     def preempting_threshold(self) -> float:
         """!
-        @return The minimum cost a job can have so that it can preempt already
-          running jobs. Should be at least @blocking_threshold.
+        @return The maximum cost a job can have so that it can preempt already
+          running jobs. Should be at most @blocking_threshold.
         """
 
 
