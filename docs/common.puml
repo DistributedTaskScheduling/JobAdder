@@ -6,3 +6,10 @@ ja.common.job.JobSchedulingConstraints "1" --* ja.common.job.Job
 
 ja.common.job.Job *-- "1" ja.common.docker_context.IDockerContext
 ja.common.job.Job *-- "1" ja.common.docker_context.DockerConstraints
+
+ja.common.proxy.proxy.Proxy *-- "1" ja.common.proxy.ssh.SSHConnection
+ja.common.proxy.proxy.Proxy "1" -- "1" ja.common.proxy.remote.Remote : call via SSH
+ja.common.proxy.remote.Remote "0..*" -- "1" ja.common.proxy.command_handler.CommandHandler : socket
+ja.common.proxy.ssh.SSHConnection "0..*" o-- "1" ja.common.proxy.ssh.SSHConfig
+ja.common.message.base.Command "0..*" -- ja.common.proxy.command_handler.CommandHandler : process
+ja.common.message.base.Response "0..*" -- ja.common.proxy.command_handler.CommandHandler : create for each Command
