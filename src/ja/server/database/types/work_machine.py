@@ -1,3 +1,5 @@
+from enum import Enum
+
 from ja.common.work_machine import ResourceAllocation
 
 
@@ -64,14 +66,20 @@ class WorkMachineConnectionDetails:
     # TODO: this class is incomplete
 
 
+class WorkMachineState(Enum):
+    ONLINE = 0
+    RETIRED = 10
+    OFFLINE = 20
+
+
 class WorkMachine:
     """
     Represents the data stored about a work machine in the database.
     Each work machine is uniquely determined by its UID.
     """
     def __init__(self,
-                 uid: int,
-                 is_online: bool = False,
+                 uid: str,
+                 state: WorkMachineState = WorkMachineState.OFFLINE,
                  resources: WorkMachineResources = None,
                  connection: WorkMachineConnectionDetails = None):
         """!
@@ -81,22 +89,21 @@ class WorkMachine:
         and connection details.
 
         @param uid The unique ID of the machine.
-        @param is_online Whether the work machine is online.
+        @param state Whether the work machine is online, retired, or offline.
         @param resources The available resources on the work machine.
         @param connection The connection information about the work machine.
         """
 
     @property
-    def uid(self) -> int:
+    def uid(self) -> str:
         """!
         @return The UID of the work machine.
         """
 
     @property
-    def online(self) -> bool:
+    def state(self) -> WorkMachineState:
         """!
-        @return True if the work machine is online and connected to the server,
-          False otherwise.
+        @return: Whether the work machine is online, retired, or offline.
         """
 
     @property

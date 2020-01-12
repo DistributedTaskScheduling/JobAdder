@@ -1,7 +1,7 @@
 """
 This module provides the interfaces for Messages sent to the central server.
 """
-from abc import ABC
+from abc import ABC, abstractmethod
 from ja.common.message.base import Command, Response
 from ja.server.database.database import ServerDatabase
 
@@ -13,6 +13,7 @@ class ServerCommand(Command, ABC):
     ServerCommands typically operate on the server database.
     """
 
+    @abstractmethod
     def execute(self, database: ServerDatabase) -> "ServerResponse":
         """!
         Executes a ServerCommand object on the server and generates a
@@ -27,3 +28,9 @@ class ServerResponse(Response, ABC):
     """
     Corresponding Response class for ServerCommand.
     """
+
+    @property
+    def uid(self) -> str:
+        """!
+        @return: UID of an added job/registered worker, None otherwise.
+        """

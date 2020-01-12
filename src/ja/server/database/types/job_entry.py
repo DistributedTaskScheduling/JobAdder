@@ -14,7 +14,7 @@ class JobRuntimeStatistics:
         """!
         @param added The date and time when the job was first added in the database.
         @param started The date and time when the job was first started, or None if the job has never been started.
-        @param The amount of time that the job has been running for, in seconds.
+        @param running_time The amount of time that the job has been running for, in seconds.
         """
 
     @property
