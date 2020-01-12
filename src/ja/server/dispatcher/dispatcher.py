@@ -1,7 +1,7 @@
 from ja.common.job import Job
-from ja.server.proxy.proxy import WorkerProxy
-from typing import List
 from ja.server.database.database import ServerDatabase
+from ja.server.dispatcher.proxy_factory import IWorkerProxyFactory
+from typing import List
 
 
 JobDistribution = ServerDatabase.JobDistribution
@@ -12,10 +12,10 @@ class Dispatcher:
     Represents the mediator between the Scheduler and the work machines.
     """
 
-    def __init__(self, worker_proxies: List[WorkerProxy]):
+    def __init__(self, proxy_factory: IWorkerProxyFactory):
         """!
         Constructor for the dispatcher class.
-        @param worker_proxies proxies of the work machines.
+        @param proxy_factory The proxy factory to use to create WorkerProxies
         """
 
     def set_distribution(self, job_distribution: JobDistribution) -> None:
@@ -34,10 +34,4 @@ class Dispatcher:
     def _reset(self) -> None:
         """!
         Dispatches the added jobs, pauses the paused jobs and cancels the cancelled jobs.
-        """
-
-    @property
-    def woker_proxies(self) -> List[WorkerProxy]:
-        """!
-        @return work machine proxies.
         """
