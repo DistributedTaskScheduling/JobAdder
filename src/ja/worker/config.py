@@ -11,6 +11,12 @@ class WorkerConfig(Config):
     """
 
     @property
+    def uid(self) -> str:
+        """!
+        @return: The desired UID to register with on the server.
+        """
+
+    @property
     def ssh_config(self) -> SSHConfig:
         """!
         @return: Parameters for establishing an ssh connection to the server.
