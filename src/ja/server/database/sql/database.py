@@ -17,7 +17,7 @@ class SQLDatabase(ServerDatabase):
 
         @param host The host of the database to connect to.
         @param user The username to use for the connection.
-        @param passowrd The password to use for the connection.
+        @param password The password to use for the connection.
         """
 
     def find_job_by_id(self, job_id: str) -> Job:

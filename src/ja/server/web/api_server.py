@@ -27,7 +27,7 @@ class StatisticsWebServer:
         """!
         Initialize the web server.
 
-        @param host The server name for the server, see http.server.HTTPServer.
-        @param port The server port for the server, see http.server.HTTPServer.
+        @param server_name server name for the server, see http.server.HTTPServer.
+        @param server_port server port for the server, see http.server.HTTPServer.
         @param database The database to get information from when serving requests.
         """
