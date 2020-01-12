@@ -1,18 +1,21 @@
+from abc import ABC, abstractmethod
+
 from ja.common.proxy.proxy import ContinuousProxy
 from ja.common.message.server import ServerResponse
 from ja.common.proxy.ssh import SSHConfig
 from ja.server.database.types.work_machine import WorkMachineResources
 
 
-class WorkerServerProxy(ContinuousProxy):
+class IWorkerServerProxy(ContinuousProxy, ABC):
     """
-    Proxy for the central server used on the worker client.
+    Interface for the proxy for the central server used on the worker client.
     """
     def __init__(self, ssh_config: SSHConfig):
         """!
         @param ssh_config: Config for paramiko
         """
 
+    @abstractmethod
     def register_self(self, work_machine_resources: WorkMachineResources) -> ServerResponse:
         """!
         Adds the worker client to the worker client pool of the central server.
@@ -22,6 +25,7 @@ class WorkerServerProxy(ContinuousProxy):
         @return: The Response from the Server.
         """
 
+    @abstractmethod
     def unregister_self(self) -> ServerResponse:
         """!
         Unregisters the worker client from the worker client pool of the
@@ -31,14 +35,34 @@ class WorkerServerProxy(ContinuousProxy):
         @return: The Response from the Server.
         """
 
+    @abstractmethod
     def notify_job_finished(self, uid: str) -> ServerResponse:
         """!
         @param uid: uid of the job that has finished.
         @return: The Response from the Server.
         """
 
+    @abstractmethod
     def notify_job_crashed(self, uid: str) -> ServerResponse:
         """!
         @param uid: uid of the job that has crashed.
         @return: The Response from the Server.
         """
+
+
+class WorkerServerProxy(IWorkerServerProxy):
+    """
+    Implementation of the proxy for the central server used on the worker client.
+    """
+
+    def register_self(self, work_machine_resources: WorkMachineResources) -> ServerResponse:
+        pass
+
+    def unregister_self(self) -> ServerResponse:
+        pass
+
+    def notify_job_finished(self, uid: str) -> ServerResponse:
+        pass
+
+    def notify_job_crashed(self, uid: str) -> ServerResponse:
+        pass
