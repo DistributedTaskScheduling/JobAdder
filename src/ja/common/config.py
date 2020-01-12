@@ -1,7 +1,8 @@
+from abc import ABC
 from ja.common.message.base import Serializable
 
 
-class Config(Serializable):
+class Config(Serializable, ABC):
     """
     Base class for hierarchical configuration (files). The properties of Config
     objects are equivalent to the arguments of CLIs. Can override properties

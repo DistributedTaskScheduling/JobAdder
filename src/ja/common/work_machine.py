@@ -1,3 +1,5 @@
+from typing import Dict
+
 from ja.common.message.base import Serializable
 
 
@@ -31,3 +33,10 @@ class ResourceAllocation(Serializable):
         """!
         @return The allocated swap space in MB.
         """
+
+    def to_dict(self) -> Dict[str, object]:
+        pass
+
+    @classmethod
+    def from_dict(cls, property_dict: Dict[str, object]) -> "ResourceAllocation":
+        pass

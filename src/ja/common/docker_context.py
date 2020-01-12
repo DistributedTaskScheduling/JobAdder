@@ -4,7 +4,8 @@ These include, but are not limited to, mount points, program environment
 and hardware constraints.
 """
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Dict
+from ja.common.message.base import Serializable
 
 
 class MountPoint:
@@ -34,7 +35,7 @@ class MountPoint:
         """
 
 
-class IDockerContext(ABC):
+class IDockerContext(Serializable, ABC):
     """
     A docker context consists of the necessary data to build a docker image to
     run a job in.
@@ -54,7 +55,7 @@ class IDockerContext(ABC):
         """
 
 
-class DockerConstraints:
+class DockerConstraints(Serializable):
     """
     A list of constraints of the docker container.
     """
@@ -86,3 +87,10 @@ class DockerConstraints:
         """!
         @return The maximum amount of RAM in MB to allocate for this container.
         """
+
+    def to_dict(self) -> Dict[str, object]:
+        pass
+
+    @classmethod
+    def from_dict(cls, property_dict: Dict[str, object]) -> "DockerConstraints":
+        pass
