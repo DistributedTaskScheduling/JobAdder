@@ -1,10 +1,11 @@
 @startuml
 
 skinparam monochrome false
-scale 2
+scale 1
 
 !include ../build/project.puml
 
 !include common.puml
+!include server.puml
 
 @enduml

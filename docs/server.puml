@@ -1,0 +1,18 @@
+ja.server.database.types.work_machine.WorkMachineConnectionDetails "1" --* ja.server.database.types.work_machine.WorkMachine
+ja.server.database.types.work_machine.WorkMachineResources "1" --* ja.server.database.types.work_machine.WorkMachine
+ja.server.database.types.job_entry.DatabaseJobEntry *-- "1" ja.server.database.JobRuntimeStatistics
+ja.server.database.ServerDatabase "1" <-- ja.server.email.EmailNotifier
+
+ja.server.scheduler.scheduler.Scheduler *-- "1" ja.server.scheduler.algorithm.SchedulingAlgorithm
+
+ja.server.scheduler.default_algorithm.DefaultSchedulingAlgorithm *-- "1" ja.server.scheduler.default_policies.DefaultCostFunction
+ja.server.scheduler.default_algorithm.DefaultSchedulingAlgorithm *-- "3" ja.server.scheduler.default_policies.DefaultJobDistributionPolicyBase
+
+ja.server.dispatcher.dispatcher.Dispatcher --> "1" ja.server.dispatcher.proxy_factory.IWorkerProxyFactory
+
+ja.server.main.JobCenter *-- "1" ja.server.scheduler.scheduler.Scheduler
+ja.server.main.JobCenter *-- "1" ja.server.database.ServerDatabase
+ja.server.main.JobCenter *-- "1" ja.server.dispatcher.proxy_factory.WorkerProxyFactory
+ja.server.main.JobCenter *-- "1" ja.server.dispatcher.dispatcher.Dispatcher
+ja.server.main.JobCenter *-- "1" ja.server.email.EmailNotifier
+ja.server.main.JobCenter *-- "1" ja.server.web.api_server.StatisticsWebServer
