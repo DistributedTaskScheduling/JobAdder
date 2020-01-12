@@ -23,7 +23,7 @@ class Dispatcher:
         Distributes the newly added jobs to the work machines.
         and potentially pauses jobs that need to be paused.
 
-        @param jobs list of the new job distribution.
+        @param job_distribution the new job distribution.
         """
 
     def _get_changed_jobs(self, jobs: List[Job]) -> List[Job]:
