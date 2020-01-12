@@ -4,12 +4,12 @@ This command will get the cpu_load and other information about the state of the 
 from typing import Dict
 
 from ja.common.message.worker import WorkerCommand, WorkerResponse
-from ja.worker.worker_client import Worker
+from ja.worker.main import JobWorker
 
 
 class GetWorkloadCommand(WorkerCommand):
 
-    def execute(self, worker_client: Worker) -> WorkerResponse:
+    def execute(self, worker_client: JobWorker) -> WorkerResponse:
         """!
         Get the information about the work machine using the provided @worker_client
         @param worker_client:  the Worker object to use for the execution

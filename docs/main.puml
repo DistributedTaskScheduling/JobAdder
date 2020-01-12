@@ -6,6 +6,8 @@ scale 1
 !include ../build/project.puml
 
 !include common.puml
+!include user.puml
 !include server.puml
+!include worker.puml
 
 @enduml

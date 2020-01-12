@@ -4,7 +4,7 @@ as notifying the CS
 """
 
 
-class Worker:
+class JobWorker:
     """
     The main class on the Worker Client
     """

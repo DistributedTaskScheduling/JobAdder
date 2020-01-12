@@ -3,7 +3,7 @@ This module provides interfaces for Messages
 """
 from abc import ABC
 from ja.common.message.base import Command, Response
-from ja.worker.worker_client import Worker
+from ja.worker.main import JobWorker
 
 
 class WorkerCommand(Command, ABC):
@@ -12,7 +12,7 @@ class WorkerCommand(Command, ABC):
     and performed on the worker client.
     """
 
-    def execute(self, worker_client: Worker) -> "WorkerResponse":
+    def execute(self, worker_client: JobWorker) -> "WorkerResponse":
         """!
         Executes a WorkerCommand object on the worker and generates a
         WorkerResponse object to be sent back in return.

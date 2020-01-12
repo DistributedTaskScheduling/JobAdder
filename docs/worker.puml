@@ -1,0 +1,4 @@
+ja.worker.main.JobWorker *-- "1" ja.worker.docker_events.DockerEvents
+ja.worker.main.JobWorker *-- "1" ja.worker.config.WorkerConfig
+ja.worker.main.JobWorker *-- "1" ja.worker.proxy.message_handler.WorkerCommandHandler
+ja.worker.main.JobWorker *-- "1" ja.worker.proxy.proxy.WorkerServerProxy
