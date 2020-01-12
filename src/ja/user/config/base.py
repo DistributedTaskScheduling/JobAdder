@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Dict
 
 from ja.common.config import Config
+from ja.common.proxy.ssh import SSHConfig
 
 
 class Verbosity(Enum):
@@ -25,33 +26,9 @@ class UserConfig(Config):
         """
 
     @property
-    def server(self) -> str:
+    def ssh_config(self) -> SSHConfig:
         """!
-        @return: The IP address of the server to connect to.
-        """
-
-    @property
-    def username(self) -> str:
-        """!
-        @return: The username to use for SSH authentication.
-        """
-
-    @property
-    def password(self) -> str:
-        """!
-        @return: The password to use for SSH authentication.
-        """
-
-    @property
-    def private_key(self) -> str:
-        """!
-        @return: The private key to use for SSH authentication.
-        """
-
-    @property
-    def passphrase(self) -> str:
-        """!
-        @return: The passphrase to use for unlocking the private key for SSH authentication.
+        @return: The config containing the parameters for establishing an ssh connection to the server.
         """
 
     def source_from_user_config(self, other_config: "UserConfig", unset_only: bool = True) -> None:
