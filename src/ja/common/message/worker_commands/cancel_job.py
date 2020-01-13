@@ -4,12 +4,12 @@ This command will cancel a running job on the work machine
 from typing import Dict
 
 from ja.common.message.worker import WorkerCommand, WorkerResponse
-from ja.worker.worker_client import Worker
+from ja.worker.main import JobWorker
 
 
 class CancelJobCommand(WorkerCommand):
 
-    def execute(self, worker_client: Worker) -> WorkerResponse:
+    def execute(self, worker_client: JobWorker) -> WorkerResponse:
         """!
         Cancel the job on the worker machine using the provided @worker_client
         @param worker_client:  the Worker object to use for the execution

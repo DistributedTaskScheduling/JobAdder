@@ -1,0 +1,3 @@
+ja.user.main.JobAdder *-- "1" ja.user.proxy.UserServerProxy
+ja.user.main.JobAdder *-- "1" ja.user.cli.UserClientCLIHandler
+ja.user.cli.UserClientCLIHandler *-- "1" ja.user.config.base.UserConfig

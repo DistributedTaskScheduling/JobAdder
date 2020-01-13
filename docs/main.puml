@@ -12,7 +12,9 @@ scale 1
 
 !include layout.puml
 !include common.puml
+!include user.puml
 !include server.puml
+!include worker.puml
 
 !include ../build/project.puml.footer
 
