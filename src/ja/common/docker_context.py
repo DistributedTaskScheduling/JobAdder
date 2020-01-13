@@ -54,6 +54,11 @@ class IDockerContext(Serializable, ABC):
         @return A list of all mount points for the job.
         """
 
+    @classmethod
+    @abstractmethod
+    def from_dict(cls, property_dict: Dict[str, object]) -> "IDockerContext":
+        pass
+
 
 class DockerConstraints(Serializable):
     """
