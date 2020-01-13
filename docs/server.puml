@@ -1,5 +1,6 @@
 ja.server.database.types.work_machine.WorkMachineConnectionDetails "1" --* ja.server.database.types.work_machine.WorkMachine
 ja.server.database.types.work_machine.WorkMachineResources "1" --* ja.server.database.types.work_machine.WorkMachine
+ja.server.database.types.work_machine.WorkMachineState "1" --* ja.server.database.types.work_machine.WorkMachine
 ja.server.database.types.job_entry.DatabaseJobEntry *-- "1" ja.server.database.JobRuntimeStatistics
 ja.server.database.ServerDatabase "1" <-- ja.server.email.EmailNotifier
 
