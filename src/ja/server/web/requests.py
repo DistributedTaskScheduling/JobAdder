@@ -1,10 +1,8 @@
 from abc import ABC, abstractmethod
-from ja.common.message.base import Serializable
 from ja.server.database.database import ServerDatabase
-from typing import Dict
 
 
-class WebRequest(Serializable, ABC):
+class WebRequest(ABC):
     """
     A base class for the different statistics requests.
     """
@@ -13,6 +11,13 @@ class WebRequest(Serializable, ABC):
     def generate_report(self, database: ServerDatabase) -> None:
         """!
         Generate the requested statistics from the data in the database.
+        """
+
+    @abstractmethod
+    def to_yaml(self) -> str:
+        """!
+        @return A yaml representation of this object.The entries in the
+        yaml are equivalent to the properties of this object.
         """
 
 
@@ -31,7 +36,7 @@ class WorkMachineWorkloadRequest(WebRequest):
     def generate_report(self, database: ServerDatabase) -> None:
         pass
 
-    def to_dict(self) -> Dict[str, object]:
+    def to_yaml(self) -> str:
         pass
 
 
@@ -50,7 +55,7 @@ class JobInformationRequest(WebRequest):
     def generate_report(self, database: ServerDatabase) -> None:
         pass
 
-    def to_dict(self) -> Dict[str, object]:
+    def to_yaml(self) -> str:
         pass
 
 
@@ -69,7 +74,7 @@ class UserJobsRequest(WebRequest):
     def generate_report(self, database: ServerDatabase) -> None:
         pass
 
-    def to_dict(self) -> Dict[str, object]:
+    def to_yaml(self) -> str:
         pass
 
 
@@ -88,7 +93,7 @@ class PastJobsRequest(WebRequest):
     def generate_report(self, database: ServerDatabase) -> None:
         pass
 
-    def to_dict(self) -> Dict[str, object]:
+    def to_yaml(self) -> str:
         pass
 
 
@@ -107,5 +112,5 @@ class WorkMachineJobsRequest(WebRequest):
     def generate_report(self, database: ServerDatabase) -> None:
         pass
 
-    def to_dict(self) -> Dict[str, object]:
+    def to_yaml(self) -> str:
         pass
