@@ -1,11 +1,19 @@
 @startuml
+!pragma teoz true
 
+skinparam nodesep 10
+skinparam ranksep 20
+skinparam linetype polyline
+skinparam linetype ortho
 skinparam monochrome false
 scale 1
 
 !include ../build/project.puml
 
+!include layout.puml
 !include common.puml
 !include server.puml
+
+!include ../build/project.puml.footer
 
 @enduml

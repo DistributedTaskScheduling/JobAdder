@@ -1,0 +1,3 @@
+ja.server -right[hidden]-> ja.common
+ja.common -right[hidden]-> ja.user
+ja.user -down[hidden]-> ja.worker
