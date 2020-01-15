@@ -4,7 +4,7 @@ implemented in order for a class to be transferable between the components
 of JobAdder.
 """
 from abc import ABC, abstractmethod
-from typing import Dict, cast
+from typing import List, Dict, cast
 import yaml
 
 
@@ -57,11 +57,29 @@ class Serializable(ABC):
         return cast(str, _property)
 
     @classmethod
+    def _get_str_list_from_dict(cls, property_dict: Dict[str, object], key: str, mandatory: bool = True) -> List[str]:
+        _property = cls._get_from_dict(property_dict=property_dict, key=key, mandatory=mandatory)
+        if not isinstance(_property, list):
+            cls._raise_error_wrong_type(key=key, expected_type="List[str]", actual_type=_property.__class__.__name__)
+        _list = cast(List[object], _property)
+        for _element in _list:
+            if not isinstance(_element, str):
+                cls._raise_error_wrong_type(key=key, expected_type="List[str]", actual_type="List[object]")
+        return cast(List[str], _list)
+
+    @classmethod
     def _get_int_from_dict(cls, property_dict: Dict[str, object], key: str, mandatory: bool = True) -> int:
         _property = cls._get_from_dict(property_dict=property_dict, key=key, mandatory=mandatory)
         if not isinstance(_property, int):
             cls._raise_error_wrong_type(key=key, expected_type="int", actual_type=_property.__class__.__name__)
         return cast(int, _property)
+
+    @classmethod
+    def _get_bool_from_dict(cls, property_dict: Dict[str, object], key: str, mandatory: bool = True) -> bool:
+        _property = cls._get_from_dict(property_dict=property_dict, key=key, mandatory=mandatory)
+        if not isinstance(_property, bool):
+            cls._raise_error_wrong_type(key=key, expected_type="int", actual_type=_property.__class__.__name__)
+        return cast(bool, _property)
 
     @abstractmethod
     def to_dict(self) -> Dict[str, object]:

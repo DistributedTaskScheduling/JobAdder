@@ -3,7 +3,7 @@ This module contains the definition of the Job class and related structures.
 """
 from typing import List, Dict
 from enum import Enum
-from ja.common.docker_context import DockerConstraints, IDockerContext
+from ja.common.docker_context import DockerConstraints, IDockerContext, DockerContext
 from ja.common.message.base import Serializable
 
 
@@ -39,32 +39,48 @@ class JobSchedulingConstraints(Serializable):
                  priority: JobPriority,
                  is_preemtible: bool,
                  special_resources: List[str]):
-        pass
+        self._priority = priority
+        self._is_preemptible = is_preemtible
+        self._special_resources = special_resources
 
     @property
     def priority(self) -> JobPriority:
         """!
         @return The priority of the job.
         """
+        return self._priority
 
     @property
     def is_preemptible(self) -> bool:
         """!
         @return Whether the job can be preempted.
         """
+        return self._is_preemptible
 
     @property
-    def get_special_resources(self) -> List[str]:
+    def special_resources(self) -> List[str]:
         """!
         @return A list of special resources used by the job.
         """
+        return self._special_resources
 
     def to_dict(self) -> Dict[str, object]:
-        pass
+        _dict: Dict[str, object] = dict()
+        _dict["priority"] = self.priority
+        _dict["is_preemptible"] = self.is_preemptible
+        _dict["special_resources"] = self.special_resources
+        return _dict
 
     @classmethod
     def from_dict(cls, property_dict: Dict[str, object]) -> "JobSchedulingConstraints":
-        pass
+        _priority = JobPriority(cls._get_from_dict(property_dict=property_dict, key="priority"))
+        _is_preemtible = cls._get_bool_from_dict(property_dict=property_dict, key="is_preemtible")
+        _special_resources = cls._get_str_list_from_dict(property_dict=property_dict, key="special_resources")
+
+        cls._assert_all_properties_used(property_dict)
+
+        return JobSchedulingConstraints(
+            priority=_priority, is_preemtible=_is_preemtible, special_resources=_special_resources)
 
 
 class Job(Serializable):
@@ -190,15 +206,15 @@ class Job(Serializable):
 
     @classmethod
     def from_dict(cls, property_dict: Dict[str, object]) -> "Job":
-        _uid: str = cls._get_str_from_dict(property_dict=property_dict, key="uid", mandatory=False)
-        _owner_id: int = cls._get_int_from_dict(property_dict=property_dict, key="uid")
-        _email: str = cls._get_str_from_dict(property_dict=property_dict, key="email")
+        _uid = cls._get_str_from_dict(property_dict=property_dict, key="uid", mandatory=False)
+        _owner_id = cls._get_int_from_dict(property_dict=property_dict, key="uid")
+        _email = cls._get_str_from_dict(property_dict=property_dict, key="email")
 
         _scheduling_constraints = JobSchedulingConstraints.from_dict(
             cls._get_dict_from_dict(property_dict=property_dict, key="scheduling_constraints")
         )
 
-        _docker_context = IDockerContext.from_dict(
+        _docker_context = DockerContext.from_dict(
             cls._get_dict_from_dict(property_dict=property_dict, key="docker_context")
         )
 
