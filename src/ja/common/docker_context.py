@@ -21,25 +21,32 @@ class MountPoint(Serializable):
         @param source_path The host directory to be mounted.
         @param mount_path The target path in the container to mount at.
         """
+        self._source_path = source_path
+        self._mount_path = mount_path
 
     @property
     def source_path(self) -> str:
         """!
         @return The directory to be mounted.
         """
+        return self._source_path
 
     @property
     def mount_path(self) -> str:
         """!
         @return The path where the directory should be mounted.
         """
+        return self._mount_path
 
     def to_dict(self) -> Dict[str, object]:
-        pass
+        return {"source_path": self.source_path, "mount_path": self.mount_path}
 
     @classmethod
     def from_dict(cls, property_dict: Dict[str, object]) -> "MountPoint":
-        pass
+        _source_path = cls._get_str_from_dict(property_dict=property_dict, key="source_path")
+        _mount_path = cls._get_str_from_dict(property_dict=property_dict, key="mount_path")
+        cls._assert_all_properties_used(property_dict)
+        return MountPoint(source_path=_source_path, mount_path=_mount_path)
 
 
 class IDockerContext(Serializable, ABC):
