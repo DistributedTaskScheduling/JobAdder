@@ -24,6 +24,12 @@ class MountPoint(Serializable):
         self._source_path = source_path
         self._mount_path = mount_path
 
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, MountPoint):
+            return self.source_path == other.source_path and self.mount_path == other.mount_path
+        else:
+            return False
+
     @property
     def source_path(self) -> str:
         """!
@@ -43,10 +49,10 @@ class MountPoint(Serializable):
 
     @classmethod
     def from_dict(cls, property_dict: Dict[str, object]) -> "MountPoint":
-        _source_path = cls._get_str_from_dict(property_dict=property_dict, key="source_path")
-        _mount_path = cls._get_str_from_dict(property_dict=property_dict, key="mount_path")
+        source_path = cls._get_str_from_dict(property_dict=property_dict, key="source_path")
+        mount_path = cls._get_str_from_dict(property_dict=property_dict, key="mount_path")
         cls._assert_all_properties_used(property_dict)
-        return MountPoint(source_path=_source_path, mount_path=_mount_path)
+        return MountPoint(source_path=source_path, mount_path=mount_path)
 
 
 class IDockerContext(Serializable, ABC):
@@ -54,6 +60,12 @@ class IDockerContext(Serializable, ABC):
     A docker context consists of the necessary data to build a docker image to
     run a job in.
     """
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, IDockerContext):
+            return self.dockerfile_source == other.dockerfile_source and self.mount_points == other.mount_points
+        else:
+            return False
 
     @property
     @abstractmethod
@@ -97,34 +109,34 @@ class DockerContext(IDockerContext):
         return self._mount_points
 
     def to_dict(self) -> Dict[str, object]:
-        _dict: Dict[str, object] = dict()
-        _dict["dockerfile_source"] = self.dockerfile_source
-        _dict["mount_points"] = [_mount_point.to_dict() for _mount_point in self.mount_points]
-        return _dict
+        return_dict: Dict[str, object] = dict()
+        return_dict["dockerfile_source"] = self.dockerfile_source
+        return_dict["mount_points"] = [_mount_point.to_dict() for _mount_point in self.mount_points]
+        return return_dict
 
     @classmethod
-    def from_dict(cls, property_dict: Dict[str, object]) -> "IDockerContext":
-        _dockerfile_source = cls._get_str_from_dict(property_dict=property_dict, key="dockerfile_source")
+    def from_dict(cls, property_dict: Dict[str, object]) -> IDockerContext:
+        dockerfile_source = cls._get_str_from_dict(property_dict=property_dict, key="dockerfile_source")
 
-        _property: object = cls._get_from_dict(property_dict=property_dict, key="mount_points")
-        if not isinstance(_property, list):
+        prop: object = cls._get_from_dict(property_dict=property_dict, key="mount_points")
+        if not isinstance(prop, list):
             cls._raise_error_wrong_type(
                 key="mount_points", expected_type="List[MountPoint]",
-                actual_type=_property.__class__.__name__
+                actual_type=prop.__class__.__name__
             )
-        _object_list = cast(List[object], _property)
-        _mount_point_list: List[MountPoint] = []
-        for _object in _object_list:
+        object_list = cast(List[object], prop)
+        mount_point_list: List[MountPoint] = []
+        for _object in object_list:
             if not isinstance(_object, dict):
                 cls._raise_error_wrong_type(
                     key="mount_points", expected_type="List[MountPoint]",
                     actual_type="List[object]"
                 )
-                _mount_point_list.append(MountPoint.from_dict(
-                    cast(Dict[str, object], _object)
-                ))
+            mount_point_list.append(MountPoint.from_dict(
+                cast(Dict[str, object], _object)
+            ))
         cls._assert_all_properties_used(property_dict)
-        return DockerContext(dockerfile_source=_dockerfile_source, mount_points=_mount_point_list)
+        return DockerContext(dockerfile_source=dockerfile_source, mount_points=mount_point_list)
 
 
 class DockerConstraints(Serializable):
@@ -134,14 +146,21 @@ class DockerConstraints(Serializable):
     def __init__(self, cpu_threads: int = -1, memory: int = 1):
         """!
         Create a new set of Docker constraints.
-        @param cpu_threads Initial value of @cpu_threads.
-        @param memory The value of @memory.
+        @param cpu_threads Initial value of @cpu_threads. -1 if unknown. Must be > 0 if set to exact number.
+        @param memory The value of @memory, must be > 0.
         """
         self._cpu_threads = -1
-        self.cpu_threads = cpu_threads
+        if cpu_threads != -1:
+            self.cpu_threads = cpu_threads
         if memory < 1:
             raise ValueError("Cannot set memory to %s because this value is < 1." % memory)
         self._memory = memory
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, DockerConstraints):
+            return self.cpu_threads == other.cpu_threads and self.memory == other.memory
+        else:
+            return False
 
     @property
     def cpu_threads(self) -> int:
@@ -161,9 +180,10 @@ class DockerConstraints(Serializable):
         """
         if self._cpu_threads != -1:
             raise RuntimeError("cpu_threads can only be set once.")
-        if count_threads < 1:
+        elif count_threads < 1:
             raise ValueError("Cannot set cpu_threads to %s because this value is < 1." % count_threads)
-        self._cpu_threads = count_threads
+        else:
+            self._cpu_threads = count_threads
 
     @property
     def memory(self) -> int:
@@ -173,14 +193,14 @@ class DockerConstraints(Serializable):
         return self._memory
 
     def to_dict(self) -> Dict[str, object]:
-        _dict: Dict[str, object] = dict()
-        _dict["cpu_threads"] = self.cpu_threads
-        _dict["memory"] = self.memory
-        return _dict
+        return_dict: Dict[str, object] = dict()
+        return_dict["cpu_threads"] = self.cpu_threads
+        return_dict["memory"] = self.memory
+        return return_dict
 
     @classmethod
     def from_dict(cls, property_dict: Dict[str, object]) -> "DockerConstraints":
-        _cpu_threads = cls._get_int_from_dict(property_dict=property_dict, key="cpu_threads")
-        _memory = cls._get_int_from_dict(property_dict=property_dict, key="memory")
+        cpu_threads = cls._get_int_from_dict(property_dict=property_dict, key="cpu_threads")
+        memory = cls._get_int_from_dict(property_dict=property_dict, key="memory")
         cls._assert_all_properties_used(property_dict)
-        return DockerConstraints(cpu_threads=_cpu_threads, memory=_memory)
+        return DockerConstraints(cpu_threads=cpu_threads, memory=memory)

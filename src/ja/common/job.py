@@ -43,6 +43,14 @@ class JobSchedulingConstraints(Serializable):
         self._is_preemptible = is_preemtible
         self._special_resources = special_resources
 
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, JobSchedulingConstraints):
+            return self.priority == other.priority \
+                and self.is_preemptible == other.is_preemptible \
+                and self.special_resources == other.special_resources
+        else:
+            return False
+
     @property
     def priority(self) -> JobPriority:
         """!
@@ -65,22 +73,22 @@ class JobSchedulingConstraints(Serializable):
         return self._special_resources
 
     def to_dict(self) -> Dict[str, object]:
-        _dict: Dict[str, object] = dict()
-        _dict["priority"] = self.priority
-        _dict["is_preemptible"] = self.is_preemptible
-        _dict["special_resources"] = self.special_resources
-        return _dict
+        return_dict: Dict[str, object] = dict()
+        return_dict["priority"] = self.priority
+        return_dict["is_preemptible"] = self.is_preemptible
+        return_dict["special_resources"] = self.special_resources
+        return return_dict
 
     @classmethod
     def from_dict(cls, property_dict: Dict[str, object]) -> "JobSchedulingConstraints":
-        _priority = JobPriority(cls._get_from_dict(property_dict=property_dict, key="priority"))
-        _is_preemtible = cls._get_bool_from_dict(property_dict=property_dict, key="is_preemtible")
-        _special_resources = cls._get_str_list_from_dict(property_dict=property_dict, key="special_resources")
+        priority = JobPriority(cls._get_from_dict(property_dict=property_dict, key="priority"))
+        is_preemtible = cls._get_bool_from_dict(property_dict=property_dict, key="is_preemptible")
+        special_resources = cls._get_str_list_from_dict(property_dict=property_dict, key="special_resources")
 
         cls._assert_all_properties_used(property_dict)
 
         return JobSchedulingConstraints(
-            priority=_priority, is_preemtible=_is_preemtible, special_resources=_special_resources)
+            priority=priority, is_preemtible=is_preemtible, special_resources=special_resources)
 
 
 class Job(Serializable):
@@ -107,6 +115,19 @@ class Job(Serializable):
         self._docker_context = docker_context
         self._docker_constraints = docker_constraints
         self._label = label
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Job):
+            return self.uid == other.uid \
+                and self.status == other.status \
+                and self.owner_id == other.owner_id \
+                and self.email == other.email \
+                and self.scheduling_constraints == other.scheduling_constraints \
+                and self.docker_context == other.docker_context \
+                and self.docker_constraints == other.docker_constraints \
+                and self.label == other.label
+        else:
+            return False
 
     @property
     def uid(self) -> str:
@@ -193,45 +214,45 @@ class Job(Serializable):
         return self._label
 
     def to_dict(self) -> Dict[str, object]:
-        _dict: Dict[str, object] = dict()
-        _dict["uid"] = self.uid
-        _dict["owner_id"] = self.owner_id
-        _dict["email"] = self.email
-        _dict["scheduling_constraints"] = self.scheduling_constraints.to_dict()
-        _dict["docker_context"] = self.docker_context.to_dict()
-        _dict["docker_constraints"] = self.docker_constraints.to_dict()
-        _dict["status"] = self.status
-        _dict["label"] = self.label
-        return _dict
+        return_dict: Dict[str, object] = dict()
+        return_dict["uid"] = self.uid
+        return_dict["owner_id"] = self.owner_id
+        return_dict["email"] = self.email
+        return_dict["scheduling_constraints"] = self.scheduling_constraints.to_dict()
+        return_dict["docker_context"] = self.docker_context.to_dict()
+        return_dict["docker_constraints"] = self.docker_constraints.to_dict()
+        return_dict["status"] = self.status
+        return_dict["label"] = self.label
+        return return_dict
 
     @classmethod
     def from_dict(cls, property_dict: Dict[str, object]) -> "Job":
-        _uid = cls._get_str_from_dict(property_dict=property_dict, key="uid", mandatory=False)
-        _owner_id = cls._get_int_from_dict(property_dict=property_dict, key="uid")
-        _email = cls._get_str_from_dict(property_dict=property_dict, key="email")
+        uid = cls._get_str_from_dict(property_dict=property_dict, key="uid", mandatory=False)
+        owner_id = cls._get_int_from_dict(property_dict=property_dict, key="owner_id")
+        email = cls._get_str_from_dict(property_dict=property_dict, key="email")
 
-        _scheduling_constraints = JobSchedulingConstraints.from_dict(
+        scheduling_constraints = JobSchedulingConstraints.from_dict(
             cls._get_dict_from_dict(property_dict=property_dict, key="scheduling_constraints")
         )
 
-        _docker_context = DockerContext.from_dict(
+        docker_context = DockerContext.from_dict(
             cls._get_dict_from_dict(property_dict=property_dict, key="docker_context")
         )
 
-        _docker_constraints = DockerConstraints.from_dict(
+        docker_constraints = DockerConstraints.from_dict(
             cls._get_dict_from_dict(property_dict=property_dict, key="docker_constraints")
         )
 
-        _status = JobStatus(cls._get_from_dict(property_dict=property_dict, key="status"))
+        status = JobStatus(cls._get_from_dict(property_dict=property_dict, key="status"))
 
-        _label = cls._get_str_from_dict(property_dict=property_dict, key="label", mandatory=False)
+        label = cls._get_str_from_dict(property_dict=property_dict, key="label", mandatory=False)
 
         cls._assert_all_properties_used(property_dict)
 
-        _job = Job(
-            owner_id=_owner_id, email=_email, scheduling_constraints=_scheduling_constraints,
-            docker_context=_docker_context, docker_constraints=_docker_constraints, label=_label
+        job = Job(
+            owner_id=owner_id, email=email, scheduling_constraints=scheduling_constraints,
+            docker_context=docker_context, docker_constraints=docker_constraints, label=label
         )
-        _job.uid = _uid
-        _job.status = _status
-        return _job
+        job.uid = uid
+        job.status = status
+        return job

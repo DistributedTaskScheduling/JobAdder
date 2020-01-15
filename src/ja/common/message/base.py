@@ -18,13 +18,13 @@ class Serializable(ABC):
 
     @classmethod
     def _get_from_dict(cls, property_dict: Dict[str, object], key: str, mandatory: bool = True) -> object:
-        _property = property_dict.pop(key, None)
-        if mandatory and _property is None:
+        prop = property_dict.pop(key, None)
+        if mandatory and prop is None:
             raise ValueError(
                 "Cannot read in object of type %s because the dictionary does not have the mandatory property %s"
                 % (cls, key)
             )
-        return _property
+        return prop
 
     @classmethod
     def _raise_error_wrong_type(cls, key: str, expected_type: str, actual_type: str) -> None:
@@ -44,42 +44,42 @@ class Serializable(ABC):
     @classmethod
     def _get_dict_from_dict(
             cls, property_dict: Dict[str, object], key: str, mandatory: bool = True) -> Dict[str, object]:
-        _property = cls._get_from_dict(property_dict=property_dict, key=key, mandatory=mandatory)
-        if not isinstance(_property, dict):
-            cls._raise_error_wrong_type(key=key, expected_type="dict", actual_type=_property.__class__.__name__)
-        return cast(Dict[str, object], _property)
+        prop = cls._get_from_dict(property_dict=property_dict, key=key, mandatory=mandatory)
+        if mandatory and not isinstance(prop, dict):
+            cls._raise_error_wrong_type(key=key, expected_type="dict", actual_type=prop.__class__.__name__)
+        return cast(Dict[str, object], prop)
 
     @classmethod
     def _get_str_from_dict(cls, property_dict: Dict[str, object], key: str, mandatory: bool = True) -> str:
-        _property = cls._get_from_dict(property_dict=property_dict, key=key, mandatory=mandatory)
-        if not isinstance(_property, str):
-            cls._raise_error_wrong_type(key=key, expected_type="str", actual_type=_property.__class__.__name__)
-        return cast(str, _property)
+        prop = cls._get_from_dict(property_dict=property_dict, key=key, mandatory=mandatory)
+        if mandatory and not isinstance(prop, str):
+            cls._raise_error_wrong_type(key=key, expected_type="str", actual_type=prop.__class__.__name__)
+        return cast(str, prop)
 
     @classmethod
     def _get_str_list_from_dict(cls, property_dict: Dict[str, object], key: str, mandatory: bool = True) -> List[str]:
-        _property = cls._get_from_dict(property_dict=property_dict, key=key, mandatory=mandatory)
-        if not isinstance(_property, list):
-            cls._raise_error_wrong_type(key=key, expected_type="List[str]", actual_type=_property.__class__.__name__)
-        _list = cast(List[object], _property)
-        for _element in _list:
-            if not isinstance(_element, str):
+        prop = cls._get_from_dict(property_dict=property_dict, key=key, mandatory=mandatory)
+        if mandatory and not isinstance(prop, list):
+            cls._raise_error_wrong_type(key=key, expected_type="List[str]", actual_type=prop.__class__.__name__)
+        return_list = cast(List[object], prop)
+        for element in return_list:
+            if not isinstance(element, str):
                 cls._raise_error_wrong_type(key=key, expected_type="List[str]", actual_type="List[object]")
-        return cast(List[str], _list)
+        return cast(List[str], return_list)
 
     @classmethod
     def _get_int_from_dict(cls, property_dict: Dict[str, object], key: str, mandatory: bool = True) -> int:
-        _property = cls._get_from_dict(property_dict=property_dict, key=key, mandatory=mandatory)
-        if not isinstance(_property, int):
-            cls._raise_error_wrong_type(key=key, expected_type="int", actual_type=_property.__class__.__name__)
-        return cast(int, _property)
+        prop = cls._get_from_dict(property_dict=property_dict, key=key, mandatory=mandatory)
+        if mandatory and not isinstance(prop, int):
+            cls._raise_error_wrong_type(key=key, expected_type="int", actual_type=prop.__class__.__name__)
+        return cast(int, prop)
 
     @classmethod
     def _get_bool_from_dict(cls, property_dict: Dict[str, object], key: str, mandatory: bool = True) -> bool:
-        _property = cls._get_from_dict(property_dict=property_dict, key=key, mandatory=mandatory)
-        if not isinstance(_property, bool):
-            cls._raise_error_wrong_type(key=key, expected_type="int", actual_type=_property.__class__.__name__)
-        return cast(bool, _property)
+        prop = cls._get_from_dict(property_dict=property_dict, key=key, mandatory=mandatory)
+        if mandatory and not isinstance(prop, bool):
+            cls._raise_error_wrong_type(key=key, expected_type="int", actual_type=prop.__class__.__name__)
+        return cast(bool, prop)
 
     @abstractmethod
     def to_dict(self) -> Dict[str, object]:
