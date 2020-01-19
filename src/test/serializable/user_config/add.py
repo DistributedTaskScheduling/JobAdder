@@ -22,7 +22,7 @@ class AddCommandConfigTest(AbstractSerializableTest):
                                             owner_id=1008,
                                             email="user@website.com",
                                             scheduling_constraints=JobSchedulingConstraints(
-                                                priority=JobPriority.MEDIUM, is_preemtible=False,
+                                                priority=JobPriority.MEDIUM, is_preemptible=False,
                                                 special_resources=["THING"]
                                             ),
                                             docker_context=DockerContext(

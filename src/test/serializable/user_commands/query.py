@@ -1,7 +1,6 @@
 from ja.common.job import JobPriority, JobStatus
 from ja.common.proxy.ssh import SSHConfig
-from test.serializable.base import SerializableTestMixin
-from unittest import TestCase
+from test.serializable.base import AbstractSerializableTest
 
 from typing import List
 from datetime import datetime, timedelta
@@ -10,7 +9,7 @@ from ja.user.message.query import QueryCommand
 from ja.user.config.base import UserConfig, Verbosity
 
 
-class QueryCommandTest(TestCase, SerializableTestMixin):
+class QueryCommandTest(AbstractSerializableTest):
     """
     Class for testing QueryCommandConfig.
     """

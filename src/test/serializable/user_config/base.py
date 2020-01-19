@@ -1,11 +1,10 @@
 from ja.common.proxy.ssh import SSHConfig
-from test.serializable.base import SerializableTestMixin
-from unittest import TestCase
+from test.serializable.base import AbstractSerializableTest
 
 from ja.user.config.base import UserConfig, Verbosity
 
 
-class UserConfigTest(TestCase, SerializableTestMixin):
+class UserConfigTest(AbstractSerializableTest):
     """
     Class for testing CancelCommandConfig.
     """

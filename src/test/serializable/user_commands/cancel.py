@@ -1,12 +1,10 @@
-from test.serializable.base import SerializableTestMixin
-from unittest import TestCase
-
+from test.serializable.base import AbstractSerializableTest
 from ja.common.proxy.ssh import SSHConfig
 from ja.user.message.cancel import CancelCommand
 from ja.user.config.base import UserConfig, Verbosity
 
 
-class CancelCommandTest(TestCase, SerializableTestMixin):
+class CancelCommandTest(AbstractSerializableTest):
     """
     Class for testing CancelCommandConfig.
     """
@@ -14,7 +12,7 @@ class CancelCommandTest(TestCase, SerializableTestMixin):
     def setUp(self) -> None:
         self._optional_properties = []
 
-        config = UserConfig(shh_config=SSHConfig(hostname="ies", username="pettto",
+        config = UserConfig(ssh_config=SSHConfig(hostname="ies", username="pettto",
                                                  password="1234567890"), verbosity=Verbosity.DETAILED)
         self._object = CancelCommand(config=config, label="ies")
 
