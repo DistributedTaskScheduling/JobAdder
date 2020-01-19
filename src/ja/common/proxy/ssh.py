@@ -101,10 +101,10 @@ class SSHConfig(Config):
     def __eq__(self, o: object) -> bool:
         if isinstance(o, SSHConfig):
             return self._hostname == o._hostname \
-                   and self._username == o._username \
-                   and self._key_filename == o._key_filename \
-                   and self._password == o._password \
-                   and self._passphrase == o._passphrase
+                and self._username == o._username \
+                and self._key_filename == o._key_filename \
+                and self._password == o._password \
+                and self._passphrase == o._passphrase
         else:
             return False
 
