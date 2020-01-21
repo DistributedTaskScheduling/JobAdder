@@ -3,7 +3,7 @@ This module contains the definition of the Job class and related structures.
 """
 from typing import List, Dict
 from enum import Enum
-from ja.common.docker_context import DockerConstraints, IDockerContext
+from ja.common.docker_context import DockerConstraints, IDockerContext, DockerContext
 from ja.common.message.base import Serializable
 
 
@@ -39,32 +39,56 @@ class JobSchedulingConstraints(Serializable):
                  priority: JobPriority,
                  is_preemtible: bool,
                  special_resources: List[str]):
-        pass
+        self._priority = priority
+        self._is_preemptible = is_preemtible
+        self._special_resources = special_resources
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, JobSchedulingConstraints):
+            return self.priority == other.priority \
+                and self.is_preemptible == other.is_preemptible \
+                and self.special_resources == other.special_resources
+        else:
+            return False
 
     @property
     def priority(self) -> JobPriority:
         """!
         @return The priority of the job.
         """
+        return self._priority
 
     @property
     def is_preemptible(self) -> bool:
         """!
         @return Whether the job can be preempted.
         """
+        return self._is_preemptible
 
     @property
-    def get_special_resources(self) -> List[str]:
+    def special_resources(self) -> List[str]:
         """!
         @return A list of special resources used by the job.
         """
+        return self._special_resources
 
     def to_dict(self) -> Dict[str, object]:
-        pass
+        return_dict: Dict[str, object] = dict()
+        return_dict["priority"] = self.priority
+        return_dict["is_preemptible"] = self.is_preemptible
+        return_dict["special_resources"] = self.special_resources
+        return return_dict
 
     @classmethod
     def from_dict(cls, property_dict: Dict[str, object]) -> "JobSchedulingConstraints":
-        pass
+        priority = JobPriority(cls._get_from_dict(property_dict=property_dict, key="priority"))
+        is_preemtible = cls._get_bool_from_dict(property_dict=property_dict, key="is_preemptible")
+        special_resources = cls._get_str_list_from_dict(property_dict=property_dict, key="special_resources")
+
+        cls._assert_all_properties_used(property_dict)
+
+        return JobSchedulingConstraints(
+            priority=priority, is_preemtible=is_preemtible, special_resources=special_resources)
 
 
 class Job(Serializable):
@@ -72,18 +96,38 @@ class Job(Serializable):
     Represents a job with all of its attributes.
     @param owner_id The unix user id of the user who owns this job.
     @param email The email of the user who created the job, or None.
-    @param ctx The docker context of the job.
-    @param constraints The docker constraints of the job.
+    @param scheduling_constraints The docker constraints of the job.
+    @param docker_context The docker context of the job.
     @param label The label set by the user for the job.
     """
     def __init__(self,
                  owner_id: int,
                  email: str,
-                 constraints: JobSchedulingConstraints,
-                 ctx: IDockerContext,
+                 scheduling_constraints: JobSchedulingConstraints,
+                 docker_context: IDockerContext,
                  docker_constraints: DockerConstraints,
                  label: str = None):
-        pass
+        self._uid: str = None
+        self._status: JobStatus = JobStatus.NEW
+        self._owner_id = owner_id
+        self._email = email
+        self._scheduling_constraints = scheduling_constraints
+        self._docker_context = docker_context
+        self._docker_constraints = docker_constraints
+        self._label = label
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Job):
+            return self.uid == other.uid \
+                and self.status == other.status \
+                and self.owner_id == other.owner_id \
+                and self.email == other.email \
+                and self.scheduling_constraints == other.scheduling_constraints \
+                and self.docker_context == other.docker_context \
+                and self.docker_constraints == other.docker_constraints \
+                and self.label == other.label
+        else:
+            return False
 
     @property
     def uid(self) -> str:
@@ -91,6 +135,7 @@ class Job(Serializable):
         Get the job unique identifier used to create the job.
         If the job has not been queued yet, it has no UID.
         """
+        return self._uid
 
     @uid.setter
     def uid(self, value: str) -> None:
@@ -100,36 +145,49 @@ class Job(Serializable):
 
         @param value The new job UID.
         """
-
-    @property
-    def label(self) -> str:
-        """!
-        @return: The label set by the user for this job.
-        """
+        self._uid = value
 
     @property
     def owner_id(self) -> int:
         """!
         @return The id of the user who owns the job.
         """
+        return self._owner_id
 
     @property
     def email(self) -> str:
         """!
         @return The email of the user who owns the job, or None if no email was specified.
         """
+        return self._email
 
     @property
     def scheduling_constraints(self) -> JobSchedulingConstraints:
         """!
         @return The scheduling constraints of the job.
         """
+        return self._scheduling_constraints
+
+    @property
+    def docker_context(self) -> IDockerContext:
+        """!
+        @return The docker context of the job.
+        """
+        return self._docker_context
+
+    @property
+    def docker_constraints(self) -> DockerConstraints:
+        """!
+        @return The docker constraints of the job.
+        """
+        return self._docker_constraints
 
     @property
     def status(self) -> JobStatus:
         """!
         @return The current job status.
         """
+        return self._status
 
     @status.setter
     def status(self, new_status: JobStatus) -> None:
@@ -146,22 +204,55 @@ class Job(Serializable):
 
         @param new_status The new status of the job.
         """
+        self._status = new_status
 
     @property
-    def docker_context(self) -> IDockerContext:
+    def label(self) -> str:
         """!
-        @return The docker context of the job.
+        @return: The label set by the user for this job.
         """
-
-    @property
-    def docker_constraints(self) -> DockerConstraints:
-        """!
-        @return The docker constraints of the job.
-        """
+        return self._label
 
     def to_dict(self) -> Dict[str, object]:
-        pass
+        return_dict: Dict[str, object] = dict()
+        return_dict["uid"] = self.uid
+        return_dict["owner_id"] = self.owner_id
+        return_dict["email"] = self.email
+        return_dict["scheduling_constraints"] = self.scheduling_constraints.to_dict()
+        return_dict["docker_context"] = self.docker_context.to_dict()
+        return_dict["docker_constraints"] = self.docker_constraints.to_dict()
+        return_dict["status"] = self.status
+        return_dict["label"] = self.label
+        return return_dict
 
     @classmethod
     def from_dict(cls, property_dict: Dict[str, object]) -> "Job":
-        pass
+        uid = cls._get_str_from_dict(property_dict=property_dict, key="uid", mandatory=False)
+        owner_id = cls._get_int_from_dict(property_dict=property_dict, key="owner_id")
+        email = cls._get_str_from_dict(property_dict=property_dict, key="email")
+
+        scheduling_constraints = JobSchedulingConstraints.from_dict(
+            cls._get_dict_from_dict(property_dict=property_dict, key="scheduling_constraints")
+        )
+
+        docker_context = DockerContext.from_dict(
+            cls._get_dict_from_dict(property_dict=property_dict, key="docker_context")
+        )
+
+        docker_constraints = DockerConstraints.from_dict(
+            cls._get_dict_from_dict(property_dict=property_dict, key="docker_constraints")
+        )
+
+        status = JobStatus(cls._get_from_dict(property_dict=property_dict, key="status"))
+
+        label = cls._get_str_from_dict(property_dict=property_dict, key="label", mandatory=False)
+
+        cls._assert_all_properties_used(property_dict)
+
+        job = Job(
+            owner_id=owner_id, email=email, scheduling_constraints=scheduling_constraints,
+            docker_context=docker_context, docker_constraints=docker_constraints, label=label
+        )
+        job.uid = uid
+        job.status = status
+        return job
