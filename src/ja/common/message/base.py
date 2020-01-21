@@ -5,6 +5,7 @@ of JobAdder.
 """
 from abc import ABC, abstractmethod
 from typing import Dict
+import yaml
 
 
 class Serializable(ABC):
@@ -36,6 +37,9 @@ class Serializable(ABC):
         """!
         @return A YAML document (string) representation of this object.
         """
+        as_yaml = yaml.dump(self.to_dict())
+        assert isinstance(as_yaml, str)
+        return as_yaml
 
     @classmethod
     def from_string(cls, yaml_string: str) -> "Serializable":
@@ -45,6 +49,9 @@ class Serializable(ABC):
         @return A new Serializable object based on the properties encoded in
         the YAML document.
         """
+        as_dict = yaml.load(yaml_string, Loader=yaml.SafeLoader)
+        assert isinstance(as_dict, dict)
+        return cls.from_dict(as_dict)
 
 
 class Message(Serializable, ABC):

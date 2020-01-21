@@ -1,7 +1,7 @@
 language: python
 python: 3.6
 
-install: "pip3 install flake8 mypy"
+install: "pip3 install flake8 mypy PyYAML"
 script:
   - flake8 src/ --ignore F821 --max-line-length=120
   - ./.travis/check_init_py.sh src/
