@@ -1,26 +1,40 @@
 from abc import ABC, abstractmethod
-from ja.common.job import Job
+from ja.common.job import Job, JobPriority
 from ja.server.database.database import ServerDatabase
+from ja.server.database.types.job_entry import DatabaseJobEntry
 from ja.server.database.types.work_machine import WorkMachine
 from ja.server.scheduler.algorithm import CostFunction, JobDistributionPolicy
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
+
+import datetime as dt
 
 
 class DefaultCostFunction(CostFunction):
     """
     The default cost function provided by JobAdder.
     """
+    _base_costs: Dict[JobPriority, float] = {
+        JobPriority.URGENT: 0,
+        JobPriority.HIGH: 500,
+        JobPriority.MEDIUM: 1000,
+        JobPriority.LOW: 2000,
+    }
+    _multiplier: float = -1
 
-    def calculate_cost(self, job: Job) -> float:
-        pass
+    def calculate_cost(self, job: DatabaseJobEntry) -> float:
+        elapsed = int((dt.datetime.now() - job.statistics.time_added).total_seconds() / 60)
+        base = self._base_costs[job.job.scheduling_constraints.priority]
+        return base + self._multiplier * elapsed
 
     @property
     def blocking_threshold(self) -> float:
-        pass
+        high_base = self._base_costs[JobPriority.HIGH]
+        # Start blocking if a high priority job has been around for longer than 6 hours
+        return high_base + self._multiplier * 60 * 6
 
     @property
     def preempting_threshold(self) -> float:
-        pass
+        return self._base_costs[JobPriority.URGENT]
 
 
 class DefaultJobDistributionPolicyBase(JobDistributionPolicy, ABC):
