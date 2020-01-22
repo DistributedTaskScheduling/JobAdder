@@ -16,7 +16,7 @@ class JobStatus(Enum):
     RUNNING = 2
     PAUSED = 3
     DONE = 4
-    KILLED = 5
+    CANCELLED = 5
     CRASHED = 6
 
 
@@ -195,16 +195,29 @@ class Job(Serializable):
         Set the job status.
         The following transitions are allowed:
         NEW -> QUEUED
-        QUEUED -> KILLED | RUNNING
-        RUNNING -> PAUSED | DONE | KILLED | CRASHED
-        PAUSED -> KILLED | RUNNING
+        QUEUED -> CANCELLED | RUNNING
+        RUNNING -> PAUSED | DONE | CANCELLED | CRASHED
+        PAUSED -> CANCELLED | RUNNING
 
         If the transition requested is not allowed, or if the job has not
         been assigned an UID, a RuntimeError will be raised.
 
         @param new_status The new status of the job.
         """
-        self._status = new_status
+        if self._status == JobStatus.NEW:
+            transition_legal = new_status == JobStatus.QUEUED
+        elif self._status == JobStatus.QUEUED:
+            transition_legal = new_status in [JobStatus.CANCELLED, JobStatus.RUNNING]
+        elif self._status == JobStatus.RUNNING:
+            transition_legal = new_status in [JobStatus.PAUSED, JobStatus.DONE, JobStatus.CANCELLED, JobStatus.CRASHED]
+        elif self._status == JobStatus.PAUSED:
+            transition_legal = new_status in [JobStatus.CANCELLED, JobStatus.RUNNING]
+        else:
+            transition_legal = False
+        if transition_legal:
+            self._status = new_status
+        else:
+            raise ValueError("Illegal job status transition: %s -> %s" % (self._status.name, new_status.name))
 
     @property
     def label(self) -> str:
@@ -229,7 +242,7 @@ class Job(Serializable):
     def from_dict(cls, property_dict: Dict[str, object]) -> "Job":
         uid = cls._get_str_from_dict(property_dict=property_dict, key="uid", mandatory=False)
         owner_id = cls._get_int_from_dict(property_dict=property_dict, key="owner_id")
-        email = cls._get_str_from_dict(property_dict=property_dict, key="email")
+        email = cls._get_str_from_dict(property_dict=property_dict, key="email", mandatory=False)
 
         scheduling_constraints = JobSchedulingConstraints.from_dict(
             cls._get_dict_from_dict(property_dict=property_dict, key="scheduling_constraints")
@@ -254,5 +267,5 @@ class Job(Serializable):
             docker_context=docker_context, docker_constraints=docker_constraints, label=label
         )
         job.uid = uid
-        job.status = status
+        job._status = status  # Bypass check whether transition from JobStatus.NEW is legal
         return job

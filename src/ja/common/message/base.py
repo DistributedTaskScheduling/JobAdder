@@ -139,23 +139,42 @@ class Command(Message, ABC):
         """
 
 
-class Response(Message, ABC):
+class Response(Message):
     """
     A base class for messages which are sent as a response to Commands. They
     indicate the result of the action on the remote component.
     """
+    def __init__(self, result_string: str, is_success: bool):
+        self._result_string = result_string
+        self._is_success = is_success
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, self.__class__):
+            return self.result_string == other.result_string and self.is_success == other.is_success
+        else:
+            return False
 
     @property
-    @abstractmethod
     def result_string(self) -> str:
         """!
         @return A human-readable string that states the result of the sent
         Command.
         """
+        return self._result_string
 
     @property
-    @abstractmethod
     def is_success(self) -> bool:
         """!
         @return Whether the sent Command was successful.
         """
+        return self._is_success
+
+    def to_dict(self) -> Dict[str, object]:
+        return {"result_string": self.result_string, "is_success": self.is_success}
+
+    @classmethod
+    def from_dict(cls, property_dict: Dict[str, object]) -> "Response":
+        result_string = cls._get_str_from_dict(property_dict=property_dict, key="result_string")
+        is_success = cls._get_bool_from_dict(property_dict=property_dict, key="is_success")
+        cls._assert_all_properties_used(property_dict)
+        return cls(result_string=result_string, is_success=is_success)

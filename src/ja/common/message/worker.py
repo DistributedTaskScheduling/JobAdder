@@ -2,6 +2,8 @@
 This module provides interfaces for Messages
 """
 from abc import ABC
+from typing import Dict, cast
+
 from ja.common.message.base import Command, Response
 from ja.worker.main import JobWorker
 
@@ -21,7 +23,11 @@ class WorkerCommand(Command, ABC):
         """
 
 
-class WorkerResponse(Response, ABC):
+class WorkerResponse(Response):
     """
     Corresponding Response class for WorkerCommand.
     """
+
+    @classmethod
+    def from_dict(cls, property_dict: Dict[str, object]) -> "WorkerResponse":
+        return cast(WorkerResponse, super().from_dict(property_dict))
