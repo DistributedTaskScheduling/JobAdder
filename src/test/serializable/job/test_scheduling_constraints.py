@@ -9,7 +9,7 @@ class SchedulingConstraintsTest(AbstractSerializableTest):
     def setUp(self) -> None:
         self._optional_properties = []
         self._object = JobSchedulingConstraints(
-            priority=JobPriority.HIGH, is_preemtible=True, special_resources=["SPESHUL", "Windows", "RPI4"]
+            priority=JobPriority.HIGH, is_preemptible=True, special_resources=["SPESHUL", "Windows", "RPI4"]
         )
         self._object_dict = {
             "priority": 2, "is_preemptible": True, "special_resources": ["SPESHUL", "Windows", "RPI4"]

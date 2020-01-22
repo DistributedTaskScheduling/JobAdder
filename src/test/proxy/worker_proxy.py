@@ -85,7 +85,7 @@ class AbstractWorkerProxyTest(TestCase):
             owner_id=1003,
             email=None,
             scheduling_constraints=JobSchedulingConstraints(
-                priority=JobPriority.MEDIUM, is_preemtible=True, special_resources=[]
+                priority=JobPriority.MEDIUM, is_preemptible=True, special_resources=[]
             ),
             docker_context=DockerContext(dockerfile_source="", mount_points=[]),
             docker_constraints=DockerConstraints(cpu_threads=1, memory=1024)
@@ -97,7 +97,7 @@ class AbstractWorkerProxyTest(TestCase):
             owner_id=1003,
             email=None,
             scheduling_constraints=JobSchedulingConstraints(
-                priority=JobPriority.MEDIUM, is_preemtible=True, special_resources=[]
+                priority=JobPriority.MEDIUM, is_preemptible=True, special_resources=[]
             ),
             docker_context=DockerContext(dockerfile_source="", mount_points=[]),
             docker_constraints=DockerConstraints(cpu_threads=1, memory=1024)

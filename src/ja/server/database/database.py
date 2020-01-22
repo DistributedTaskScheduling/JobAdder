@@ -12,7 +12,7 @@ class ServerDatabase(ABC):
     """
 
     @abstractmethod
-    def find_job_by_id(self, job_id: str) -> Job:
+    def find_job_by_id(self, job_id: str) -> DatabaseJobEntry:
         """!
         Load a job from the database by its id.
 

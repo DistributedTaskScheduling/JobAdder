@@ -1,12 +1,11 @@
 from typing import Dict, cast
 
-from ja.common.message.base import Serializable
 
-
-class ResourceAllocation(Serializable):
+class ResourceAllocation:
     """
     Represents a group of resources on a work machine.
     """
+
     def __init__(self, cpu_threads: int, memory: int, swap: int):
         """!
         Create the ResourceAllocation object.
@@ -15,11 +14,6 @@ class ResourceAllocation(Serializable):
         @param memory The amount of RAM, in MB.
         @param swap The amount of swap space, in MB.
         """
-
-        self._cpu_threads = cpu_threads
-        self._memory = memory
-        self._swap = swap
-
         self._cpu_threads = cpu_threads
         self._memory = memory
         self._swap = swap

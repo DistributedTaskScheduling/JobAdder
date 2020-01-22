@@ -13,7 +13,7 @@ class JobTest(AbstractSerializableTest):
             owner_id=1008,
             email="user@website.com",
             scheduling_constraints=JobSchedulingConstraints(
-                priority=JobPriority.MEDIUM, is_preemtible=False, special_resources=["THING"]
+                priority=JobPriority.MEDIUM, is_preemptible=False, special_resources=["THING"]
             ),
             docker_context=DockerContext(
                 dockerfile_source="ssh localhost",

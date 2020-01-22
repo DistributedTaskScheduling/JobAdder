@@ -1,4 +1,4 @@
-from enum import Enum
+import enum
 from ja.common.work_machine import ResourceAllocation
 
 
@@ -88,7 +88,7 @@ class WorkMachineConnectionDetails:
     # TODO: this class is incomplete
 
 
-class WorkMachineState(Enum):
+class WorkMachineState(enum.Enum):
     ONLINE = 0
     RETIRED = 10
     OFFLINE = 20
@@ -99,6 +99,7 @@ class WorkMachine:
     Represents the data stored about a work machine in the database.
     Each work machine is uniquely determined by its UID.
     """
+
     def __init__(self,
                  uid: str,
                  state: WorkMachineState = WorkMachineState.OFFLINE,
@@ -118,6 +119,12 @@ class WorkMachine:
         self._state = state
         self._resources = resources
         self._connection_details = connection
+
+    def __eq__(self, o: object) -> bool:
+        if isinstance(o, WorkMachine):
+            return self.uid == o.uid and self.connection_details == o.connection_details \
+                and self.resources == o.resources and self.state == o.state
+        return False
 
     @property
     def uid(self) -> str:

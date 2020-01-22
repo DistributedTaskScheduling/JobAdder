@@ -3,7 +3,7 @@ Contains definitions of the various Docker-related attributes of a job.
 These include, but are not limited to, mount points, program environment
 and hardware constraints.
 """
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import List, Dict, cast
 from ja.common.message.base import Serializable
 
@@ -15,6 +15,7 @@ class MountPoint(Serializable):
     2. The target path in the Docker container where the directory needs to be
     mounted(@mount_path).
     """
+
     def __init__(self, source_path: str, mount_path: str):
         """!
         Initializes a new mount point.
@@ -29,6 +30,9 @@ class MountPoint(Serializable):
             return self.source_path == other.source_path and self.mount_path == other.mount_path
         else:
             return False
+
+    def __hash__(self) -> int:
+        return hash((self._source_path, self._mount_path))
 
     @property
     def source_path(self) -> str:
@@ -55,7 +59,7 @@ class MountPoint(Serializable):
         return MountPoint(source_path=source_path, mount_path=mount_path)
 
 
-class IDockerContext(Serializable, ABC):
+class IDockerContext(Serializable):
     """
     A docker context consists of the necessary data to build a docker image to
     run a job in.
@@ -92,6 +96,7 @@ class DockerContext(IDockerContext):
     """
     An implementation of the IDockerContext interface
     """
+
     def __init__(self, dockerfile_source: str, mount_points: List[MountPoint]):
         """
         @param dockerfile_source: The string contents of a Dockerfile which can be used to build the docker image.
@@ -115,7 +120,7 @@ class DockerContext(IDockerContext):
         return return_dict
 
     @classmethod
-    def from_dict(cls, property_dict: Dict[str, object]) -> IDockerContext:
+    def from_dict(cls, property_dict: Dict[str, object]) -> "DockerContext":
         dockerfile_source = cls._get_str_from_dict(property_dict=property_dict, key="dockerfile_source")
 
         prop: object = cls._get_from_dict(property_dict=property_dict, key="mount_points")
@@ -143,6 +148,7 @@ class DockerConstraints(Serializable):
     """
     A list of constraints of the docker container.
     """
+
     def __init__(self, cpu_threads: int = -1, memory: int = 1):
         """!
         Create a new set of Docker constraints.
