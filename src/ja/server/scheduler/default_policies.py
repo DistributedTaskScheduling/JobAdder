@@ -45,7 +45,7 @@ class DefaultJobDistributionPolicyBase(JobDistributionPolicy, ABC):
     def _assign_machine_cost(self,
                              job: Job,
                              machine: WorkMachine,
-                             existing_jobs: List[Job]) -> Optional[Tuple[int, List[Job]]]:
+                             existing_jobs: List[Job]) -> Optional[Tuple[float, List[Job]]]:
         """!
         Calculate the cost of assigning @machine for @job.
         @return The cost of assigning @job to @machine and a list of jobs on @machine to preempt, or None if this is
@@ -56,8 +56,18 @@ class DefaultJobDistributionPolicyBase(JobDistributionPolicy, ABC):
                        job: Job,
                        distribution: ServerDatabase.JobDistribution,
                        available_machines: List[WorkMachine]) -> Optional[Tuple[WorkMachine, List[Job]]]:
-        # Should iterate over all available machines and select the best one depending on _assign_machine_cost
-        pass
+        chosen_machine: Tuple[WorkMachine, List[Job]] = None
+        chosen_cost: float = 0
+
+        for machine in available_machines:
+            job_entries = [ej.job for ej in filter(lambda entry: (entry.assigned_machine is machine), distribution)]
+            result = self._assign_machine_cost(job, machine, job_entries)
+            if result:
+                (cost, preempted) = result
+                if not chosen_machine or cost < chosen_cost:
+                    chosen_cost = cost
+                    chosen_machine = (machine, preempted)
+        return chosen_machine
 
 
 class DefaultNonPreemptiveDistributionPolicy(DefaultJobDistributionPolicyBase):
@@ -67,7 +77,7 @@ class DefaultNonPreemptiveDistributionPolicy(DefaultJobDistributionPolicyBase):
     def _assign_machine_cost(self,
                              job: Job,
                              machine: WorkMachine,
-                             existing_jobs: List[Job]) -> Optional[Tuple[int, List[Job]]]:
+                             existing_jobs: List[Job]) -> Optional[Tuple[float, List[Job]]]:
         pass
 
 
@@ -78,7 +88,7 @@ class DefaultBlockingDistributionPolicy(DefaultJobDistributionPolicyBase):
     def _assign_machine_cost(self,
                              job: Job,
                              machine: WorkMachine,
-                             existing_jobs: List[Job]) -> Optional[Tuple[int, List[Job]]]:
+                             existing_jobs: List[Job]) -> Optional[Tuple[float, List[Job]]]:
         pass
 
 
@@ -89,5 +99,5 @@ class DefaultPreemptiveDistributionPolicy(DefaultJobDistributionPolicyBase):
     def _assign_machine_cost(self,
                              job: Job,
                              machine: WorkMachine,
-                             existing_jobs: List[Job]) -> Optional[Tuple[int, List[Job]]]:
+                             existing_jobs: List[Job]) -> Optional[Tuple[float, List[Job]]]:
         pass
