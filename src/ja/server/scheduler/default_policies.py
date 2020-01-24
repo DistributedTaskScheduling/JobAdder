@@ -97,7 +97,12 @@ class DefaultBlockingDistributionPolicy(DefaultJobDistributionPolicyBase):
                              job: Job,
                              machine: WorkMachine,
                              existing_jobs: List[Job]) -> Optional[Tuple[float, List[Job]]]:
-        pass
+        job_allocation = ResourceAllocation(job.docker_constraints.cpu_threads, job.docker_constraints.memory, 0)
+        after_allocation = machine.resources.total_resources - job_allocation
+        if after_allocation.is_negative():
+            return None
+
+        return (len(existing_jobs), [])
 
 
 class DefaultPreemptiveDistributionPolicy(DefaultJobDistributionPolicyBase):

@@ -6,6 +6,7 @@ import ja.server.database.types.work_machine as wm
 import ja.server.scheduler.default_policies as dp
 
 from ja.common.docker_context import DockerConstraints
+from test.abstract import skipIfAbstract
 from unittest import TestCase
 from typing import List, Optional, Tuple
 
@@ -100,34 +101,60 @@ class DefaultJobDistributionPolicyBaseTest(TestCase):
         self.assertIsNotNone(selector.assign_machine(job=self._job, distribution=[], available_machines=self._machines))
 
 
-class DefaultNonPreemptiveDistributionPolicyTest(TestCase):
+class AbstractDefaultPolicyTest(TestCase):
+    @skipIfAbstract
     def setUp(self) -> None:
         self.cpu = 8
         self.ram = 32
         self.job = _get_job(jb.JobPriority.MEDIUM, cpu=self.cpu, ram=self.ram).job
-        self.policy = dp.DefaultNonPreemptiveDistributionPolicy()
+        self.policy: dp.DefaultJobDistributionPolicyBase = None
 
     def test_resources_not_enough(self) -> None:
-        machine = _get_machine(cpu=self.cpu*2, ram=self.ram-1)
+        machine = _get_machine(cpu=self.cpu * 2, ram=self.ram - 1)
         self.assertIsNone(self.policy._assign_machine_cost(self.job, machine, []))
-        machine = _get_machine(cpu=self.cpu-1, ram=self.ram*2)
+        machine = _get_machine(cpu=self.cpu - 1, ram=self.ram * 2)
         self.assertIsNone(self.policy._assign_machine_cost(self.job, machine, []))
 
-    def _get_score(self, machine: wm.WorkMachine) -> float:
-        result = self.policy._assign_machine_cost(self.job, machine, [])
+    def _get_score(self, machine: wm.WorkMachine, existing_jobs: List[jb.Job] = []) -> float:
+        result = self.policy._assign_machine_cost(self.job, machine, existing_jobs)
         self.assertIsNotNone(result)
         (cost, preempted) = result
         self.assertListEqual(preempted, [])
         return cost
 
+
+class DefaultNonPreemptiveDistributionPolicyTest(AbstractDefaultPolicyTest):
+    def setUp(self) -> None:
+        super().setUp()
+        self.policy = dp.DefaultNonPreemptiveDistributionPolicy()
+
     def test_best_fit(self) -> None:
         machine = _get_machine(self.cpu, self.ram)  # perfect fit
         self.assertAlmostEqual(self._get_score(machine), 0.0)
 
-        machine = _get_machine(self.cpu+1, self.ram+1)  # A little bigger
+        machine = _get_machine(self.cpu + 1, self.ram + 1)  # A little bigger
         almost_fit_score = self._get_score(machine)
         self.assertGreater(almost_fit_score, 0.0)
 
         machine = _get_machine(self.cpu * 5 + 5, self.ram * 5 + 5)  # bad fit
         bad_fit_score = self._get_score(machine)
+        self.assertGreater(bad_fit_score, almost_fit_score)
+
+
+class DefaultBlockingDistributionPolicyTest(AbstractDefaultPolicyTest):
+    def setUp(self) -> None:
+        super().setUp()
+        self.policy = dp.DefaultBlockingDistributionPolicy()
+
+    def test_smallest_number_jobs(self) -> None:
+        machine = _get_machine(self.cpu, self.ram)  # No Jobs
+        self.assertAlmostEqual(self._get_score(machine), 0.0)
+
+        # One Job
+        almost_fit_score = self._get_score(machine, existing_jobs=[self.job])
+        self.assertGreater(almost_fit_score, 0.0)
+
+        # Multiple Jobs
+        machine = _get_machine(self.cpu, self.ram)
+        bad_fit_score = self._get_score(machine, existing_jobs=[self.job] * 5)
         self.assertGreater(bad_fit_score, almost_fit_score)
