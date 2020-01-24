@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from ja.common.job import Job, JobPriority
+from ja.common.work_machine import ResourceAllocation
 from ja.server.database.database import ServerDatabase
 from ja.server.database.types.job_entry import DatabaseJobEntry
 from ja.server.database.types.work_machine import WorkMachine
@@ -71,6 +72,8 @@ class DefaultJobDistributionPolicyBase(JobDistributionPolicy, ABC):
 
 
 class DefaultNonPreemptiveDistributionPolicy(DefaultJobDistributionPolicyBase):
+    _cpu_threads_w = 2.0
+    _memory_w = 1.0
     """
     Default distribution policy for non-preemptive scheduling.
     """
@@ -78,7 +81,12 @@ class DefaultNonPreemptiveDistributionPolicy(DefaultJobDistributionPolicyBase):
                              job: Job,
                              machine: WorkMachine,
                              existing_jobs: List[Job]) -> Optional[Tuple[float, List[Job]]]:
-        pass
+        job_allocation = ResourceAllocation(job.docker_constraints.cpu_threads, job.docker_constraints.memory, 0)
+        after_allocation = machine.resources.free_resources - job_allocation
+        if after_allocation.is_negative():
+            return None
+
+        return (after_allocation.cpu_threads * self._cpu_threads_w + after_allocation.memory * self._memory_w, [])
 
 
 class DefaultBlockingDistributionPolicy(DefaultJobDistributionPolicyBase):
