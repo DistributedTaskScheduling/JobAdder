@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from copy import deepcopy
 from ja.common.job import Job, JobPriority
 from ja.common.work_machine import ResourceAllocation
 from ja.server.database.database import ServerDatabase
@@ -46,12 +47,27 @@ class DefaultJobDistributionPolicyBase(JobDistributionPolicy, ABC):
     def _assign_machine_cost(self,
                              job: Job,
                              machine: WorkMachine,
-                             existing_jobs: List[Job]) -> Optional[Tuple[float, List[Job]]]:
+                             existing_jobs: List[DatabaseJobEntry]) -> Optional[Tuple[float, List[Job]]]:
         """!
         Calculate the cost of assigning @machine for @job.
         @return The cost of assigning @job to @machine and a list of jobs on @machine to preempt, or None if this is
           not possible.
         """
+
+    def _get_job_allocation(self, job: Job) -> ResourceAllocation:
+        return ResourceAllocation(job.docker_constraints.cpu_threads, job.docker_constraints.memory, 0)
+
+    def _check_machine_feasible(self, job: Job, machine: WorkMachine, free_only: bool) -> ResourceAllocation:
+        """
+        Check whether the work machine has enough resources to run the given job.
+        @param free_only If True, only the free resources on the machine are taken into consideration.
+        @return None if not feasible, else the remaining free space.
+        """
+        available = machine.resources.free_resources if free_only else machine.resources.total_resources
+        after_allocation = available - self._get_job_allocation(job)
+        if after_allocation.is_negative():
+            return None
+        return after_allocation
 
     def assign_machine(self,
                        job: Job,
@@ -61,7 +77,10 @@ class DefaultJobDistributionPolicyBase(JobDistributionPolicy, ABC):
         chosen_cost: float = 0
 
         for machine in available_machines:
-            job_entries = [ej.job for ej in filter(lambda entry: (entry.assigned_machine is machine), distribution)]
+            job_entries = \
+                list(filter(lambda e: ((e.assigned_machine.uid if e.assigned_machine else None) == machine.uid),
+                     distribution))
+
             result = self._assign_machine_cost(job, machine, job_entries)
             if result:
                 (cost, preempted) = result
@@ -80,10 +99,9 @@ class DefaultNonPreemptiveDistributionPolicy(DefaultJobDistributionPolicyBase):
     def _assign_machine_cost(self,
                              job: Job,
                              machine: WorkMachine,
-                             existing_jobs: List[Job]) -> Optional[Tuple[float, List[Job]]]:
-        job_allocation = ResourceAllocation(job.docker_constraints.cpu_threads, job.docker_constraints.memory, 0)
-        after_allocation = machine.resources.free_resources - job_allocation
-        if after_allocation.is_negative():
+                             existing_jobs: List[DatabaseJobEntry]) -> Optional[Tuple[float, List[Job]]]:
+        after_allocation = self._check_machine_feasible(job, machine, free_only=True)
+        if not after_allocation:
             return None
 
         return (after_allocation.cpu_threads * self._cpu_threads_w + after_allocation.memory * self._memory_w, [])
@@ -96,21 +114,51 @@ class DefaultBlockingDistributionPolicy(DefaultJobDistributionPolicyBase):
     def _assign_machine_cost(self,
                              job: Job,
                              machine: WorkMachine,
-                             existing_jobs: List[Job]) -> Optional[Tuple[float, List[Job]]]:
-        job_allocation = ResourceAllocation(job.docker_constraints.cpu_threads, job.docker_constraints.memory, 0)
-        after_allocation = machine.resources.total_resources - job_allocation
-        if after_allocation.is_negative():
+                             existing_jobs: List[DatabaseJobEntry]) -> Optional[Tuple[float, List[Job]]]:
+        if not self._check_machine_feasible(job, machine, free_only=False):
             return None
-
         return (len(existing_jobs), [])
 
 
 class DefaultPreemptiveDistributionPolicy(DefaultJobDistributionPolicyBase):
+    _inverse_multiplier = 10.0
     """
     Default distribution policy for preemptive jobs.
     """
+    def __init__(self, cost_function: CostFunction):
+        """!
+        Initialize the default preemptive distribution policy.
+
+        @param cost_function The cost function to assing priorities to tasks.
+        """
+        self._cost_func = cost_function
+
     def _assign_machine_cost(self,
                              job: Job,
                              machine: WorkMachine,
-                             existing_jobs: List[Job]) -> Optional[Tuple[float, List[Job]]]:
-        pass
+                             existing_jobs: List[DatabaseJobEntry]) -> Optional[Tuple[float, List[Job]]]:
+        if not self._check_machine_feasible(job, machine, free_only=False):
+            return None
+
+        sorted_jobs = sorted(existing_jobs, key=lambda je: (self._cost_func.calculate_cost(je)), reverse=True)
+        sorted_jobs = list(filter(lambda je: (not je.job.scheduling_constraints.is_preemptible), sorted_jobs))
+        job_allocation = self._get_job_allocation(job)
+        allocation = deepcopy(machine.resources.free_resources)
+
+        total_cost: float = 0
+        to_preempt: List[Job] = []
+        while (allocation - job_allocation).is_negative():
+            if not sorted_jobs:
+                return None
+
+            next_job = sorted_jobs.pop(0)
+            next_job_cost = self._cost_func.calculate_cost(next_job)
+            if next_job_cost <= self._cost_func.preempting_threshold:
+                # We cannot pause enough jobs on this machine
+                return None
+
+            total_cost += self._inverse_multiplier / (next_job_cost - self._cost_func.preempting_threshold)
+            to_preempt.append(next_job.job)
+            allocation += self._get_job_allocation(next_job.job)
+
+        return (total_cost, to_preempt)

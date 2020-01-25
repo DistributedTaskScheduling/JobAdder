@@ -62,7 +62,7 @@ class DummyWorkMachineSelector(dp.DefaultJobDistributionPolicyBase):
     def _assign_machine_cost(self,
                              job: jb.Job,
                              machine: wm.WorkMachine,
-                             existing_jobs: List[jb.Job]) -> Optional[Tuple[float, List[jb.Job]]]:
+                             existing_jobs: List[je.DatabaseJobEntry]) -> Optional[Tuple[float, List[jb.Job]]]:
         if machine in self._chosen:
             return (0.0, [])
         if machine in self._invalid:
@@ -115,7 +115,7 @@ class AbstractDefaultPolicyTest(TestCase):
         machine = _get_machine(cpu=self.cpu - 1, ram=self.ram * 2)
         self.assertIsNone(self.policy._assign_machine_cost(self.job, machine, []))
 
-    def _get_score(self, machine: wm.WorkMachine, existing_jobs: List[jb.Job] = []) -> float:
+    def _get_score(self, machine: wm.WorkMachine, existing_jobs: List[je.DatabaseJobEntry] = []) -> float:
         result = self.policy._assign_machine_cost(self.job, machine, existing_jobs)
         self.assertIsNotNone(result)
         (cost, preempted) = result
@@ -145,16 +145,65 @@ class DefaultBlockingDistributionPolicyTest(AbstractDefaultPolicyTest):
     def setUp(self) -> None:
         super().setUp()
         self.policy = dp.DefaultBlockingDistributionPolicy()
+        self.existing = _get_job(jb.JobPriority.MEDIUM)
 
     def test_smallest_number_jobs(self) -> None:
         machine = _get_machine(self.cpu, self.ram)  # No Jobs
         self.assertAlmostEqual(self._get_score(machine), 0.0)
 
         # One Job
-        almost_fit_score = self._get_score(machine, existing_jobs=[self.job])
+        almost_fit_score = self._get_score(machine, existing_jobs=[self.existing])
         self.assertGreater(almost_fit_score, 0.0)
 
         # Multiple Jobs
         machine = _get_machine(self.cpu, self.ram)
-        bad_fit_score = self._get_score(machine, existing_jobs=[self.job] * 5)
+        bad_fit_score = self._get_score(machine, existing_jobs=[self.existing] * 5)
         self.assertGreater(bad_fit_score, almost_fit_score)
+
+
+class DefaultPreemptiveDistributionPolicyTest(AbstractDefaultPolicyTest):
+    def setUp(self) -> None:
+        super().setUp()
+        self.policy = dp.DefaultPreemptiveDistributionPolicy(dp.DefaultCostFunction())
+        self._big_high_job = _get_job(jb.JobPriority.HIGH, since=10, cpu=self.cpu * 2, ram=self.ram * 2)
+        self._high_job = _get_job(jb.JobPriority.HIGH, since=10, cpu=self.cpu, ram=self.ram)
+        self._medium_job = _get_job(jb.JobPriority.MEDIUM, since=5, cpu=self.cpu, ram=self.ram)
+        self._low_job = _get_job(jb.JobPriority.LOW, since=0, cpu=self.cpu, ram=self.ram)
+
+    def _execute(self, machine: wm.WorkMachine, existing_jobs: List[je.DatabaseJobEntry]) -> Tuple[float, List[jb.Job]]:
+        result = self.policy._assign_machine_cost(self.job, machine, existing_jobs)
+        self.assertIsNotNone(result)
+        return result
+
+    def test_free_machine(self) -> None:
+        machine = _get_machine(self.cpu, self.ram)  # No Jobs
+        self.assertAlmostEqual(self._get_score(machine), 0.0)
+
+    def test_preempt_all_jobs(self) -> None:
+        machine = _get_machine(self.cpu, self.ram)
+        machine.resources.allocate(cwm.ResourceAllocation(self.cpu, self.ram, 0))
+
+        (almost_fit_score, preempt) = self._execute(machine, existing_jobs=[self._medium_job])
+        self.assertGreater(almost_fit_score, 0.0)
+        self.assertListEqual(preempt, [self._medium_job.job])
+
+    def test_preempt_some_jobs(self) -> None:
+        # 3 Jobs, preempt only 2
+        machine = _get_machine(self.cpu * 4, self.ram * 4)
+        # Needs to suspend other jobs
+        self.job = _get_job(jb.JobPriority.URGENT, cpu=self.cpu * 2, ram=self.ram * 2).job
+
+        machine.resources.allocate(cwm.ResourceAllocation(self.cpu * 4, self.cpu * 4, 0))  # 4xhigh job
+        (bad_fit, bad_preempt) = \
+            self._execute(machine, existing_jobs=[self._high_job] * 4)
+        (med_fit, med_preempt) = \
+            self._execute(machine, existing_jobs=[self._big_high_job, self._medium_job, self._medium_job])
+        (good_fit, good_preempt) = \
+            self._execute(machine, existing_jobs=[self._high_job, self._medium_job, self._medium_job, self._low_job])
+
+        self.assertGreater(bad_fit, med_fit)
+        self.assertGreater(med_fit, good_fit)
+
+        self.assertCountEqual(bad_preempt, [self._high_job.job, self._high_job.job])
+        self.assertCountEqual(med_preempt, [self._medium_job.job, self._medium_job.job])
+        self.assertCountEqual(good_preempt, [self._low_job.job, self._medium_job.job])
