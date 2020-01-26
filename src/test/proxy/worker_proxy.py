@@ -34,7 +34,7 @@ class WorkerProxyDummy(IWorkerProxy):
                     result_string=IWorkerProxy.DISPATCH_JOB_DUPLICATE % (job.uid, self.uid), is_success=False
                 ).to_dict())
         job_copy = Job.from_dict(job.to_dict())
-        job_copy.status = JobStatus.RUNNING
+        job_copy._status = JobStatus.RUNNING
         self._jobs.append(job_copy)
         return WorkerResponse.from_dict(WorkerResponse(
             result_string=IWorkerProxy.DISPATCH_JOB_SUCCESS % (job.uid, self.uid), is_success=True).to_dict())
