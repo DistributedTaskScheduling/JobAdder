@@ -1,68 +1,57 @@
-import datetime as dt
-import ja.common.job as jb
-import ja.common.work_machine as cwm
-import ja.server.database.types.job_entry as je
-import ja.server.database.types.work_machine as wm
 import ja.server.scheduler.default_policies as dp
 
-from ja.common.docker_context import DockerConstraints
+from ja.common.job import Job, JobPriority
+from ja.common.work_machine import ResourceAllocation
+from ja.server.database.types.job_entry import DatabaseJobEntry
+from ja.server.database.types.work_machine import WorkMachine
+
 from test.abstract import skipIfAbstract
-from unittest import TestCase
+from test.server.scheduler.common import get_job, get_machine
 from typing import List, Optional, Tuple
-
-
-def _datetime_before(since: int) -> dt.datetime:
-    return dt.datetime.now() - dt.timedelta(minutes=since)
-
-
-def _get_job(prio: jb.JobPriority, since: int = 0, cpu: int = 1, ram: int = 1) -> je.DatabaseJobEntry:
-    job = jb.Job(owner_id=0, email="hey@you", scheduling_constraints=jb.JobSchedulingConstraints(prio, False, []),
-                 docker_context=None, docker_constraints=DockerConstraints(cpu, ram))
-    stats = je.JobRuntimeStatistics(_datetime_before(since), dt.datetime.now(), 0)
-    return je.DatabaseJobEntry(job, stats, None)
+from unittest import TestCase
 
 
 class DefaultCostFunctionTest(TestCase):
     def setUp(self) -> None:
-        self.cost_func = dp.DefaultCostFunction()
-        self.low_base = self.cost_func.calculate_cost(_get_job(jb.JobPriority.LOW, since=0))
-        self.medium_base = self.cost_func.calculate_cost(_get_job(jb.JobPriority.MEDIUM, since=0))
-        self.high_base = self.cost_func.calculate_cost(_get_job(jb.JobPriority.HIGH, since=0))
-        self.urgent_base = self.cost_func.calculate_cost(_get_job(jb.JobPriority.URGENT, since=0))
+        self._cost_func = dp.DefaultCostFunction()
+        self._low_base = self._cost_func.calculate_cost(get_job(JobPriority.LOW, since=0))
+        self._medium_base = self._cost_func.calculate_cost(get_job(JobPriority.MEDIUM, since=0))
+        self._high_base = self._cost_func.calculate_cost(get_job(JobPriority.HIGH, since=0))
+        self._urgent_base = self._cost_func.calculate_cost(get_job(JobPriority.URGENT, since=0))
 
     def test_only_urgent_is_preempting(self) -> None:
-        self.assertLessEqual(self.urgent_base, self.cost_func.preempting_threshold)
-        self.assertLess(self.cost_func.preempting_threshold, self.low_base)
-        self.assertLess(self.cost_func.preempting_threshold, self.medium_base)
-        self.assertLess(self.cost_func.preempting_threshold, self.high_base)
+        self.assertLessEqual(self._urgent_base, self._cost_func.preempting_threshold)
+        self.assertLess(self._cost_func.preempting_threshold, self._low_base)
+        self.assertLess(self._cost_func.preempting_threshold, self._medium_base)
+        self.assertLess(self._cost_func.preempting_threshold, self._high_base)
 
     def test_priorities_are_ordered(self) -> None:
-        self.assertLess(self.urgent_base, self.high_base)
-        self.assertLess(self.high_base, self.medium_base)
-        self.assertLess(self.medium_base, self.low_base)
+        self.assertLess(self._urgent_base, self._high_base)
+        self.assertLess(self._high_base, self._medium_base)
+        self.assertLess(self._medium_base, self._low_base)
 
     def test_priority_decrease_over_time(self) -> None:
-        after_5_mins = self.cost_func.calculate_cost(_get_job(jb.JobPriority.MEDIUM, since=5))
-        after_15_mins = self.cost_func.calculate_cost(_get_job(jb.JobPriority.MEDIUM, since=15))
+        after_5_mins = self._cost_func.calculate_cost(get_job(JobPriority.MEDIUM, since=5))
+        after_15_mins = self._cost_func.calculate_cost(get_job(JobPriority.MEDIUM, since=15))
         self.assertLessEqual(after_15_mins, after_5_mins)
-        self.assertLessEqual(after_5_mins, self.medium_base)
+        self.assertLessEqual(after_5_mins, self._medium_base)
 
     def test_preempt_after_block(self) -> None:
-        self.assertLessEqual(self.cost_func.preempting_threshold, self.cost_func.blocking_threshold)
+        self.assertLessEqual(self._cost_func.preempting_threshold, self._cost_func.blocking_threshold)
 
 
 class DummyWorkMachineSelector(dp.DefaultJobDistributionPolicyBase):
     """
     Returns 0 for a predefined work machine, and large costs for the others.
     """
-    def __init__(self, chosen: List[wm.WorkMachine], invalid: List[wm.WorkMachine]):
+    def __init__(self, chosen: List[WorkMachine], invalid: List[WorkMachine]):
         self._chosen = chosen
         self._invalid = invalid
 
     def _assign_machine_cost(self,
-                             job: jb.Job,
-                             machine: wm.WorkMachine,
-                             existing_jobs: List[je.DatabaseJobEntry]) -> Optional[Tuple[float, List[jb.Job]]]:
+                             job: Job,
+                             machine: WorkMachine,
+                             existing_jobs: List[DatabaseJobEntry]) -> Optional[Tuple[float, List[Job]]]:
         if machine in self._chosen:
             return (0.0, [])
         if machine in self._invalid:
@@ -71,20 +60,17 @@ class DummyWorkMachineSelector(dp.DefaultJobDistributionPolicyBase):
         return (100.0, [])
 
 
-def _get_machine(cpu: int, ram: int) -> wm.WorkMachine:
-    return wm.WorkMachine("Test", wm.WorkMachineState.ONLINE,
-                          wm.WorkMachineResources(cwm.ResourceAllocation(cpu, ram, 0)))
-
-
 class DefaultJobDistributionPolicyBaseTest(TestCase):
     def setUp(self) -> None:
-        self._machines = [_get_machine(10, 10), _get_machine(5, 5), _get_machine(1, 16)]
-        self._job = _get_job(jb.JobPriority.MEDIUM).job
+        self._machines = [get_machine(10, 10), get_machine(5, 5), get_machine(1, 16)]
+        self._job = get_job(JobPriority.MEDIUM).job
 
     def test_no_suitable_machines(self) -> None:
         selector = DummyWorkMachineSelector([], self._machines)
-        self.assertEqual(selector.assign_machine(job=_get_job(jb.JobPriority.MEDIUM, 0).job,
-                         distribution=[], available_machines=self._machines), None)
+        self.assertIsNone(selector.assign_machine(job=get_job(JobPriority.MEDIUM, 0).job,
+                          distribution=[], available_machines=[]))
+        self.assertIsNone(selector.assign_machine(job=get_job(JobPriority.MEDIUM, 0).job,
+                          distribution=[], available_machines=self._machines))
 
     def test_select_only_available(self) -> None:
         selector = DummyWorkMachineSelector(self._machines[-1:], self._machines[:-1])
@@ -104,19 +90,19 @@ class DefaultJobDistributionPolicyBaseTest(TestCase):
 class AbstractDefaultPolicyTest(TestCase):
     @skipIfAbstract
     def setUp(self) -> None:
-        self.cpu = 8
-        self.ram = 32
-        self.job = _get_job(jb.JobPriority.MEDIUM, cpu=self.cpu, ram=self.ram).job
-        self.policy: dp.DefaultJobDistributionPolicyBase = None
+        self._cpu = 8
+        self._ram = 32
+        self._job = get_job(JobPriority.MEDIUM, cpu=self._cpu, ram=self._ram).job
+        self._policy: dp.DefaultJobDistributionPolicyBase = None
 
     def test_resources_not_enough(self) -> None:
-        machine = _get_machine(cpu=self.cpu * 2, ram=self.ram - 1)
-        self.assertIsNone(self.policy._assign_machine_cost(self.job, machine, []))
-        machine = _get_machine(cpu=self.cpu - 1, ram=self.ram * 2)
-        self.assertIsNone(self.policy._assign_machine_cost(self.job, machine, []))
+        machine = get_machine(cpu=self._cpu * 2, ram=self._ram - 1)
+        self.assertIsNone(self._policy._assign_machine_cost(self._job, machine, []))
+        machine = get_machine(cpu=self._cpu - 1, ram=self._ram * 2)
+        self.assertIsNone(self._policy._assign_machine_cost(self._job, machine, []))
 
-    def _get_score(self, machine: wm.WorkMachine, existing_jobs: List[je.DatabaseJobEntry] = []) -> float:
-        result = self.policy._assign_machine_cost(self.job, machine, existing_jobs)
+    def _get_score(self, machine: WorkMachine, existing_jobs: List[DatabaseJobEntry] = []) -> float:
+        result = self._policy._assign_machine_cost(self._job, machine, existing_jobs)
         self.assertIsNotNone(result)
         (cost, preempted) = result
         self.assertListEqual(preempted, [])
@@ -126,17 +112,17 @@ class AbstractDefaultPolicyTest(TestCase):
 class DefaultNonPreemptiveDistributionPolicyTest(AbstractDefaultPolicyTest):
     def setUp(self) -> None:
         super().setUp()
-        self.policy = dp.DefaultNonPreemptiveDistributionPolicy()
+        self._policy = dp.DefaultNonPreemptiveDistributionPolicy()
 
     def test_best_fit(self) -> None:
-        machine = _get_machine(self.cpu, self.ram)  # perfect fit
+        machine = get_machine(self._cpu, self._ram)  # perfect fit
         self.assertAlmostEqual(self._get_score(machine), 0.0)
 
-        machine = _get_machine(self.cpu + 1, self.ram + 1)  # A little bigger
+        machine = get_machine(self._cpu + 1, self._ram + 1)  # A little bigger
         almost_fit_score = self._get_score(machine)
         self.assertGreater(almost_fit_score, 0.0)
 
-        machine = _get_machine(self.cpu * 5 + 5, self.ram * 5 + 5)  # bad fit
+        machine = get_machine(self._cpu * 5 + 5, self._ram * 5 + 5)  # bad fit
         bad_fit_score = self._get_score(machine)
         self.assertGreater(bad_fit_score, almost_fit_score)
 
@@ -144,44 +130,44 @@ class DefaultNonPreemptiveDistributionPolicyTest(AbstractDefaultPolicyTest):
 class DefaultBlockingDistributionPolicyTest(AbstractDefaultPolicyTest):
     def setUp(self) -> None:
         super().setUp()
-        self.policy = dp.DefaultBlockingDistributionPolicy()
-        self.existing = _get_job(jb.JobPriority.MEDIUM)
+        self._policy = dp.DefaultBlockingDistributionPolicy()
+        self._existing = get_job(JobPriority.MEDIUM)
 
     def test_smallest_number_jobs(self) -> None:
-        machine = _get_machine(self.cpu, self.ram)  # No Jobs
+        machine = get_machine(self._cpu, self._ram)  # No Jobs
         self.assertAlmostEqual(self._get_score(machine), 0.0)
 
         # One Job
-        almost_fit_score = self._get_score(machine, existing_jobs=[self.existing])
+        almost_fit_score = self._get_score(machine, existing_jobs=[self._existing])
         self.assertGreater(almost_fit_score, 0.0)
 
         # Multiple Jobs
-        machine = _get_machine(self.cpu, self.ram)
-        bad_fit_score = self._get_score(machine, existing_jobs=[self.existing] * 5)
+        machine = get_machine(self._cpu, self._ram)
+        bad_fit_score = self._get_score(machine, existing_jobs=[self._existing] * 5)
         self.assertGreater(bad_fit_score, almost_fit_score)
 
 
 class DefaultPreemptiveDistributionPolicyTest(AbstractDefaultPolicyTest):
     def setUp(self) -> None:
         super().setUp()
-        self.policy = dp.DefaultPreemptiveDistributionPolicy(dp.DefaultCostFunction())
-        self._big_high_job = _get_job(jb.JobPriority.HIGH, since=10, cpu=self.cpu * 2, ram=self.ram * 2)
-        self._high_job = _get_job(jb.JobPriority.HIGH, since=10, cpu=self.cpu, ram=self.ram)
-        self._medium_job = _get_job(jb.JobPriority.MEDIUM, since=5, cpu=self.cpu, ram=self.ram)
-        self._low_job = _get_job(jb.JobPriority.LOW, since=0, cpu=self.cpu, ram=self.ram)
+        self._policy = dp.DefaultPreemptiveDistributionPolicy(dp.DefaultCostFunction())
+        self._big_high_job = get_job(JobPriority.HIGH, since=10, cpu=self._cpu * 2, ram=self._ram * 2)
+        self._high_job = get_job(JobPriority.HIGH, since=10, cpu=self._cpu, ram=self._ram)
+        self._medium_job = get_job(JobPriority.MEDIUM, since=5, cpu=self._cpu, ram=self._ram)
+        self._low_job = get_job(JobPriority.LOW, since=0, cpu=self._cpu, ram=self._ram)
 
-    def _execute(self, machine: wm.WorkMachine, existing_jobs: List[je.DatabaseJobEntry]) -> Tuple[float, List[jb.Job]]:
-        result = self.policy._assign_machine_cost(self.job, machine, existing_jobs)
+    def _execute(self, machine: WorkMachine, existing_jobs: List[DatabaseJobEntry]) -> Tuple[float, List[Job]]:
+        result = self._policy._assign_machine_cost(self._job, machine, existing_jobs)
         self.assertIsNotNone(result)
         return result
 
     def test_free_machine(self) -> None:
-        machine = _get_machine(self.cpu, self.ram)  # No Jobs
+        machine = get_machine(self._cpu, self._ram)  # No Jobs
         self.assertAlmostEqual(self._get_score(machine), 0.0)
 
     def test_preempt_all_jobs(self) -> None:
-        machine = _get_machine(self.cpu, self.ram)
-        machine.resources.allocate(cwm.ResourceAllocation(self.cpu, self.ram, 0))
+        machine = get_machine(self._cpu, self._ram)
+        machine.resources.allocate(ResourceAllocation(self._cpu, self._ram, 0))
 
         (almost_fit_score, preempt) = self._execute(machine, existing_jobs=[self._medium_job])
         self.assertGreater(almost_fit_score, 0.0)
@@ -189,11 +175,11 @@ class DefaultPreemptiveDistributionPolicyTest(AbstractDefaultPolicyTest):
 
     def test_preempt_some_jobs(self) -> None:
         # 3 Jobs, preempt only 2
-        machine = _get_machine(self.cpu * 4, self.ram * 4)
+        machine = get_machine(self._cpu * 4, self._ram * 4)
         # Needs to suspend other jobs
-        self.job = _get_job(jb.JobPriority.URGENT, cpu=self.cpu * 2, ram=self.ram * 2).job
+        self._job = get_job(JobPriority.URGENT, cpu=self._cpu * 2, ram=self._ram * 2).job
 
-        machine.resources.allocate(cwm.ResourceAllocation(self.cpu * 4, self.cpu * 4, 0))  # 4xhigh job
+        machine.resources.allocate(ResourceAllocation(self._cpu * 4, self._cpu * 4, 0))  # 4xhigh job
         (bad_fit, bad_preempt) = \
             self._execute(machine, existing_jobs=[self._high_job] * 4)
         (med_fit, med_preempt) = \
