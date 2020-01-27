@@ -21,9 +21,11 @@ def get_job(prio: JobPriority,
             since: int = 0,
             cpu: int = 1,
             ram: int = 1,
-            machine: WorkMachine = None) -> DatabaseJobEntry:
+            machine: WorkMachine = None,
+            special_resources: List[str] = []) -> DatabaseJobEntry:
     global _global_job_counter
-    job = Job(owner_id=0, email="hey@you", scheduling_constraints=JobSchedulingConstraints(prio, False, []),
+    job = Job(owner_id=0, email="hey@you",
+              scheduling_constraints=JobSchedulingConstraints(prio, False, special_resources),
               docker_context=None, docker_constraints=DockerConstraints(cpu, ram))
     job.uid = str(_global_job_counter)
     _global_job_counter += 1
@@ -33,10 +35,10 @@ def get_job(prio: JobPriority,
     return DatabaseJobEntry(job, stats, machine)
 
 
-def get_machine(cpu: int, ram: int) -> WorkMachine:
+def get_machine(cpu: int, ram: int, swap: int = None) -> WorkMachine:
     global _global_machine_counter
     machine = WorkMachine("Test", WorkMachineState.ONLINE,
-                          WorkMachineResources(ResourceAllocation(cpu, ram, ram)))
+                          WorkMachineResources(ResourceAllocation(cpu, ram, swap if swap else ram)))
     machine.uid = str(_global_machine_counter)
     _global_machine_counter += 1
     return machine
