@@ -43,12 +43,11 @@ class WorkerConfig(Config):
         d["uid"] = self._uid
         return d
 
-
     @classmethod
     def from_dict(cls, property_dict: Dict[str, object]) -> "WorkerConfig":
         _ssh_config = SSHConfig.from_dict(
             cls._get_dict_from_dict(property_dict=property_dict, key="ssh_config", mandatory=False))
         _resource_allocation = ResourceAllocation.from_dict(
             cls._get_dict_from_dict(property_dict=property_dict, key="resource_allocation", mandatory=False))
-        _uid = property_dict["uid"]
+        _uid = str(property_dict["uid"])
         return WorkerConfig(_uid, _ssh_config, _resource_allocation)
