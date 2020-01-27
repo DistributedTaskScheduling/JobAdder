@@ -47,7 +47,7 @@ class JobDistributionPolicy(ABC):
 
     @abstractmethod
     def assign_machine(self,
-                       job: Job,
+                       job: DatabaseJobEntry,
                        distribution: ServerDatabase.JobDistribution,
                        available_machines: List[WorkMachine]) -> Optional[Tuple[WorkMachine, List[Job]]]:
         """!

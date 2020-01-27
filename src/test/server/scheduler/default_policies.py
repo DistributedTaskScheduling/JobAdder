@@ -49,7 +49,7 @@ class DummyWorkMachineSelector(dp.DefaultJobDistributionPolicyBase):
         self._invalid = invalid
 
     def _assign_machine_cost(self,
-                             job: Job,
+                             job: DatabaseJobEntry,
                              machine: WorkMachine,
                              existing_jobs: List[DatabaseJobEntry]) -> Optional[Tuple[float, List[Job]]]:
         if machine in self._chosen:
@@ -63,13 +63,13 @@ class DummyWorkMachineSelector(dp.DefaultJobDistributionPolicyBase):
 class DefaultJobDistributionPolicyBaseTest(TestCase):
     def setUp(self) -> None:
         self._machines = [get_machine(10, 10), get_machine(5, 5), get_machine(1, 16)]
-        self._job = get_job(JobPriority.MEDIUM).job
+        self._job = get_job(JobPriority.MEDIUM)
 
     def test_no_suitable_machines(self) -> None:
         selector = DummyWorkMachineSelector([], self._machines)
-        self.assertIsNone(selector.assign_machine(job=get_job(JobPriority.MEDIUM, 0).job,
+        self.assertIsNone(selector.assign_machine(job=get_job(JobPriority.MEDIUM, 0),
                           distribution=[], available_machines=[]))
-        self.assertIsNone(selector.assign_machine(job=get_job(JobPriority.MEDIUM, 0).job,
+        self.assertIsNone(selector.assign_machine(job=get_job(JobPriority.MEDIUM, 0),
                           distribution=[], available_machines=self._machines))
 
     def test_select_only_available(self) -> None:
@@ -92,7 +92,7 @@ class AbstractDefaultPolicyTest(TestCase):
     def setUp(self) -> None:
         self._cpu = 8
         self._ram = 32
-        self._job = get_job(JobPriority.MEDIUM, cpu=self._cpu, ram=self._ram).job
+        self._job = get_job(JobPriority.MEDIUM, cpu=self._cpu, ram=self._ram)
         self._policy: dp.DefaultJobDistributionPolicyBase = None
 
     def test_resources_not_enough(self) -> None:
@@ -112,7 +112,7 @@ class AbstractDefaultPolicyTest(TestCase):
 class DefaultNonPreemptiveDistributionPolicyTest(AbstractDefaultPolicyTest):
     def setUp(self) -> None:
         super().setUp()
-        self._policy = dp.DefaultNonPreemptiveDistributionPolicy()
+        self._policy = dp.DefaultNonPreemptiveDistributionPolicy(dp.DefaultCostFunction())
 
     def test_best_fit(self) -> None:
         machine = get_machine(self._cpu, self._ram)  # perfect fit
@@ -125,6 +125,17 @@ class DefaultNonPreemptiveDistributionPolicyTest(AbstractDefaultPolicyTest):
         machine = get_machine(self._cpu * 5 + 5, self._ram * 5 + 5)  # bad fit
         bad_fit_score = self._get_score(machine)
         self.assertGreater(bad_fit_score, almost_fit_score)
+
+    def test_none_if_not_enough_swap(self) -> None:
+        machine = get_machine(self._cpu, self._ram)
+        machine.resources.allocate(ResourceAllocation(0, 0, 1))
+        self.assertIsNone(self._policy._assign_machine_cost(self._job, machine, []))
+
+    def test_urgent_overrides_swap(self) -> None:
+        machine = get_machine(self._cpu, self._ram)
+        machine.resources.allocate(ResourceAllocation(0, 0, 1))
+        urgent_job = get_job(JobPriority.URGENT, cpu=self._cpu, ram=self._ram)
+        self.assertIsNotNone(self._policy._assign_machine_cost(urgent_job, machine, []))
 
 
 class DefaultBlockingDistributionPolicyTest(AbstractDefaultPolicyTest):
@@ -177,7 +188,7 @@ class DefaultPreemptiveDistributionPolicyTest(AbstractDefaultPolicyTest):
         # 3 Jobs, preempt only 2
         machine = get_machine(self._cpu * 4, self._ram * 4)
         # Needs to suspend other jobs
-        self._job = get_job(JobPriority.URGENT, cpu=self._cpu * 2, ram=self._ram * 2).job
+        self._job = get_job(JobPriority.URGENT, cpu=self._cpu * 2, ram=self._ram * 2)
 
         machine.resources.allocate(ResourceAllocation(self._cpu * 4, self._cpu * 4, 0))  # 4xhigh job
         (bad_fit, bad_preempt) = \
