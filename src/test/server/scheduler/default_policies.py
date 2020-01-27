@@ -6,7 +6,7 @@ from ja.server.database.types.job_entry import DatabaseJobEntry
 from ja.server.database.types.work_machine import WorkMachine
 
 from test.abstract import skipIfAbstract
-from test.server.scheduler.common import get_job, get_machine
+from test.server.scheduler.common import get_job, get_machine, assert_items_equal
 from typing import List, Optional, Tuple
 from unittest import TestCase
 
@@ -201,6 +201,6 @@ class DefaultPreemptiveDistributionPolicyTest(AbstractDefaultPolicyTest):
         self.assertGreater(bad_fit, med_fit)
         self.assertGreater(med_fit, good_fit)
 
-        self.assertCountEqual(bad_preempt, [self._high_job.job, self._high_job.job])
-        self.assertCountEqual(med_preempt, [self._medium_job.job, self._medium_job.job])
-        self.assertCountEqual(good_preempt, [self._low_job.job, self._medium_job.job])
+        assert_items_equal(self, bad_preempt, [self._high_job.job, self._high_job.job])
+        assert_items_equal(self, med_preempt, [self._medium_job.job, self._medium_job.job])
+        assert_items_equal(self, good_preempt, [self._low_job.job, self._medium_job.job])
