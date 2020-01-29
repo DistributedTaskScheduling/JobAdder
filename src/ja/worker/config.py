@@ -1,12 +1,9 @@
 from typing import Dict
-
-from ..common.config import Config
-from ..common.proxy.ssh import SSHConfig
-from ..common.work_machine import ResourceAllocation
+from ja.common.config import Config
+from ja.common.proxy.ssh import SSHConfig
+from ja.common.work_machine import ResourceAllocation
 import yaml
 import os
-import psutil
-
 
 
 class WorkerConfig(Config):
@@ -33,17 +30,18 @@ class WorkerConfig(Config):
         return SSHConfig(hostname = hostname, username = username)
         
     def get_resources(self) -> ResourceAllocation:
-        cpu_threads = os.cpu_count()
-        mem = psutil.virtual_memory().available
-        swap = 0.5 * mem 
-        return ResourceAllocation(cpu_threads, mem, swap)
+        cpu_threads= os.cpu_count()
+        mem_bytes= os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
+        mem_mb= mem_bytes / (1024.**2)
+        swap = 0.5 * mem_mb
+        return ResourceAllocation(cpu_threads, mem_mb, swap)
 
     @property
     def uid(self) -> str:
         """!
         @return: The desired UID to register with on the server.
         """
-        return self._uid
+        return str(self._uid)
 
     @property
     def ssh_config(self) -> SSHConfig:
@@ -69,10 +67,10 @@ class WorkerConfig(Config):
 
     @classmethod
     def from_dict(cls, property_dict: Dict[str, object]) -> "WorkerConfig":
-        #_ssh_config = SSHConfig.from_dict(
+        # _ssh_config = SSHConfig.from_dict(
         #    cls._get_dict_from_dict(property_dict=property_dict, key="ssh_config", mandatory=False))
-        #_resource_allocation = ResourceAllocation.from_dict(
+        # _resource_allocation = ResourceAllocation.from_dict(
         #    cls._get_dict_from_dict(property_dict=property_dict, key="resource_allocation", mandatory=False))
-        #_uid = str(property_dict["uid"])
-        #return WorkerConfig(_uid, _ssh_config, _resource_allocation)
+        # _uid = str(property_dict["uid"])
+        # return WorkerConfig(_uid, _ssh_config, _resource_allocation)
         pass
