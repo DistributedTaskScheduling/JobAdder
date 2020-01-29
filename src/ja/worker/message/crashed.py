@@ -7,7 +7,6 @@ from ja.common.job import Job
 from ja.common.job import JobStatus
 
 
-
 class JobCrashedCommand(WorkerServerCommand):
     """
     Informs the server that a job has crashed.
@@ -26,7 +25,7 @@ class JobCrashedCommand(WorkerServerCommand):
         return self._uid
 
     def execute(self, database: ServerDatabase) -> ServerResponse:
-        job = database.find_job_by_id(self._uid)
+        job: Job = database.find_job_by_id(self._uid)
         job.status = JobStatus.CRASHED
         database.update_job(job)
         return ServerResponse(result_string="job status has been changed to crashed", is_success=True)

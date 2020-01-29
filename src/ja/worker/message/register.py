@@ -47,7 +47,7 @@ class RegisterWorkerCommand(WorkerServerCommand):
         d: Dict[str, object] = dict()
         d["uid"] = self._uid
         d["resource_allocation"] = self._resource_allocation.to_dict()
-        # d["connection_details"] = something() 
+        # d["connection_details"] = something()
         return d
 
     @classmethod

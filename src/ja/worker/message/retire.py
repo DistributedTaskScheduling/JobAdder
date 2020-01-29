@@ -31,7 +31,6 @@ class RetireWorkerCommand(WorkerServerCommand):
         database.update_work_machine(wm)
         return ServerResponse(result_string="machine retired", is_success=True)
 
-
     def create_work_machine(self) -> WorkMachine:
         uid = self._uid
         state = WorkMachineState.OFFLINE
@@ -43,7 +42,7 @@ class RetireWorkerCommand(WorkerServerCommand):
     def to_dict(self) -> Dict[str, object]:
         d: Dict[str, object] = dict()
         d["uid"] = self._uid
-        # d["connection_details"] = something() 
+        # d["connection_details"] = something()
         return d
 
     @classmethod
@@ -51,5 +50,4 @@ class RetireWorkerCommand(WorkerServerCommand):
         uid = str(property_dict["uid"])
         # connection_details = WorkMachineConnectionDetails.from_dict(
         #    cls._get_dict_from_dict(property_dict=property_dict, key="connection_details", mandatory=False))
-        return RetireWorkerCommand(uid,None)
-
+        return RetireWorkerCommand(uid, None)

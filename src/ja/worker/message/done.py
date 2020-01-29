@@ -7,7 +7,6 @@ from ja.common.job import Job
 from ja.common.job import JobStatus
 
 
-
 class JobDoneCommand(WorkerServerCommand):
     """
     Informs the server that a job is done.
@@ -26,11 +25,10 @@ class JobDoneCommand(WorkerServerCommand):
         return self._uid
 
     def execute(self, database: ServerDatabase) -> ServerResponse:
-        job = database.find_job_by_id(self._uid)
+        job: Job = database.find_job_by_id(self._uid)
         job.status = JobStatus.DONE
         database.update_job(job)
         return ServerResponse(result_string="job status has been changed to done", is_success=True)
- 
 
     def to_dict(self) -> Dict[str, object]:
         d: Dict[str, object] = dict()

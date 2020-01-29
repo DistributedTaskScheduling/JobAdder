@@ -67,20 +67,20 @@ class WorkerServerProxy(IWorkerServerProxy):
 
     def register_self(self, work_machine_resources: WorkMachineResources) -> ServerResponse:
         register_command = RegisterWorkerCommand(self._uid)
-        response =  register_command.execute(database=self._database, resources=work_machine_resources)
+        response = register_command.execute(database=self._database, resources=work_machine_resources)
         return response
 
     def unregister_self(self) -> ServerResponse:
         retire_command = RetireWorkerCommand(self._uid)
-        response =  retire_command.execute(database=self._database, resources=None)
+        response = retire_command.execute(database=self._database, resources=None)
         return response
 
     def notify_job_finished(self, uid: str) -> ServerResponse:
         job_done_command = JobDoneCommand(self._uid)
-        response =  job_done_command.execute(database=self._database, resources=None)
+        response = job_done_command.execute(database=self._database, resources=None)
         return response
 
     def notify_job_crashed(self, uid: str) -> ServerResponse:
         job_crashed_command = JobCrashedCommand(self._uid)
-        response =  job_crashed_command.execute(database=self._database, resources=None)
+        response = job_crashed_command.execute(database=self._database, resources=None)
         return response
