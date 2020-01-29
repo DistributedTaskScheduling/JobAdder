@@ -27,14 +27,14 @@ class WorkerConfig(Config):
         hostname: str = data_loaded["hostname"]
         username: str = data_loaded["username"]
         self._uid = data_loaded["uid"]
-        return SSHConfig(hostname = hostname, username = username)
-        
+        return SSHConfig(hostname, username)
+
     def get_resources(self) -> ResourceAllocation:
-        cpu_threads= os.cpu_count()
-        mem_bytes= os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
-        mem_mb= mem_bytes / (1024.**2)
+        cpu_threads = os.cpu_count()
+        mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
+        mem_mb = mem_bytes / (1024.**2)
         swap = 0.5 * mem_mb
-        return ResourceAllocation(cpu_threads, mem_mb, swap)
+        return ResourceAllocation(cpu_threads, int(mem_mb), int(swap))
 
     @property
     def uid(self) -> str:
@@ -59,7 +59,7 @@ class WorkerConfig(Config):
 
     def to_dict(self) -> Dict[str, object]:
         d: Dict[str, object] = dict()
-        #the sshconfig.to_dict() needs to be implemented
+        # the sshconfig.to_dict() needs to be implemented
         d["ssh_config"] = self._ssh_config.to_dict()
         d["resource_allocation"] = self._resource_allocation.to_dict()
         d["uid"] = self._uid
