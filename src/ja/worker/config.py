@@ -4,6 +4,7 @@ from ja.common.proxy.ssh import SSHConfig
 from ja.common.work_machine import ResourceAllocation
 import yaml
 import os
+from typing import cast
 
 
 class WorkerConfig(Config):
@@ -16,25 +17,17 @@ class WorkerConfig(Config):
         reads the config file from the disk
         creates resource allocation instance
         """
-        self._conf_path = conf_path
-        self._ssh_config = self.read_conf()
-        self._resource_allocation = self.get_resources()
-
-    def read_conf(self) -> SSHConfig:
-        with open(self._conf_path, 'r') as stream:
+        with open(conf_path, 'r') as stream:
             data_loaded = yaml.safe_load(stream)
 
+        self._uid = data_loaded["uid"]
         hostname: str = data_loaded["hostname"]
         username: str = data_loaded["username"]
-        self._uid = data_loaded["uid"]
-        return SSHConfig(hostname, username)
-
-    def get_resources(self) -> ResourceAllocation:
-        cpu_threads = os.cpu_count()
-        mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
-        mem_mb = mem_bytes / (1024.**2)
-        swap = 0.5 * mem_mb
-        return ResourceAllocation(cpu_threads, int(mem_mb), int(swap))
+        self._ssh_config = SSHConfig(hostname, username)
+        cpu_threads: int = cast(int, data_loaded["cpu_threads"])
+        available_memory: int = cast(int, data_loaded["available_memory"])
+        swap_memory: int = cast(int, data_loaded["swap_memory"])
+        self._resource_allocation = ResourceAllocation(cpu_threads, available_memory, swap_memory)
 
     @property
     def uid(self) -> str:
