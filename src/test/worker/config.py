@@ -11,10 +11,10 @@ class WorkMachineConfigTest(TestCase):
     def setUp(self) -> None:
         ssh_config: SSHConfig = SSHConfig(hostname="127.0.1.1", username="someuser")
         resource_allocation: ResourceAllocation = ResourceAllocation(1, 2, 3)
-        self._wmc: WorkerConfig = WorkerConfig(3, ssh_config, resource_allocation)
+        self._wmc: WorkerConfig = WorkerConfig("3", ssh_config, resource_allocation)
 
     def test_uid_getter(self) -> None:
-        self.assertEqual(self._wmc.uid, 3)
+        self.assertEqual(self._wmc.uid, "3")
 
     def test_ssh_getter(self) -> None:
         self.assertEqual(self._wmc.ssh_config.username, "someuser")
