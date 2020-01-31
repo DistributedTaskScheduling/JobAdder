@@ -2,8 +2,6 @@ from typing import Dict
 from ja.common.config import Config
 from ja.common.proxy.ssh import SSHConfig
 from ja.common.work_machine import ResourceAllocation
-import yaml
-from typing import cast
 
 
 class WorkerConfig(Config):
