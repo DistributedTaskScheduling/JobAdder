@@ -16,9 +16,9 @@ class WorkMachineConfigTest(TestCase):
     def test_uid_getter(self) -> None:
         self.assertEqual(self._wmc.uid, "3")
 
-    def test_ssh_getter(self) -> None:
-        self.assertEqual(self._wmc.ssh_config.username, "someuser")
-        self.assertEqual(self._wmc.ssh_config.hostname, "127.0.1.1")
+    # def test_ssh_getter(self) -> None:
+    #    self.assertEqual(self._wmc.ssh_config.username, "someuser")
+    #    self.assertEqual(self._wmc.ssh_config.hostname, "127.0.1.1")
 
     def test_resource_getter(self) -> None:
         self.assertEqual(self._wmc.resources.cpu_threads, 1)
