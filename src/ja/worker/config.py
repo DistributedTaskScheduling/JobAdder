@@ -11,22 +11,14 @@ class WorkerConfig(Config):
     Config for the worker client.
     """
 
-    def __init__(self, conf_path: str):
+    def __init__(self, uid: str, ssh_config: SSHConfig, resource_allocation: ResourceAllocation):
         """!
         reads the config file from the disk
         creates resource allocation instance
         """
-        with open(conf_path, 'r') as stream:
-            data_loaded = yaml.safe_load(stream)
-
-        self._uid = data_loaded["uid"]
-        hostname: str = data_loaded["hostname"]
-        username: str = data_loaded["username"]
-        self._ssh_config = SSHConfig(hostname, username)
-        cpu_threads: int = cast(int, data_loaded["cpu_threads"])
-        available_memory: int = cast(int, data_loaded["available_memory"])
-        swap_memory: int = cast(int, data_loaded["swap_memory"])
-        self._resource_allocation = ResourceAllocation(cpu_threads, available_memory, swap_memory)
+        self._uid = uid
+        self._ssh_config = ssh_config
+        self._resource_allocation = resource_allocation
 
     @property
     def uid(self) -> str:
@@ -51,7 +43,6 @@ class WorkerConfig(Config):
 
     def to_dict(self) -> Dict[str, object]:
         d: Dict[str, object] = dict()
-        # the sshconfig.to_dict() needs to be implemented
         d["ssh_config"] = self._ssh_config.to_dict()
         d["resource_allocation"] = self._resource_allocation.to_dict()
         d["uid"] = self._uid
@@ -59,10 +50,9 @@ class WorkerConfig(Config):
 
     @classmethod
     def from_dict(cls, property_dict: Dict[str, object]) -> "WorkerConfig":
-        # _ssh_config = SSHConfig.from_dict(
-        #    cls._get_dict_from_dict(property_dict=property_dict, key="ssh_config", mandatory=False))
-        # _resource_allocation = ResourceAllocation.from_dict(
-        #    cls._get_dict_from_dict(property_dict=property_dict, key="resource_allocation", mandatory=False))
-        # _uid = str(property_dict["uid"])
-        # return WorkerConfig(_uid, _ssh_config, _resource_allocation)
-        pass
+        _ssh_config = SSHConfig.from_dict(
+            cls._get_dict_from_dict(property_dict=property_dict, key="ssh_config", mandatory=False))
+        _resource_allocation = ResourceAllocation.from_dict(
+            cls._get_dict_from_dict(property_dict=property_dict, key="resource_allocation", mandatory=False))
+        _uid = str(property_dict["uid"])
+        return WorkerConfig(_uid, _ssh_config, _resource_allocation)
