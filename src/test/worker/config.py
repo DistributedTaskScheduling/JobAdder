@@ -1,5 +1,3 @@
-from typing import Dict
-from ja.common.config import Config
 from ja.common.proxy.ssh import SSHConfig
 from ja.common.work_machine import ResourceAllocation
 from ja.worker.config import WorkerConfig
