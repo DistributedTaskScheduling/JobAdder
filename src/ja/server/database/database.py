@@ -89,7 +89,7 @@ class ServerDatabase(ABC):
         @param callback The callback to execute when rescheduling is necessary.
         """
 
-    JobStatusCallback = Callable[['ServerDatabase', 'Job'], None]
+    JobStatusCallback = Callable[['Job'], None]
 
     @abstractmethod
     def set_job_status_callback(self, callback: JobStatusCallback) -> None:
