@@ -144,13 +144,16 @@ class Response(Message):
     A base class for messages which are sent as a response to Commands. They
     indicate the result of the action on the remote component.
     """
-    def __init__(self, result_string: str, is_success: bool):
+    def __init__(self, result_string: str, is_success: bool, uid: str = None):
         self._result_string = result_string
         self._is_success = is_success
+        self._uid = uid
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, self.__class__):
-            return self.result_string == other.result_string and self.is_success == other.is_success
+            return self.result_string == other.result_string \
+                and self.is_success == other.is_success \
+                and self.uid == other.uid
         else:
             return False
 
@@ -169,12 +172,20 @@ class Response(Message):
         """
         return self._is_success
 
+    @property
+    def uid(self) -> str:
+        """!
+        @return: UID of an added job/registered worker, None otherwise.
+        """
+        return self._uid
+
     def to_dict(self) -> Dict[str, object]:
-        return {"result_string": self.result_string, "is_success": self.is_success}
+        return {"result_string": self.result_string, "is_success": self.is_success, "uid": self.uid}
 
     @classmethod
     def from_dict(cls, property_dict: Dict[str, object]) -> "Response":
         result_string = cls._get_str_from_dict(property_dict=property_dict, key="result_string")
         is_success = cls._get_bool_from_dict(property_dict=property_dict, key="is_success")
+        uid = cls._get_str_from_dict(property_dict=property_dict, key="uid", mandatory=False)
         cls._assert_all_properties_used(property_dict)
-        return cls(result_string=result_string, is_success=is_success)
+        return cls(result_string=result_string, is_success=is_success, uid=uid)

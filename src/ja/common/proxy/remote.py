@@ -1,4 +1,5 @@
 from sys import stdin, stdout
+from typing import TextIO
 from getpass import getuser
 import yaml
 import socket
@@ -15,11 +16,12 @@ class Remote(object):
     Listens for a Response (as YAML string) on the same socket. Writes the
     Response YAML string to stdout.
     """
-    def __init__(self, socket_path: str):
+    def __init__(self, socket_path: str, input_stream: TextIO = stdin, output_stream: TextIO = stdout):
         """!
         @param socket_path: The Unix named socket to write the Command to.
+        @param output_stream: The output stream to write the Response to.
         """
-        input_string = stdin.read()
+        input_string = input_stream.read()
         command_dict = yaml.load(input_string, Loader=yaml.SafeLoader)
         command_dict["username"] = getuser()
         command_string = yaml.dump(command_dict) + "\0"  # Null character to signal end of input.
@@ -34,6 +36,6 @@ class Remote(object):
                 if not data:  # Becomes True when socket is closed by CommandHandler.
                     break
                 response_string += data.decode()
-            stdout.write(response_string)
+            output_stream.write(response_string)
         finally:
             named_socket.close()

@@ -2,7 +2,7 @@
 This module provides the interfaces for Messages sent to the central server.
 """
 from abc import ABC, abstractmethod
-from typing import cast
+from typing import cast, Dict
 
 from ja.common.message.base import Command, Response
 from ja.server.database.database import ServerDatabase
@@ -31,11 +31,11 @@ class ServerResponse(Response, ABC):
     Corresponding Response class for ServerCommand.
     """
 
-    @property
-    def uid(self) -> str:
-        """!
-        @return: UID of an added job/registered worker, None otherwise.
-        """
+    # TODO remove ServerResponse class if no extra functionality is implemented
+
+    @classmethod
+    def from_dict(cls, property_dict: Dict[str, object]) -> "ServerResponse":
+        return cast(ServerResponse, super().from_dict(property_dict))
 
     @classmethod
     def from_string(cls, yaml_string: str) -> "ServerResponse":

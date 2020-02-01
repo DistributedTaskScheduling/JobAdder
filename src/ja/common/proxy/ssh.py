@@ -1,4 +1,5 @@
 from typing import Dict
+from abc import ABC, abstractmethod
 from paramiko import SSHClient, AutoAddPolicy  # type: ignore
 
 from ja.common.message.server import ServerCommand, ServerResponse
@@ -6,21 +7,49 @@ from ja.common.message.worker import WorkerCommand, WorkerResponse
 from ja.common.config import Config
 
 
-class SSHConnection:
+class ISSHConnection(ABC):
     """
     Establishes an SSH connection to a Remote object. Writes Command objects to
     the stdin of said Remote objects. Then reads a Response object from stdout
     of the Remote objects. Message objects are read/written as YAML strings.
     Uses paramiko as the backend for establishing an ssh connection.
     """
-    def __init__(self, ssh_config: "SSHConfig", remote: str):
+
+    @abstractmethod
+    def send_server_command(self, command: ServerCommand) -> ServerResponse:
+        """!
+        Sends a ServerCommand to the Remote on the host. Automatically attaches the username specified in ssh_config to
+        the ServerCommand.
+        @param command: The ServerCommand to sent to the Remote.
+        @return: The ServerResponse received from the Remote.
+        """
+
+    @abstractmethod
+    def send_worker_command(self, command: WorkerCommand) -> WorkerResponse:
+        """!
+        Sends a WorkerCommand to the Remote on the host. Automatically attaches the username specified in ssh_config to
+        the WorkerCommand.
+        @param command: The WorkerCommand to sent to the Remote.
+        @return: The WorkerResponse received from the Remote.
+        """
+
+    @abstractmethod
+    def close(self) -> None:
+        """!
+        Closes the ssh connection to the host.
+        @return None.
+        """
+
+
+class SSHConnection(ISSHConnection):
+    def __init__(self, ssh_config: "SSHConfig", remote_path: str):
         """!
         Creates a new SSHConnection object. Arguments for establishing the
         actual ssh connection are packaged in @ssh_config. If no credentials
         are provided and no suitable keys were found automatically the
         constructor prompts the user for input.
         @param ssh_config: Config for paramiko.
-        @param remote: The name of the Remote to execute on the host.
+        @param remote_path: The name of the Remote to execute on the host.
         """
         self._username = ssh_config.username
         self._client = SSHClient()
@@ -29,16 +58,10 @@ class SSHConnection:
             hostname=ssh_config.hostname, username=self._username, password=ssh_config.password,
             key_filename=ssh_config.key_path, passphrase=ssh_config.passphrase
         )
-        self._remote = remote
+        self._remote_path = remote_path
 
     def send_server_command(self, command: ServerCommand) -> ServerResponse:
-        """!
-        Sends a ServerCommand to the Remote on the host. Automatically attaches the username specified in ssh_config to
-        the ServerCommand.
-        @param command: The ServerCommand to sent to the Remote.
-        @return: The ServerResponse received from the Remote.
-        """
-        stdin, stdout, stderr = self._client.exec_command(self._remote)
+        stdin, stdout, stderr = self._client.exec_command(self._remote_path)
         stdin.write(command)
         response = ServerResponse.from_string(stdout.read())
         stdin.close()
@@ -47,13 +70,7 @@ class SSHConnection:
         return response
 
     def send_worker_command(self, command: WorkerCommand) -> WorkerResponse:
-        """!
-        Sends a WorkerCommand to the Remote on the host. Automatically attaches the username specified in ssh_config to
-        the WorkerCommand.
-        @param command: The WorkerCommand to sent to the Remote.
-        @return: The WorkerResponse received from the Remote.
-        """
-        stdin, stdout, stderr = self._client.exec_command(self._remote)
+        stdin, stdout, stderr = self._client.exec_command(self._remote_path)
         stdin.write(command)
         response = WorkerResponse.from_string(stdout.read())
         stdin.close()
@@ -62,10 +79,6 @@ class SSHConnection:
         return response
 
     def close(self) -> None:
-        """!
-        Closes the ssh connection to the host.
-        @return None.
-        """
         self._client.close()
 
 

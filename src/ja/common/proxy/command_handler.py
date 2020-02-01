@@ -3,6 +3,7 @@ import socket
 from abc import ABC, abstractmethod
 from threading import Thread
 import yaml
+from typing import Dict
 
 
 class CommandHandler(ABC):
@@ -52,11 +53,12 @@ class CommandHandler(ABC):
                         break
                     input_string += data.decode()
                 input_dict = yaml.load(input_string, yaml.SafeLoader)
-                response_string = self._process_command_string(input_dict["command"], input_dict["username"])
+                response_dict = self._process_command_string(input_dict["command"], input_dict["username"])
+                response_string = yaml.dump(response_dict)
                 connection.sendall(response_string.encode())
             finally:
                 connection.close()
 
     @abstractmethod
-    def _process_command_string(self, command_string: str, username: str) -> str:
+    def _process_command_string(self, command_dict: Dict[str, object], username: str) -> Dict[str, object]:
         pass

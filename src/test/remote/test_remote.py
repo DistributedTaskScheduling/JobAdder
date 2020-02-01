@@ -2,20 +2,21 @@ import yaml
 from subprocess import run, PIPE
 from unittest import TestCase
 from getpass import getuser
+from typing import Dict
 
 from ja.common.proxy.command_handler import CommandHandler
 
 
 class CommandHandlerDummy(CommandHandler):
 
-    def _process_command_string(self, command_string: str, username: str) -> str:
-        print("LAMO")
+    def _process_command_string(self, command_dict: Dict[str, object], username: str) -> Dict[str, object]:
         assert username == getuser()
+        command_string = str(command_dict["payload"])
         response_string = ""
         while command_string.startswith("COMMAND"):
             command_string = command_string[7:]
             response_string += "RESPONSE"
-        return response_string
+        return dict(payload=response_string)
 
 
 class RemoteTest(TestCase):
@@ -26,14 +27,15 @@ class RemoteTest(TestCase):
 
     @staticmethod
     def _call_remote(command_string: str) -> str:
-        command_dict = dict(command=command_string)
+        command_dict = dict(command=dict(payload=command_string))
         finished_process = run(
             [
                 "python3",
                 "test/remote/remote"  # Change to "remote" to run from current directory
             ], timeout=10, input=yaml.dump(command_dict).encode(), stdout=PIPE)
         stdout: bytes = finished_process.stdout
-        return stdout.decode()
+        response_dict = yaml.load(stdout.decode(), yaml.SafeLoader)
+        return str(response_dict["payload"])
 
     def setUp(self) -> None:
         self._command_string = "COMMAND"
