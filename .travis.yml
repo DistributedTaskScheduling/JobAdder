@@ -1,6 +1,6 @@
 language: python
 python: 3.7
-install: "pip3 install flake8 mypy PyYAML psycopg2 SQLAlchemy testing.postgresql sqlalchemy-stubs freezegun"
+install: "pip3 install flake8 mypy PyYAML psycopg2 SQLAlchemy testing.postgresql sqlalchemy-stubs paramiko freezegun"
 script:
   - flake8 src/ --ignore F821 --max-line-length=120
   - ./.travis/check_init_py.sh src/

@@ -1,6 +1,8 @@
 from typing import Dict
+from paramiko import SSHClient, AutoAddPolicy  # type: ignore
 
-from ja.common.message.base import Command, Response
+from ja.common.message.server import ServerCommand, ServerResponse
+from ja.common.message.worker import WorkerCommand, WorkerResponse
 from ja.common.config import Config
 
 
@@ -20,20 +22,51 @@ class SSHConnection:
         @param ssh_config: Config for paramiko.
         @param remote: The name of the Remote to execute on the host.
         """
+        self._username = ssh_config.username
+        self._client = SSHClient()
+        self._client.set_missing_host_key_policy(AutoAddPolicy())
+        self._client.connect(
+            hostname=ssh_config.hostname, username=self._username, password=ssh_config.password,
+            key_filename=ssh_config.key_path, passphrase=ssh_config.passphrase
+        )
+        self._remote = remote
 
-    def send(self, command: Command) -> Response:
+    def send_server_command(self, command: ServerCommand) -> ServerResponse:
         """!
-        Sends a Command to the Remote on the host. Automatically attaches
-        the username specified in ssh_config to the Command.
-        @param command: The Command to sent to the Remote.
-        @return: The Response received from the Remote.
+        Sends a ServerCommand to the Remote on the host. Automatically attaches the username specified in ssh_config to
+        the ServerCommand.
+        @param command: The ServerCommand to sent to the Remote.
+        @return: The ServerResponse received from the Remote.
         """
+        stdin, stdout, stderr = self._client.exec_command(self._remote)
+        stdin.write(command)
+        response = ServerResponse.from_string(stdout.read())
+        stdin.close()
+        stdout.close()
+        stderr.close()
+        return response
+
+    def send_worker_command(self, command: WorkerCommand) -> WorkerResponse:
+        """!
+        Sends a WorkerCommand to the Remote on the host. Automatically attaches the username specified in ssh_config to
+        the WorkerCommand.
+        @param command: The WorkerCommand to sent to the Remote.
+        @return: The WorkerResponse received from the Remote.
+        """
+        stdin, stdout, stderr = self._client.exec_command(self._remote)
+        stdin.write(command)
+        response = WorkerResponse.from_string(stdout.read())
+        stdin.close()
+        stdout.close()
+        stderr.close()
+        return response
 
     def close(self) -> None:
         """!
         Closes the ssh connection to the host.
         @return None.
         """
+        self._client.close()
 
 
 class SSHConfig(Config):

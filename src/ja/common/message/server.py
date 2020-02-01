@@ -2,6 +2,8 @@
 This module provides the interfaces for Messages sent to the central server.
 """
 from abc import ABC, abstractmethod
+from typing import cast
+
 from ja.common.message.base import Command, Response
 from ja.server.database.database import ServerDatabase
 
@@ -34,3 +36,7 @@ class ServerResponse(Response, ABC):
         """!
         @return: UID of an added job/registered worker, None otherwise.
         """
+
+    @classmethod
+    def from_string(cls, yaml_string: str) -> "ServerResponse":
+        return cast(ServerResponse, super().from_string(yaml_string))
