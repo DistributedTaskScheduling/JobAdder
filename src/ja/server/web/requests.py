@@ -1,5 +1,9 @@
 from abc import ABC, abstractmethod
 from ja.server.database.database import ServerDatabase
+from ja.server.database.types.work_machine import WorkMachine
+from typing import Dict, Any, cast
+
+import yaml
 
 
 class WebRequest(ABC):
@@ -8,16 +12,12 @@ class WebRequest(ABC):
     """
 
     @abstractmethod
-    def generate_report(self, database: ServerDatabase) -> None:
+    def generate_report(self, database: ServerDatabase) -> str:
         """!
         Generate the requested statistics from the data in the database.
-        """
 
-    @abstractmethod
-    def to_yaml(self) -> str:
-        """!
-        @return A yaml representation of this object.The entries in the
-        yaml are equivalent to the properties of this object.
+        @param database The database to fetch data from.
+        @return The requested statistics as a string in YAML format.
         """
 
 
@@ -26,18 +26,25 @@ class WorkMachineWorkloadRequest(WebRequest):
     Generates the response to the machine workload request.
     """
 
-    def __init__(self, uid: str):
-        """!
-        Initialize the request response.
+    @staticmethod
+    def _machine_to_dict(machine: WorkMachine) -> Dict[str, Any]:
+        free = machine.resources.free_resources
+        used = machine.resources.total_resources - machine.resources.free_resources
+        return {
+            "id": machine.uid,
+            "cpu_load": {"used": used.cpu_threads, "free": free.cpu_threads},
+            "memory_load": {"used": used.memory, "free": free.memory},
+            "swap_space": {"used": used.swap, "free": free.swap},
+        }
 
-        @param uid The uid of the work machine this request is for.
-        """
+    def generate_report(self, database: ServerDatabase) -> str:
+        report: Dict[str, Any] = {}
+        report["machines"] = []
 
-    def generate_report(self, database: ServerDatabase) -> None:
-        pass
+        for m in database.get_work_machines():
+            report["machines"] += [self._machine_to_dict(m)]
 
-    def to_yaml(self) -> str:
-        pass
+        return cast(str, yaml.dump(report))
 
 
 class JobInformationRequest(WebRequest):
@@ -52,10 +59,7 @@ class JobInformationRequest(WebRequest):
         @param uid The uid of the job the report is for.
         """
 
-    def generate_report(self, database: ServerDatabase) -> None:
-        pass
-
-    def to_yaml(self) -> str:
+    def generate_report(self, database: ServerDatabase) -> str:
         pass
 
 
@@ -71,10 +75,7 @@ class UserJobsRequest(WebRequest):
         @param user The user to report jobs for.
         """
 
-    def generate_report(self, database: ServerDatabase) -> None:
-        pass
-
-    def to_yaml(self) -> str:
+    def generate_report(self, database: ServerDatabase) -> str:
         pass
 
 
@@ -90,10 +91,7 @@ class PastJobsRequest(WebRequest):
         @param since The reported jobs should have been running since this amount of hours ago.
         """
 
-    def generate_report(self, database: ServerDatabase) -> None:
-        pass
-
-    def to_yaml(self) -> str:
+    def generate_report(self, database: ServerDatabase) -> str:
         pass
 
 
@@ -109,8 +107,5 @@ class WorkMachineJobsRequest(WebRequest):
         @param workmachine_id The work machine the request is for.
         """
 
-    def generate_report(self, database: ServerDatabase) -> None:
-        pass
-
-    def to_yaml(self) -> str:
+    def generate_report(self, database: ServerDatabase) -> str:
         pass
