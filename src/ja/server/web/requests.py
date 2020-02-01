@@ -1,23 +1,26 @@
 from abc import ABC, abstractmethod
 from ja.server.database.database import ServerDatabase
 from ja.server.database.types.work_machine import WorkMachine
-from typing import Dict, Any, cast
+from typing import Dict, Any, Optional, cast
 
 import yaml
+import pwd
 
 
 class WebRequest(ABC):
     """
     A base class for the different statistics requests.
     """
+    TIMESTAMP_FORMAT: str = "%Y-%d-%m %H:%M:%S"
 
     @abstractmethod
-    def generate_report(self, database: ServerDatabase) -> str:
+    def generate_report(self, database: ServerDatabase) -> Optional[str]:
         """!
         Generate the requested statistics from the data in the database.
 
         @param database The database to fetch data from.
-        @return The requested statistics as a string in YAML format.
+        @return The requested statistics as a string in YAML format. If the request is invalid (for ex. job does not
+          exist), the YAML document consists of only one value `error`, explaining the problem.
         """
 
 
@@ -51,6 +54,7 @@ class JobInformationRequest(WebRequest):
     """
     Generates the response to the job information request.
     """
+    NO_SUCH_JOB_TEMPLATE: str = "No job with UID %s found in the database."
 
     def __init__(self, uid: str):
         """!
@@ -58,9 +62,23 @@ class JobInformationRequest(WebRequest):
 
         @param uid The uid of the job the report is for.
         """
+        self._job_uid = uid
 
     def generate_report(self, database: ServerDatabase) -> str:
-        pass
+        job = database.find_job_by_id(self._job_uid)
+        if not job:
+            return cast(str, yaml.dump({"error": self.NO_SUCH_JOB_TEMPLATE % self._job_uid}))
+
+        response_dict = {
+            "user_name": pwd.getpwuid(job.job.owner_id).pw_name,
+            "user_id": job.job.owner_id,
+            "priority": job.job.scheduling_constraints.priority.name,
+            "scheduled_at": job.statistics.time_added.strftime(WebRequest.TIMESTAMP_FORMAT),
+            "time_spent_running": job.statistics.running_time,
+            "allocated_threads": job.job.docker_constraints.cpu_threads,
+            "allocated_ram": job.job.docker_constraints.memory,
+        }
+        return cast(str, yaml.dump(response_dict))
 
 
 class UserJobsRequest(WebRequest):
