@@ -2,6 +2,7 @@ from ja.common.proxy.ssh import SSHConfig
 from ja.common.work_machine import ResourceAllocation
 from ja.worker.config import WorkerConfig
 from unittest import TestCase
+from typing import Dict
 
 
 class WorkMachineConfigTest(TestCase):
@@ -24,3 +25,12 @@ class WorkMachineConfigTest(TestCase):
         self.assertEqual(self._wmc.resources.cpu_threads, 1)
         self.assertEqual(self._wmc.resources.memory, 2)
         self.assertEqual(self._wmc.resources.swap, 3)
+
+    def test_from_dict(self) -> None:
+        d: Dict[str, object] = dict()
+        d["ssh_config"] = self._wmc.ssh_config.to_dict()
+        d["resource_allocation"] = self._wmc.resources.to_dict()
+        d["uid"] = self._wmc.uid
+        # self.assertDictEqual(self._wmc, d)
+        # wc = WorkerConfig.from_dict(d)
+        # self.assertDictEqual(wc, d)
