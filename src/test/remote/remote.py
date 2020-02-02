@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-
 from ja.common.proxy.remote import Remote
 
 if __name__ == '__main__':

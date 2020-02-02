@@ -15,8 +15,10 @@ class AddCommandConfigTest(AbstractSerializableTest):
     """
 
     def setUp(self) -> None:
-        config = UserConfig(ssh_config=SSHConfig(hostname="ies", username="pettto",
-                                                 password="1234567890"), verbosity=Verbosity.DETAILED)
+        config = UserConfig(
+            ssh_config=SSHConfig(
+                hostname="ies", username="pettto", password="1234567890", key_filename="~/.ssh/id_rsa"),
+            verbosity=Verbosity.DETAILED)
         self._object = AddCommandConfig(config=config,
                                         job=Job(
                                             owner_id=1008,

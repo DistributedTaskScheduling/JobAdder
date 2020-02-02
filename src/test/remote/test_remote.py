@@ -9,8 +9,10 @@ from ja.common.proxy.command_handler import CommandHandler
 
 class CommandHandlerDummy(CommandHandler):
 
-    def _process_command_string(self, command_dict: Dict[str, object], username: str) -> Dict[str, object]:
+    def _process_command_dict(
+            self, command_dict: Dict[str, object], type_name: str, username: str) -> Dict[str, object]:
         assert username == getuser()
+        assert type_name == "COMMAND"
         command_string = str(command_dict["payload"])
         response_string = ""
         while command_string.startswith("COMMAND"):
@@ -22,16 +24,15 @@ class CommandHandlerDummy(CommandHandler):
 class RemoteTest(TestCase):
     """
     Class for testing Remote and CommandHandler.
-    IMPORTANT: THESE TESTS WILL FAIL IF YOU DON'T RUN THEM FROM THE BASE SRC DIRECTORY.
     """
 
-    @staticmethod
-    def _call_remote(command_string: str) -> str:
-        command_dict = dict(command=dict(payload=command_string))
+    def _call_remote(self, command_string: str) -> str:
+        command_dict = dict(command=dict(payload=command_string), type_name=self._command_string)
         finished_process = run(
             [
                 "python3",
-                "test/remote/remote"  # Change to "remote" to run from current directory
+                "-m",
+                "test.remote.remote"
             ], timeout=10, input=yaml.dump(command_dict).encode(), stdout=PIPE)
         stdout: bytes = finished_process.stdout
         response_dict = yaml.load(stdout.decode(), yaml.SafeLoader)
@@ -45,9 +46,9 @@ class RemoteTest(TestCase):
         self._command_handler_dummy = CommandHandlerDummy(socket_path="./dummy_socket")
 
     def test_short_command(self) -> None:
-        response_string = RemoteTest._call_remote(self._command_string)
+        response_string = self._call_remote(self._command_string)
         self.assertEqual(self._response_string, response_string)
 
     def test_long_command(self) -> None:
-        response_string = RemoteTest._call_remote(self._long_command_string)
+        response_string = self._call_remote(self._long_command_string)
         self.assertEqual(self._long_response_string, response_string)

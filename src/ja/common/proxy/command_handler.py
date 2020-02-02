@@ -45,20 +45,28 @@ class CommandHandler(ABC):
         while True:
             connection, client_address = named_socket.accept()
             try:
-                input_string = ""
-                while True:
-                    data = connection.recv(1024)
-                    if data[-1:] == b"\0":
-                        input_string += data[:-1].decode()
-                        break
-                    input_string += data.decode()
+                command_bytes = bytes(0)  # First 8 bytes encode command length
+                command_length = None
+                while command_length is None or len(command_bytes) < command_length:
+                    command_bytes += connection.recv(1024)
+                    if command_length is None and len(command_bytes) >= 8:
+                        command_length = int.from_bytes(bytes=command_bytes[:8], byteorder="big")
+                        command_bytes = command_bytes[8:]
+
+                input_string = command_bytes.decode()
+
                 input_dict = yaml.load(input_string, yaml.SafeLoader)
-                response_dict = self._process_command_string(input_dict["command"], input_dict["username"])
+                response_dict = self._process_command_dict(
+                    command_dict=input_dict["command"],
+                    type_name=input_dict["type_name"],
+                    username=input_dict["username"]
+                )
                 response_string = yaml.dump(response_dict)
                 connection.sendall(response_string.encode())
             finally:
                 connection.close()
 
     @abstractmethod
-    def _process_command_string(self, command_dict: Dict[str, object], username: str) -> Dict[str, object]:
+    def _process_command_dict(
+            self, command_dict: Dict[str, object], type_name: str, username: str) -> Dict[str, object]:
         pass

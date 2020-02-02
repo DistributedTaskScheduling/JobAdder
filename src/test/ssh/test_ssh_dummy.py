@@ -3,6 +3,7 @@ from typing import Dict
 from unittest import TestCase
 from time import sleep
 import yaml
+from getpass import getuser
 
 from ja.common.message.server import ServerCommand, ServerResponse
 from ja.common.message.worker import WorkerCommand, WorkerResponse
@@ -20,7 +21,7 @@ class SSHConnectionDummy(ISSHConnection):
         self._socket_path = socket_path
 
     def send_server_command(self, command: ServerCommand) -> ServerResponse:
-        command_dict = dict(command=command.to_dict())
+        command_dict = dict(command=command.to_dict(), type_name=command.__class__.__name__)
         input_stream = StringIO(initial_value=yaml.dump(command_dict))
         output_stream = StringIO()
         Remote(socket_path=self._socket_path, input_stream=input_stream, output_stream=output_stream)
@@ -29,7 +30,7 @@ class SSHConnectionDummy(ISSHConnection):
         return ServerResponse.from_dict(response_dict)
 
     def send_worker_command(self, command: WorkerCommand) -> WorkerResponse:
-        command_dict = dict(command=command.to_dict())
+        command_dict = dict(command=command.to_dict(), type_name=command.__class__.__name__)
         input_stream = StringIO(initial_value=yaml.dump(command_dict))
         output_stream = StringIO()
         Remote(socket_path=self._socket_path, input_stream=input_stream, output_stream=output_stream)
@@ -58,7 +59,10 @@ class ServerCommandDummy(ServerCommand):
 
 class CommandHandlerDummy(CommandHandler):
 
-    def _process_command_string(self, command_dict: Dict[str, object], username: str) -> Dict[str, object]:
+    def _process_command_dict(
+            self, command_dict: Dict[str, object], type_name: str, username: str) -> Dict[str, object]:
+        assert username == getuser()
+        assert type_name == "ServerCommandDummy"
         command = ServerCommandDummy.from_dict(command_dict)
         response = command.execute(database=None)
         return response.to_dict()
@@ -73,7 +77,7 @@ class SSHConnectionDummyTest(TestCase):
         self._payload = "PAYLOAD"
         self._server_command = ServerCommandDummy(self._payload)
         self._command_handler = CommandHandlerDummy(socket_path=socket_path)
-        sleep(0.01)
+        sleep(0.01)  # Wait until the command handler has created the socket.
         self._ssh_connection_dummy = SSHConnectionDummy(socket_path=socket_path)
 
     def test_send_server_command(self) -> None:

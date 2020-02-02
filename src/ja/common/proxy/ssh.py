@@ -42,26 +42,26 @@ class ISSHConnection(ABC):
 
 
 class SSHConnection(ISSHConnection):
-    def __init__(self, ssh_config: "SSHConfig", remote_path: str):
+    def __init__(self, ssh_config: "SSHConfig", remote_module: str):
         """!
         Creates a new SSHConnection object. Arguments for establishing the
         actual ssh connection are packaged in @ssh_config. If no credentials
         are provided and no suitable keys were found automatically the
         constructor prompts the user for input.
         @param ssh_config: Config for paramiko.
-        @param remote_path: The name of the Remote to execute on the host.
+        @param remote_module: The Python module to execute on the host.
         """
         self._username = ssh_config.username
         self._client = SSHClient()
         self._client.set_missing_host_key_policy(AutoAddPolicy())
         self._client.connect(
             hostname=ssh_config.hostname, username=self._username, password=ssh_config.password,
-            key_filename=ssh_config.key_path, passphrase=ssh_config.passphrase
+            key_filename=ssh_config.key_filename, passphrase=ssh_config.passphrase
         )
-        self._remote_path = remote_path
+        self._remote_module = remote_module
 
     def send_server_command(self, command: ServerCommand) -> ServerResponse:
-        stdin, stdout, stderr = self._client.exec_command(self._remote_path)
+        stdin, stdout, stderr = self._client.exec_command("python3 -m %s" % self._remote_module)
         stdin.write(command)
         response = ServerResponse.from_string(stdout.read())
         stdin.close()
@@ -70,7 +70,7 @@ class SSHConnection(ISSHConnection):
         return response
 
     def send_worker_command(self, command: WorkerCommand) -> WorkerResponse:
-        stdin, stdout, stderr = self._client.exec_command(self._remote_path)
+        stdin, stdout, stderr = self._client.exec_command("python3 -m %s" % self._remote_module)
         stdin.write(command)
         response = WorkerResponse.from_string(stdout.read())
         stdin.close()
@@ -87,7 +87,7 @@ class SSHConfig(Config):
     Specifies all properties used for establishing a paramiko SSHConnection.
     """
     def __init__(self, hostname: str, username: str = None, password: str = None,
-                 key_path: str = None, passphrase: str = None):
+                 key_filename: str = None, passphrase: str = None):
         """!
         For the SSHConnection some sort of credentials must be provided: either
         a password or a private key (which might need a passphrase to access).
@@ -95,14 +95,14 @@ class SSHConfig(Config):
         @param hostname: The name of the host to connect to, mandatory.
         @param username: The name of the user to use for login, optional.
         @param password: The password to use for login, optional.
-        @param key_path: The key pair to use for login, optional.
+        @param key_filename: The key pair to use for login, optional.
         @param passphrase: The passphrase to use for decrypting private keys,
         optional.
         """
         self._hostname = hostname
         self._username = username
         self._password = password
-        self._key_path = key_path
+        self._key_filename = key_filename
         self._passphrase = passphrase
 
     def __eq__(self, other: object) -> bool:
@@ -110,7 +110,7 @@ class SSHConfig(Config):
             return self.hostname == other.hostname \
                 and self.username == other.username \
                 and self.password == other.password \
-                and self.key_path == other.key_path \
+                and self.key_filename == other.key_filename \
                 and self.passphrase == other.passphrase
         else:
             return False
@@ -137,11 +137,11 @@ class SSHConfig(Config):
         return self._password
 
     @property
-    def key_path(self) -> str:
+    def key_filename(self) -> str:
         """!
         @return: The key pair to use for login.
         """
-        return self._key_path
+        return self._key_filename
 
     @property
     def passphrase(self) -> str:
@@ -155,7 +155,7 @@ class SSHConfig(Config):
         return_dict["hostname"] = self.hostname
         return_dict["username"] = self.username
         return_dict["password"] = self.password
-        return_dict["key_path"] = self.key_path
+        return_dict["key_filename"] = self.key_filename
         return_dict["passphrase"] = self.passphrase
         return return_dict
 
@@ -164,8 +164,8 @@ class SSHConfig(Config):
         hostname = cls._get_str_from_dict(property_dict=property_dict, key="hostname")
         username = cls._get_str_from_dict(property_dict=property_dict, key="username", mandatory=False)
         password = cls._get_str_from_dict(property_dict=property_dict, key="password", mandatory=False)
-        key_path = cls._get_str_from_dict(property_dict=property_dict, key="key_path", mandatory=False)
+        key_filename = cls._get_str_from_dict(property_dict=property_dict, key="key_filename", mandatory=False)
         passphrase = cls._get_str_from_dict(property_dict=property_dict, key="passphrase", mandatory=False)
         cls._assert_all_properties_used(property_dict)
         return SSHConfig(
-            hostname=hostname, username=username, password=password, key_path=key_path, passphrase=passphrase)
+            hostname=hostname, username=username, password=password, key_filename=key_filename, passphrase=passphrase)
