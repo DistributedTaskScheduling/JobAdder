@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from ja.common.job import Job, JobPriority
+from ja.common.job import Job, JobPriority, JobStatus
 from ja.common.work_machine import ResourceAllocation
 from ja.server.database.database import ServerDatabase
 from ja.server.database.types.job_entry import DatabaseJobEntry
@@ -119,13 +119,49 @@ class DefaultBlockingDistributionPolicy(DefaultJobDistributionPolicyBase):
     """
     Default distribution policy for blocking jobs.
     """
+    def _sum_constraints(self,
+                         jobs: List[DatabaseJobEntry],
+                         max_cpu: float = None,
+                         max_memory: float = None) -> Tuple[float, float]:
+
+        def _constrain(value: float, maximum: float) -> float:
+            if maximum is None:
+                return value
+            return min(value, maximum)
+
+        cpu_threads: float = 0
+        memory: float = 0
+        for j in jobs:
+            cpu_threads += _constrain(j.job.docker_constraints.cpu_threads, max_cpu)
+            memory += _constrain(j.job.docker_constraints.memory, max_memory)
+
+        return (cpu_threads, memory)
+
     def _assign_machine_cost(self,
                              job: DatabaseJobEntry,
                              machine: WorkMachine,
                              existing_jobs: List[DatabaseJobEntry]) -> Optional[Tuple[float, List[Job]]]:
+        """
+        Computes the expected amount of jobs needed to finish on the machine so that job can be scheduled.
+        """
         if not self._check_machine_feasible(job.job, machine, free_only=False):
             return None
-        return (len(existing_jobs), [])
+
+        if not len(existing_jobs):
+            return (0, [])
+
+        paused_jobs = [job for job in existing_jobs if job.job.status is JobStatus.PAUSED]
+        (need_cpu, need_memory) = self._sum_constraints(paused_jobs + [job])
+        need_cpu = max(0, need_cpu - float(machine.resources.free_resources.cpu_threads))
+        need_memory = max(0, need_memory - float(machine.resources.free_resources.memory))
+
+        # Jobs bigger than the needed cpu/memory do not contribute more to the average
+        # expected number of jobs to finish.
+        (avg_cpu, avg_memory) = self._sum_constraints(existing_jobs, need_cpu, need_memory)
+        avg_cpu /= len(existing_jobs)
+        avg_memory /= len(existing_jobs)
+
+        return (max(need_cpu / avg_cpu, need_memory / avg_memory), [])
 
 
 class DefaultPreemptiveDistributionPolicy(DefaultJobDistributionPolicyBase):

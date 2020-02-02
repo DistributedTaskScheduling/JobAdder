@@ -1,6 +1,6 @@
 import ja.server.scheduler.default_policies as dp
 
-from ja.common.job import Job, JobPriority
+from ja.common.job import Job, JobPriority, JobStatus
 from ja.common.work_machine import ResourceAllocation
 from ja.server.database.types.job_entry import DatabaseJobEntry
 from ja.server.database.types.work_machine import WorkMachine
@@ -144,18 +144,50 @@ class DefaultBlockingDistributionPolicyTest(AbstractDefaultPolicyTest):
         self._policy = dp.DefaultBlockingDistributionPolicy()
         self._existing = get_job(JobPriority.MEDIUM)
 
-    def test_smallest_number_jobs(self) -> None:
-        machine = get_machine(self._cpu, self._ram)  # No Jobs
-        self.assertAlmostEqual(self._get_score(machine), 0.0)
+    def test_ordering(self) -> None:
+        paused_job = get_job(JobPriority.MEDIUM, cpu=1, ram=1)
+        paused_job.job._status = JobStatus.PAUSED
+        small_job = get_job(JobPriority.MEDIUM, cpu=1, ram=1)
+        big_job = get_job(JobPriority.HIGH, cpu=self._cpu, ram=self._ram)
 
-        # One Job
-        almost_fit_score = self._get_score(machine, existing_jobs=[self._existing])
-        self.assertGreater(almost_fit_score, 0.0)
-
-        # Multiple Jobs
+        # One job
         machine = get_machine(self._cpu, self._ram)
-        bad_fit_score = self._get_score(machine, existing_jobs=[self._existing] * 5)
-        self.assertGreater(bad_fit_score, almost_fit_score)
+        machine.resources.allocate(ResourceAllocation(self._cpu, self._ram, 0))
+        cost1 = self._get_score(machine, [big_job])
+
+        # One job with a paused job
+        machine = get_machine(self._cpu, self._ram)
+        machine.resources.allocate(ResourceAllocation(self._cpu, self._ram, 1))
+        cost1_with_paused = self._get_score(machine, [big_job, paused_job])
+
+        # Two equal jobs, either one finishing is enough
+        machine = get_machine(self._cpu * 2, self._ram * 2)
+        machine.resources.allocate(ResourceAllocation(self._cpu * 2, self._ram * 2, 0))
+        cost2_equal = self._get_score(machine, [big_job, big_job])
+
+        # Two different jobs, only the bigger one is enough
+        machine = get_machine(self._cpu + 1, self._ram + 1)
+        machine.resources.allocate(ResourceAllocation(self._cpu + 1, self._ram + 1, 0))
+        cost2_different = self._get_score(machine, [big_job, small_job])
+
+        # Two jobs, both must finish
+        # CPU and RAM should be at least 2 for this test
+        machine = get_machine(self._cpu, self._ram)
+        machine.resources.allocate(ResourceAllocation(2, 2, 0))
+        cost2_both = self._get_score(machine, [small_job, small_job])
+
+        # Four jobs, 3 must finish
+        machine = get_machine(self._cpu + 1, self._ram + 1)
+        machine.resources.allocate(ResourceAllocation(4, 4, 0))
+        cost4_three = self._get_score(machine, [small_job] * 3)
+
+        # Finally, test ordering
+        self.assertAlmostEqual(cost1, cost2_equal, places=1)
+        self.assertAlmostEqual(cost1_with_paused, cost2_both, places=1)
+        self.assertGreater(cost1_with_paused, cost1)
+        self.assertGreater(cost2_different, cost1)
+        self.assertGreater(cost1_with_paused, cost1)
+        self.assertGreater(cost4_three, cost1_with_paused)
 
 
 class DefaultPreemptiveDistributionPolicyTest(AbstractDefaultPolicyTest):
