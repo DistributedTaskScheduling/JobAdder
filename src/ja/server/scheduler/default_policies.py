@@ -165,7 +165,9 @@ class DefaultBlockingDistributionPolicy(DefaultJobDistributionPolicyBase):
 
 
 class DefaultPreemptiveDistributionPolicy(DefaultJobDistributionPolicyBase):
-    _inverse_multiplier = 10.0
+    _cost_base_multiplier = 100.0
+    _cost_scale = 0.01
+    _cost_exponent = 4
     """
     Default distribution policy for preemptive jobs.
     """
@@ -201,7 +203,9 @@ class DefaultPreemptiveDistributionPolicy(DefaultJobDistributionPolicyBase):
                 # We cannot pause enough jobs on this machine
                 return None
 
-            total_cost += self._inverse_multiplier / (next_job_cost - self._cost_func.preempting_threshold)
+            cost = ((next_job_cost - self._cost_func.preempting_threshold) * self._cost_scale) ** self._cost_exponent
+            total_cost += self._cost_base_multiplier / cost
+
             to_preempt.append(next_job.job)
             allocation += self._get_job_allocation(next_job.job)
 
