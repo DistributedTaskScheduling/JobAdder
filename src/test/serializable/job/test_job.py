@@ -8,7 +8,7 @@ class JobTest(AbstractSerializableTest):
     Class for testing Job.
     """
     def setUp(self) -> None:
-        self._optional_properties = ["uid", "label"]
+        self._optional_properties = ["uid", "email", "label"]
         self._object = Job(
             owner_id=1008,
             email="user@website.com",

@@ -1,6 +1,6 @@
 from ja.common.job import Job
 from ja.server.database.database import ServerDatabase
-from ja.server.dispatcher.proxy_factory import IWorkerProxyFactory
+from ja.server.dispatcher.proxy_factory import WorkerProxyFactoryBase
 from typing import List
 
 
@@ -12,7 +12,7 @@ class Dispatcher:
     Represents the mediator between the Scheduler and the work machines.
     """
 
-    def __init__(self, proxy_factory: IWorkerProxyFactory):
+    def __init__(self, proxy_factory: WorkerProxyFactoryBase):
         """!
         Constructor for the dispatcher class.
         @param proxy_factory The proxy factory to use to create WorkerProxies
