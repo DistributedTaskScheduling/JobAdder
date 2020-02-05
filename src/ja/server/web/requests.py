@@ -3,6 +3,7 @@ from ja.server.database.database import ServerDatabase
 from ja.server.database.types.work_machine import WorkMachine
 from typing import Dict, Any, Optional, cast
 
+import datetime
 import yaml
 import pwd
 
@@ -81,7 +82,20 @@ class JobInformationRequest(WebRequest):
         return cast(str, yaml.dump(response_dict))
 
 
-class UserJobsRequest(WebRequest):
+class JobListRequestBase(WebRequest, ABC):
+    @staticmethod
+    def _query_database(database: ServerDatabase,
+                        owner: int = -1,
+                        since: datetime.datetime = None,
+                        machine: WorkMachine = None) -> str:
+        jobs = database.query_jobs(user_id=owner, since=since, work_machine=machine)
+        response_dict: Dict[str, Any] = {"jobs": []}
+        for job in jobs:
+            response_dict["jobs"] += [{"job_id": job.job.uid}]
+        return cast(str, yaml.dump(response_dict))
+
+
+class UserJobsRequest(JobListRequestBase):
     """
     Generates the response to the request to list user's jobs.
     """
@@ -101,14 +115,10 @@ class UserJobsRequest(WebRequest):
         except KeyError:
             return cast(str, yaml.dump({"error": self.NO_SUCH_USER_TEMPLATE % self._user}))
 
-        jobs = database.query_jobs(user_id=uid, since=None, work_machine=None)
-        response_dict: Dict[str, Any] = {"jobs": []}
-        for job in jobs:
-            response_dict["jobs"] += [{"job_id": job.job.uid}]
-        return cast(str, yaml.dump(response_dict))
+        return self._query_database(database, owner=uid)
 
 
-class PastJobsRequest(WebRequest):
+class PastJobsRequest(JobListRequestBase):
     """
     Generates the response to the request to list jobs which have been running in the past X hours.
     """
@@ -119,9 +129,10 @@ class PastJobsRequest(WebRequest):
 
         @param since The reported jobs should have been running since this amount of hours ago.
         """
+        self._since = datetime.datetime.now() - datetime.timedelta(hours=since)
 
     def generate_report(self, database: ServerDatabase) -> str:
-        pass
+        return self._query_database(database, since=self._since)
 
 
 class WorkMachineJobsRequest(WebRequest):

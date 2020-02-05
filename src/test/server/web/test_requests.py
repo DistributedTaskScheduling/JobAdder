@@ -1,3 +1,4 @@
+from freezegun import freeze_time  # type: ignore
 from ja.common.job import JobPriority, JobStatus
 from ja.common.work_machine import ResourceAllocation
 from ja.server.database.sql.mock_database import MockDatabase
@@ -43,6 +44,12 @@ class MockPwnam:
 
 
 class AbstractWebRequestTest(TestCase):
+    def _add_job(self, *args: Any, **kwargs: Any) -> DatabaseJobEntry:
+        job = get_job(*args, **kwargs)
+        self._db.update_job(job.job)
+        self._db.assign_job_machine(job.job, job.assigned_machine)
+        return job
+
     def setUp(self) -> None:
         self._request: req.WebRequest = None
         self._db = MockDatabase()
@@ -50,17 +57,22 @@ class AbstractWebRequestTest(TestCase):
         self._machine1.resources.allocate(ResourceAllocation(8, 8, 4))
         self._machine2 = get_machine(cpu=16, ram=64)
         self._machine2.resources.allocate(ResourceAllocation(8, 8, 0))
-        self._job1 = get_job(JobPriority.LOW, since=10, cpu=8, ram=8, machine=self._machine1, user=0)
-        self._job2 = get_job(JobPriority.MEDIUM, since=100, cpu=4, ram=4, machine=self._machine1,
-                             user=0, status=JobStatus.PAUSED)
-        self._job3 = get_job(JobPriority.URGENT, since=1000, cpu=8, ram=8, machine=self._machine2, user=2)
-        self._job4 = get_job(JobPriority.HIGH, since=10000, status=JobStatus.DONE, user=0)
-
         self._db.update_work_machine(self._machine1)
         self._db.update_work_machine(self._machine2)
-        for job in [self._job1, self._job2, self._job3, self._job4]:
-            self._db.update_job(job.job)
-            self._db.assign_job_machine(job.job, job.assigned_machine)
+
+        with freeze_time("2020-01-01 11:00:00"):
+            self._job1 = self._add_job(JobPriority.LOW, cpu=8, ram=8, machine=self._machine1, user=0)
+        with freeze_time("2020-01-01 10:00:00"):
+            self._job2 = self._add_job(JobPriority.MEDIUM, cpu=4, ram=4, machine=self._machine1,
+                                       user=0, status=JobStatus.QUEUED)
+            self._job2.job.status = JobStatus.RUNNING
+            self._db.update_job(self._job2.job)
+            self._job2.job.status = JobStatus.PAUSED
+            self._db.update_job(self._job2.job)
+        with freeze_time("2020-01-01 09:00:00"):
+            self._job3 = self._add_job(JobPriority.URGENT, cpu=8, ram=8, machine=self._machine2, user=2)
+        with freeze_time("2020-01-01 00:00:00"):
+            self._job4 = self._add_job(JobPriority.HIGH, since=0, status=JobStatus.DONE, user=0)
 
         pwd.getpwuid = MagicMock(side_effect=(lambda user: MockPwuid(user)))
         pwd.getpwnam = MagicMock(side_effect=(lambda user: MockPwnam(user)))
@@ -135,3 +147,23 @@ class UserJobsTest(AbstractWebRequestTest):
         self._request = req.UserJobsRequest(nonexisting_user)
         error_dict = {"error": req.UserJobsRequest.NO_SUCH_USER_TEMPLATE % nonexisting_user}
         self.assertDictEqual(error_dict, self._do_report())
+
+
+class PastJobsTest(AbstractWebRequestTest):
+    def test_no_jobs(self) -> None:
+        with freeze_time("2020-01-01 12:00:00"):
+            self._request = req.PastJobsRequest(0)
+            self.assertDictEqual({"jobs": []}, self._do_report())
+
+    def test_one_job(self) -> None:
+        with freeze_time("2020-01-01 12:00:00"):
+            self._request = req.PastJobsRequest(1)
+            expect = {"jobs": [{"job_id": self._job1.job.uid}]}
+            self.assertDictEqual(expect, self._do_report())
+
+    def test_all_jobs(self) -> None:
+        with freeze_time("2020-01-01 12:00:00"):
+            self._request = req.PastJobsRequest(12)
+            expect = {"jobs": [{"job_id": self._job1.job.uid}, {"job_id": self._job2.job.uid},
+                               {"job_id": self._job3.job.uid}, {"job_id": self._job4.job.uid}]}
+            self.assertDictEqual(expect, self._do_report())
