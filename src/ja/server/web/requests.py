@@ -85,6 +85,7 @@ class UserJobsRequest(WebRequest):
     """
     Generates the response to the request to list user's jobs.
     """
+    NO_SUCH_USER_TEMPLATE = "Unix user with name '%s' does not exist."
 
     def __init__(self, user: str):
         """!
@@ -92,9 +93,19 @@ class UserJobsRequest(WebRequest):
 
         @param user The user to report jobs for.
         """
+        self._user = user
 
     def generate_report(self, database: ServerDatabase) -> str:
-        pass
+        try:
+            uid = pwd.getpwnam(self._user).pw_uid
+        except KeyError:
+            return cast(str, yaml.dump({"error": self.NO_SUCH_USER_TEMPLATE % self._user}))
+
+        jobs = database.query_jobs(user_id=uid, since=None, work_machine=None)
+        response_dict: Dict[str, Any] = {"jobs": []}
+        for job in jobs:
+            response_dict["jobs"] += [{"job_id": job.job.uid}]
+        return cast(str, yaml.dump(response_dict))
 
 
 class PastJobsRequest(WebRequest):

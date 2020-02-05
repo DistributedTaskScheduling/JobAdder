@@ -11,10 +11,12 @@ from unittest import TestCase
 
 _global_job_counter: int = 0
 _global_machine_counter: int = 0
+global_now = dt.datetime(2020, 1, 1)
 
 
 def _datetime_before(since: int) -> dt.datetime:
-    return dt.datetime.now() - dt.timedelta(minutes=since)
+    global global_now
+    return global_now - dt.timedelta(minutes=since)
 
 
 def get_job(prio: JobPriority,
@@ -22,16 +24,19 @@ def get_job(prio: JobPriority,
             cpu: int = 1,
             ram: int = 1,
             machine: WorkMachine = None,
+            status: JobStatus = JobStatus.QUEUED,
+            user: int = 0,
             special_resources: List[str] = []) -> DatabaseJobEntry:
     global _global_job_counter
-    job = Job(owner_id=0, email="hey@you",
+    global global_now
+    job = Job(owner_id=user, email="hey@you",
               scheduling_constraints=JobSchedulingConstraints(prio, False, special_resources),
-              docker_context=None, docker_constraints=DockerConstraints(cpu, ram))
+              docker_context=None, docker_constraints=DockerConstraints(cpu, ram), status=status)
+
     job.uid = str(_global_job_counter)
     _global_job_counter += 1
-    job.status = JobStatus.QUEUED
 
-    stats = JobRuntimeStatistics(_datetime_before(since), dt.datetime.now(), 0)
+    stats = JobRuntimeStatistics(_datetime_before(since), global_now, 0)
     return DatabaseJobEntry(job, stats, machine)
 
 
