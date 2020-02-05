@@ -135,10 +135,11 @@ class PastJobsRequest(JobListRequestBase):
         return self._query_database(database, since=self._since)
 
 
-class WorkMachineJobsRequest(WebRequest):
+class WorkMachineJobsRequest(JobListRequestBase):
     """
     Generates the response to the request to list jobs which are running on the given work machine.
     """
+    NO_SUCH_MACHINE_TEMPLATE = "No work machine with UID '%s' found"
 
     def __init__(self, workmachine_id: str):
         """!
@@ -146,6 +147,12 @@ class WorkMachineJobsRequest(WebRequest):
 
         @param workmachine_id The work machine the request is for.
         """
+        self._machine_id = workmachine_id
 
     def generate_report(self, database: ServerDatabase) -> str:
-        pass
+        machines_with_id = [m for m in database.get_work_machines() if m.uid == self._machine_id]
+        if not machines_with_id:
+            return cast(str, yaml.dump({"error": self.NO_SUCH_MACHINE_TEMPLATE % self._machine_id}))
+
+        assert len(machines_with_id) == 1
+        return self._query_database(database, machine=machines_with_id[0])

@@ -167,3 +167,25 @@ class PastJobsTest(AbstractWebRequestTest):
             expect = {"jobs": [{"job_id": self._job1.job.uid}, {"job_id": self._job2.job.uid},
                                {"job_id": self._job3.job.uid}, {"job_id": self._job4.job.uid}]}
             self.assertDictEqual(expect, self._do_report())
+
+
+class WorkMachineJobsTest(AbstractWebRequestTest):
+    def test_empty_machine(self) -> None:
+        machine3 = get_machine(cpu=1, ram=1)
+        self._db.update_work_machine(machine3)
+        self._request = req.WorkMachineJobsRequest(machine3.uid)
+        self.assertDictEqual({"jobs": []}, self._do_report())
+
+    def test_nonexisting_machine(self) -> None:
+        self._request = req.WorkMachineJobsRequest("xyz")
+        self.assertDictEqual({"error": req.WorkMachineJobsRequest.NO_SUCH_MACHINE_TEMPLATE % "xyz"}, self._do_report())
+
+    def test_machine1(self) -> None:
+        expect = {"jobs": [{"job_id": self._job1.job.uid}, {"job_id": self._job2.job.uid}]}
+        self._request = req.WorkMachineJobsRequest(self._machine1.uid)
+        self.assertDictEqual(expect, self._do_report())
+
+    def test_machine2(self) -> None:
+        expect = {"jobs": [{"job_id": self._job3.job.uid}]}
+        self._request = req.WorkMachineJobsRequest(self._machine2.uid)
+        self.assertDictEqual(expect, self._do_report())
