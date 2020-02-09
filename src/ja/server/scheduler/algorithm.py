@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional, Tuple
 from ja.common.job import Job
 from ja.server.database.database import ServerDatabase
+from ja.server.database.types.job_entry import DatabaseJobEntry
 from ja.server.database.types.work_machine import WorkMachine
 
 
@@ -11,7 +12,7 @@ class CostFunction(ABC):
     """
 
     @abstractmethod
-    def calculate_cost(self, job: Job) -> float:
+    def calculate_cost(self, job: DatabaseJobEntry) -> float:
         """!
         Calculate the cost of a job.
 
@@ -22,16 +23,16 @@ class CostFunction(ABC):
         @return The calculated cost of the job.
         """
 
-    @abstractmethod
     @property
+    @abstractmethod
     def blocking_threshold(self) -> float:
         """!
         @return The maximum cost a job can have so that it can block further
           jobs with smaller cost from being scheduled.
         """
 
-    @abstractmethod
     @property
+    @abstractmethod
     def preempting_threshold(self) -> float:
         """!
         @return The maximum cost a job can have so that it can preempt already
@@ -46,7 +47,7 @@ class JobDistributionPolicy(ABC):
 
     @abstractmethod
     def assign_machine(self,
-                       job: Job,
+                       job: DatabaseJobEntry,
                        distribution: ServerDatabase.JobDistribution,
                        available_machines: List[WorkMachine]) -> Optional[Tuple[WorkMachine, List[Job]]]:
         """!

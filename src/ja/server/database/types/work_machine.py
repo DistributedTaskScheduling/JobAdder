@@ -50,8 +50,7 @@ class WorkMachineResources:
         @return True if the allocation or the test was successful, False
           otherwise.
         """
-        diff: ResourceAllocation = self._total_resources - allocation
-
+        diff: ResourceAllocation = self._free_resources - allocation
         test = not diff.is_negative()
 
         if test_only:
