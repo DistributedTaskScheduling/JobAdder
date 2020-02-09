@@ -1,8 +1,9 @@
 from ja.server.database.database import ServerDatabase
-from http.server import BaseHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import List, Any
 
 import ja.server.web.requests as req
+import threading
 
 
 def WebRequestHandlerFactory(database: ServerDatabase, mock_only: bool = True) -> type:
@@ -86,6 +87,17 @@ class StatisticsWebServer:
     Creates a web server which enables external applications to obtain statistics about JobAdder.
     """
 
+    def _server_thread(self, server_name: str, server_port: int, database: ServerDatabase) -> None:
+        try:
+            self._server = HTTPServer((server_name, server_port), WebRequestHandlerFactory(database))
+            self._server.timeout = 0.5  # Block for at most 0.5 seconds
+            while not self._quit:
+                self._server.handle_request()
+            self._server.server_close()
+        except Exception as e:
+            print("Failed to start WebAPI server.")
+            print(e)
+
     def __init__(self, server_name: str, server_port: int, database: ServerDatabase):
         """!
         Initialize the web server.
@@ -94,3 +106,11 @@ class StatisticsWebServer:
         @param server_port server port for the server, see http.server.HTTPServer.
         @param database The database to get information from when serving requests.
         """
+        self._quit = False
+        self._thread = threading.Thread(target=self._server_thread, args=(server_name, server_port, database))
+        self._thread.start()
+
+    def __del__(self) -> None:
+        if self._thread.is_alive():
+            self._quit = True
+            self._thread.join()

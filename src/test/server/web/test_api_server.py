@@ -1,11 +1,13 @@
 from datetime import datetime
 from freezegun import freeze_time  # type: ignore
 from ja.server.database.database import ServerDatabase
-from ja.server.web.api_server import WebRequestHandlerFactory
+from ja.server.web.api_server import WebRequestHandlerFactory, StatisticsWebServer
 from unittest import TestCase
 from unittest.mock import MagicMock
 
 import ja.server.web.requests as req
+import socket
+import time
 
 
 class MockBinaryIO:
@@ -85,3 +87,19 @@ class WebRequestHandlerTest(TestCase):
     def test_respond_valid_requests(self) -> None:
         self._check_response("{error: \"Invalid\"}")
         self._check_response("Hey! This is not a valid response but the request handler should not really care")
+
+
+class StatisticsWebServerTest(TestCase):
+    def test_server_starts(self) -> None:
+        # Start server and wait for initialization
+        server = StatisticsWebServer("127.0.0.1", 12345, None)
+        time.sleep(1.0)
+
+        # Check specified socket is open
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        result = sock.connect_ex(("127.0.0.1", 12345))
+        self.assertEqual(result, 0)
+        sock.close()
+
+        # Clean up
+        server.__del__()
