@@ -161,12 +161,12 @@ class DefaultBlockingDistributionPolicyTest(AbstractDefaultPolicyTest):
         cost1_with_paused = self._get_score(machine, [big_job, paused_job])
 
         # Two equal jobs, either one finishing is enough
-        machine = get_machine(self._cpu * 2, self._ram * 2)
+        machine = get_machine(self._cpu * 2, self._ram * 4)
         machine.resources.allocate(ResourceAllocation(self._cpu * 2, self._ram * 2, 0))
         cost2_equal = self._get_score(machine, [big_job, big_job])
 
         # Two different jobs, only the bigger one is enough
-        machine = get_machine(self._cpu + 1, self._ram + 1)
+        machine = get_machine(self._cpu * 2 + 1, self._ram + 1)
         machine.resources.allocate(ResourceAllocation(self._cpu + 1, self._ram + 1, 0))
         cost2_different = self._get_score(machine, [big_job, small_job])
 

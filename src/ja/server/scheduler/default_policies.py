@@ -161,7 +161,12 @@ class DefaultBlockingDistributionPolicy(DefaultJobDistributionPolicyBase):
         avg_cpu /= len(existing_jobs)
         avg_memory /= len(existing_jobs)
 
-        return (max(need_cpu / avg_cpu, need_memory / avg_memory), [])
+        score: float = 0
+        if need_cpu > 0:
+            score = max(score, need_cpu / avg_cpu)
+        if need_memory > 0:
+            score = max(score, need_memory / avg_memory)
+        return (score, [])
 
 
 class DefaultPreemptiveDistributionPolicy(DefaultJobDistributionPolicyBase):
