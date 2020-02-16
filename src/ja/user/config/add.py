@@ -30,7 +30,7 @@ class AddCommandConfig(UserConfig):
         return self._blocking
 
     def __dir__(self) -> Iterable[str]:
-        return ["_blocking", "_attach", "_job"]
+        return ["_blocking", "_attach", "_job", "_ssh_config", "_verbosity"]
 
     def __eq__(self, o: object) -> bool:
         if isinstance(o, AddCommandConfig):
@@ -41,13 +41,9 @@ class AddCommandConfig(UserConfig):
             return False
 
     def source_from_add_config(self, other_config: "AddCommandConfig", unset_only: bool = True) -> None:
-        if unset_only is False:
-            self._blocking = other_config._blocking
-            self._job = other_config._job
-        else:
-            for attr in dir(self):
-                if getattr(self, attr) is None:
-                    setattr(self, attr, getattr(other_config, attr))
+        for attr in dir(self):
+            if getattr(self, attr) is None or unset_only:
+                setattr(self, attr, getattr(other_config, attr))
 
     def to_dict(self) -> Dict[str, object]:
         add_dict: Dict[str, object] = dict()

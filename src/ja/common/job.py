@@ -145,6 +145,7 @@ class Job(Serializable):
         """!
         Set the job UID.
         If the job has an UID already set, this results in a RuntimeError.
+
         @param value The new job UID.
         """
         self._uid = value
@@ -204,12 +205,15 @@ class Job(Serializable):
         """!
         Set the job status.
         The following transitions are allowed:
+
         NEW -> QUEUED
         QUEUED -> CANCELLED | RUNNING
         RUNNING -> PAUSED | DONE | CANCELLED | CRASHED
         PAUSED -> CANCELLED | RUNNING
+
         If the transition requested is not allowed, or if the job has not
         been assigned an UID, a RuntimeError will be raised.
+
         @param new_status The new status of the job.
         """
         if self._status == JobStatus.NEW:
