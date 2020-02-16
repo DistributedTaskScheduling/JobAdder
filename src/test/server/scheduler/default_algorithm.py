@@ -1,14 +1,11 @@
 import ja.server.scheduler.default_policies as dp
 
-from copy import deepcopy
 from ja.common.job import JobPriority, JobStatus
 from ja.common.work_machine import ResourceAllocation
 from ja.server.database.types.job_entry import DatabaseJobEntry
-from ja.server.database.types.work_machine import WorkMachine
-from ja.server.database.database import ServerDatabase
-from ja.server.scheduler.algorithm import CostFunction
-from ja.server.scheduler.default_algorithm import DefaultSchedulingAlgorithm, get_allocation_for_job
-from test.server.scheduler.common import get_job, get_machine, assert_items_equal
+from ja.server.scheduler.algorithm import CostFunction, get_allocation_for_job
+from ja.server.scheduler.default_algorithm import DefaultSchedulingAlgorithm
+from test.server.scheduler.common import get_job, get_scheduled_job, get_machine, assert_distributions_equal
 from typing import Tuple
 from unittest import TestCase
 
@@ -62,30 +59,10 @@ class DefaultSchedulingAlgorithmTest(TestCase):
         self._filler.job.status = JobStatus.RUNNING
         self._machine.resources.allocate(get_allocation_for_job(self._filler.job))
 
-    def _assert_distributions_equal(self,
-                                    actual: ServerDatabase.JobDistribution,
-                                    expect: ServerDatabase.JobDistribution) -> None:
-        def extract_info_job(job: DatabaseJobEntry) -> Tuple[str, JobStatus, str]:
-            muid = job.assigned_machine.uid if job.assigned_machine else None
-            return (job.job.uid, job.job.status, muid)
-
-        actual_ids = [extract_info_job(job) for job in actual]
-        expect_ids = [extract_info_job(job) for job in expect]
-        assert_items_equal(self, actual_ids, expect_ids)
-
-    def _scheduled_job_entry(self,
-                             job: DatabaseJobEntry,
-                             machine: WorkMachine,
-                             next_status: JobStatus = None) -> DatabaseJobEntry:
-        scheduled_job = DatabaseJobEntry(deepcopy(job.job), job.statistics, machine)
-        if next_status:
-            scheduled_job.job.status = next_status
-        return scheduled_job
-
     def test_no_runnable_jobs(self) -> None:
         old_schedule = [self._filler]
         new_schedule = self._algo.reschedule_jobs(old_schedule, [self._machine], {})
-        self._assert_distributions_equal(new_schedule, old_schedule)
+        assert_distributions_equal(self, new_schedule, old_schedule)
 
     def test_pick_higher_priority_job(self) -> None:
         high_job = get_job(JobPriority.MEDIUM, since=100, cpu=self._cpu, ram=self._ram)
@@ -97,10 +74,10 @@ class DefaultSchedulingAlgorithmTest(TestCase):
         self._machine.resources.allocate(get_allocation_for_job(high_job.job))
         expected_schedule = [
             self._filler,
-            self._scheduled_job_entry(high_job, self._machine, JobStatus.RUNNING),
+            get_scheduled_job(high_job, self._machine, JobStatus.RUNNING),
             low_job,
         ]
-        self._assert_distributions_equal(new_schedule, expected_schedule)
+        assert_distributions_equal(self, new_schedule, expected_schedule)
 
     def _blocking_test_intro(self) -> Tuple[DatabaseJobEntry, DatabaseJobEntry]:
         # SimpleCostFunction guarantees HIGH priority jobs are blocking
@@ -110,12 +87,12 @@ class DefaultSchedulingAlgorithmTest(TestCase):
         # Blocking job comes, work machine is reserved for it
         first_schedule = [self._filler, big_job]
         new_schedule = self._algo.reschedule_jobs(first_schedule, [self._machine], {})
-        self._assert_distributions_equal(new_schedule, first_schedule)
+        assert_distributions_equal(self, new_schedule, first_schedule)
 
         # A low priority job comes. It is not scheduled on a blocked machine
         second_schedule = [self._filler, big_job, low_job]
         new_schedule = self._algo.reschedule_jobs(second_schedule, [self._machine], {})
-        self._assert_distributions_equal(new_schedule, second_schedule)
+        assert_distributions_equal(self, new_schedule, second_schedule)
         return (big_job, low_job)
 
     def test_use_blocked_machine(self) -> None:
@@ -127,10 +104,10 @@ class DefaultSchedulingAlgorithmTest(TestCase):
 
         new_schedule = self._algo.reschedule_jobs(third_schedule, [self._machine], {})
         expected_schedule = [
-            self._scheduled_job_entry(big_job, self._machine, JobStatus.RUNNING),
+            get_scheduled_job(big_job, self._machine, JobStatus.RUNNING),
             low_job
         ]
-        self._assert_distributions_equal(new_schedule, expected_schedule)
+        assert_distributions_equal(self, new_schedule, expected_schedule)
 
     def test_not_use_blocked_machine(self) -> None:
         (big_job, low_job) = self._blocking_test_intro()
@@ -142,10 +119,10 @@ class DefaultSchedulingAlgorithmTest(TestCase):
         new_schedule = self._algo.reschedule_jobs(third_schedule, [self._machine, new_machine], {})
         expected_schedule = [
             self._filler,
-            self._scheduled_job_entry(big_job, new_machine, JobStatus.RUNNING),
-            self._scheduled_job_entry(low_job, self._machine, JobStatus.RUNNING)
+            get_scheduled_job(big_job, new_machine, JobStatus.RUNNING),
+            get_scheduled_job(low_job, self._machine, JobStatus.RUNNING)
         ]
-        self._assert_distributions_equal(new_schedule, expected_schedule)
+        assert_distributions_equal(self, new_schedule, expected_schedule)
 
     def test_urgent_overrides_block(self) -> None:
         (big_job, low_job) = self._blocking_test_intro()
@@ -153,16 +130,16 @@ class DefaultSchedulingAlgorithmTest(TestCase):
         urgent_job = get_job(JobPriority.URGENT, cpu=self._cpu * 2, ram=self._ram * 2)
         new_schedule = self._algo.reschedule_jobs([self._filler, big_job, low_job, urgent_job], [self._machine], {})
         expected_schedule = [
-            self._scheduled_job_entry(self._filler, self._machine, JobStatus.PAUSED),
+            get_scheduled_job(self._filler, self._machine, JobStatus.PAUSED),
             big_job,
             low_job,
-            self._scheduled_job_entry(urgent_job, self._machine, JobStatus.RUNNING)
+            get_scheduled_job(urgent_job, self._machine, JobStatus.RUNNING)
         ]
-        self._assert_distributions_equal(expected_schedule, new_schedule)
+        assert_distributions_equal(self, expected_schedule, new_schedule)
 
         # However, after the urgent job is done, the block still remains
         new_schedule = self._algo.reschedule_jobs([self._filler, big_job, low_job], [self._machine], {})
-        self._assert_distributions_equal(new_schedule, [self._filler, big_job, low_job])
+        assert_distributions_equal(self, new_schedule, [self._filler, big_job, low_job])
 
     def test_preemption(self) -> None:
         # Two machines, one has 1 job, other has 2 jobs
@@ -183,23 +160,23 @@ class DefaultSchedulingAlgorithmTest(TestCase):
         expected_schedule = [
             existing_low_job1,
             existing_low_job2,
-            self._scheduled_job_entry(urgent_job, self._machine, JobStatus.RUNNING),
-            self._scheduled_job_entry(self._filler, self._machine, JobStatus.PAUSED)
+            get_scheduled_job(urgent_job, self._machine, JobStatus.RUNNING),
+            get_scheduled_job(self._filler, self._machine, JobStatus.PAUSED)
         ]
         self._machine.resources.deallocate(get_allocation_for_job(self._filler.job))
         self._machine.resources.allocate(ResourceAllocation(0, 0, self._filler.job.docker_constraints.memory))
         self._machine.resources.allocate(get_allocation_for_job(urgent_job.job))
-        self._assert_distributions_equal(new_schedule, expected_schedule)
+        assert_distributions_equal(self, new_schedule, expected_schedule)
 
         # Urgent job is done, restore filler job
         self._machine.resources.deallocate(get_allocation_for_job(urgent_job.job))
         old_schedule = [
             existing_low_job1,
             existing_low_job2,
-            self._scheduled_job_entry(self._filler, self._machine, JobStatus.PAUSED)
+            get_scheduled_job(self._filler, self._machine, JobStatus.PAUSED)
         ]
         new_schedule = self._algo.reschedule_jobs(old_schedule, [self._machine, other_machine], {})
-        self._assert_distributions_equal(new_schedule, [existing_low_job1, existing_low_job2, self._filler])
+        assert_distributions_equal(self, new_schedule, [existing_low_job1, existing_low_job2, self._filler])
 
     def test_restore_paused_first(self) -> None:
         # Preempt filler job
@@ -211,10 +188,10 @@ class DefaultSchedulingAlgorithmTest(TestCase):
         large_job = get_job(JobPriority.HIGH, cpu=self._cpu * 2, ram=self._ram * 2)
         new_schedule = self._algo.reschedule_jobs([large_job, self._filler], [self._machine], {})
         expected_schedule = [
-            self._scheduled_job_entry(self._filler, self._machine, JobStatus.RUNNING),
+            get_scheduled_job(self._filler, self._machine, JobStatus.RUNNING),
             large_job
         ]
-        self._assert_distributions_equal(new_schedule, expected_schedule)
+        assert_distributions_equal(self, new_schedule, expected_schedule)
 
     def test_special_resources(self) -> None:
         high_job = get_job(JobPriority.MEDIUM, cpu=self._cpu + 1, ram=self._ram, special_resources=["A"])
@@ -226,7 +203,7 @@ class DefaultSchedulingAlgorithmTest(TestCase):
         expected_schedule = [
             high_job,
             medium_job,
-            self._scheduled_job_entry(low_job, self._machine, JobStatus.RUNNING),
+            get_scheduled_job(low_job, self._machine, JobStatus.RUNNING),
             self._filler
         ]
-        self._assert_distributions_equal(new_schedule, expected_schedule)
+        assert_distributions_equal(self, new_schedule, expected_schedule)
