@@ -205,6 +205,7 @@ class Job(Serializable):
         """!
         Set the job status.
         The following transitions are allowed:
+
         NEW -> QUEUED
         QUEUED -> CANCELLED | RUNNING
         RUNNING -> PAUSED | DONE | CANCELLED | CRASHED

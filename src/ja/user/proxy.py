@@ -4,8 +4,8 @@ from ja.common.proxy.proxy import SingleMessageProxy
 from ja.common.message.server import ServerResponse
 from ja.common.proxy.ssh import SSHConfig
 from ja.user.config.add import AddCommandConfig
-from ja.user.config.cancel import CancelCommandConfig
-from ja.user.config.query import QueryCommandConfig
+from ja.user.message.cancel import CancelCommand
+from ja.user.message.query import QueryCommand
 
 
 class IUserServerProxy(SingleMessageProxy, ABC):
@@ -25,17 +25,17 @@ class IUserServerProxy(SingleMessageProxy, ABC):
         """
 
     @abstractmethod
-    def cancel_job(self, cancel_config: CancelCommandConfig) -> ServerResponse:
+    def cancel_job(self, cancel_command: CancelCommand) -> ServerResponse:
         """!
-        @param cancel_config: Config specifying parameters for cancelling a
+        @param cancel_command: Config specifying parameters for cancelling a
         job.
         @return: The Response from the Server.
         """
 
     @abstractmethod
-    def query(self, query_config: QueryCommandConfig) -> ServerResponse:
+    def query(self, query_command: QueryCommand) -> ServerResponse:
         """!
-        @param query_config: Config specifying parameters for querying a job.
+        @param query_command: Config specifying parameters for querying a job.
         @return: The Response from the Server.
         """
 
@@ -48,8 +48,8 @@ class UserServerProxy(IUserServerProxy):
     def add_job(self, add_config: AddCommandConfig) -> ServerResponse:
         pass
 
-    def cancel_job(self, cancel_config: CancelCommandConfig) -> ServerResponse:
+    def cancel_job(self, cancel_command: CancelCommand) -> ServerResponse:
         pass
 
-    def query(self, query_config: QueryCommandConfig) -> ServerResponse:
+    def query(self, query_command: QueryCommand) -> ServerResponse:
         pass
