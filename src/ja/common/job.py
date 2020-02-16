@@ -208,10 +208,6 @@ class Job(Serializable):
         QUEUED -> CANCELLED | RUNNING
         RUNNING -> PAUSED | DONE | CANCELLED | CRASHED
         PAUSED -> CANCELLED | RUNNING
-<<<<<<< HEAD
-
-=======
->>>>>>> cbd98ff... fixup! fixup! fixup! Implemented config userconfigs
         If the transition requested is not allowed, or if the job has not
         been assigned an UID, a RuntimeError will be raised.
         @param new_status The new status of the job.
