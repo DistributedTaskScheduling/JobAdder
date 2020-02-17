@@ -9,14 +9,13 @@ class WorkerConfig(Config):
     Config for the worker client.
     """
 
-    def __init__(self, uid: str, ssh_config: SSHConfig, resource_allocation: ResourceAllocation, ip: str):
+    def __init__(self, uid: str, ssh_config: SSHConfig, resource_allocation: ResourceAllocation):
         """!
         creates resource allocation instance
         """
         self._uid = uid
         self._ssh_config = ssh_config
         self._resource_allocation = resource_allocation
-        self._ip = ip
 
     @property
     def uid(self) -> str:
@@ -24,13 +23,6 @@ class WorkerConfig(Config):
         @return: The desired UID to register with on the server.
         """
         return str(self._uid)
-
-    @property
-    def ip(self) -> str:
-        """!
-        @return: The IP of the central server .
-        """
-        return str(self._ip)
 
     @property
     def ssh_config(self) -> SSHConfig:
@@ -51,7 +43,6 @@ class WorkerConfig(Config):
         d["ssh_config"] = self._ssh_config.to_dict()
         d["resource_allocation"] = self._resource_allocation.to_dict()
         d["uid"] = self._uid
-        d["ip"] = self._ip
         return d
 
     @classmethod
@@ -61,5 +52,4 @@ class WorkerConfig(Config):
         resource_allocation = ResourceAllocation.from_dict(
             cls._get_dict_from_dict(property_dict=property_dict, key="resource_allocation", mandatory=False))
         uid = str(property_dict["uid"])
-        ip = str(property_dict["ip"])
-        return WorkerConfig(uid, ssh_config, resource_allocation, ip)
+        return WorkerConfig(uid, ssh_config, resource_allocation)
