@@ -22,14 +22,16 @@ def get_job(prio: JobPriority,
             cpu: int = 1,
             ram: int = 1,
             machine: WorkMachine = None,
+            status: JobStatus = JobStatus.QUEUED,
+            user: int = 0,
             special_resources: List[str] = []) -> DatabaseJobEntry:
     global _global_job_counter
-    job = Job(owner_id=0, email="hey@you",
+    job = Job(owner_id=user, email="hey@you",
               scheduling_constraints=JobSchedulingConstraints(prio, False, special_resources),
-              docker_context=None, docker_constraints=DockerConstraints(cpu, ram))
+              docker_context=None, docker_constraints=DockerConstraints(cpu, ram), status=status)
+
     job.uid = str(_global_job_counter)
     _global_job_counter += 1
-    job.status = JobStatus.QUEUED
 
     stats = JobRuntimeStatistics(_datetime_before(since), dt.datetime.now(), 0)
     return DatabaseJobEntry(job, stats, machine)
