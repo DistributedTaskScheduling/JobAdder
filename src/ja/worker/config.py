@@ -17,6 +17,14 @@ class WorkerConfig(Config):
         self._ssh_config = ssh_config
         self._resource_allocation = resource_allocation
 
+    def __eq__(self, o: object) -> bool:
+        if isinstance(o, WorkerConfig):
+            return self._ssh_config == o._ssh_config \
+                and self._uid == o._uid \
+                and self._resource_allocation == o._resource_allocation
+        else:
+            return False
+
     @property
     def uid(self) -> str:
         """!
