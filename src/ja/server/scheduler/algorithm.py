@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 from ja.common.job import Job
 from ja.server.database.database import ServerDatabase
 from ja.server.database.types.job_entry import DatabaseJobEntry
@@ -69,17 +69,18 @@ class SchedulingAlgorithm(ABC):
     @abstractmethod
     def reschedule_jobs(self,
                         current_schedule: ServerDatabase.JobDistribution,
-                        available_machines: List[WorkMachine]) -> ServerDatabase.JobDistribution:
+                        available_machines: List[WorkMachine],
+                        available_special_resources: Dict[str, int]) -> ServerDatabase.JobDistribution:
         """!
-        Given the current list of jobs with their states and their assigned
-        work machines, calculate the next states and assigned machines for
-        these jobs.
+        Given the current list of jobs with their states and their assigned work machines, calculate the next states and
+        assigned machines for these jobs.
 
-        All jobs in the schedule have a state QUEUED, RUNNING or PAUSED, and
-        each running or paused job is assigned to an online machine.
+        All jobs in the schedule have a state QUEUED, RUNNING or PAUSED, and each running or paused job is assigned to
+        an online machine.
 
-        @param current_schedule A list of jobs with their states and assigned
-          work machine, if such a machine exists.
-        @param available_machines A list of work machines which can receive new
-          commands (i.e they are online).
+        @param current_schedule A list of jobs with their states and assigned work machine, if such a machine exists.
+        @param available_machines A list of work machines which can receive new commands (i.e they are online). The
+        @param available_special_resources The amount of special resources available for new jobs.
+
+        @return The new job distribution.
         """
