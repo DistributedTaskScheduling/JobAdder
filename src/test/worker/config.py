@@ -48,7 +48,7 @@ class WorkerMachineDictTest(AbstractSerializableTest):
     def setUp(self) -> None:
         self._optional_properties = []
         self._object = WorkerConfig(ssh_config=SSHConfig(hostname="127.0.1.1", username="someuser"),
-                                        resource_allocation=ResourceAllocation(1, 2, 3), uid="3")
+                                    resource_allocation=ResourceAllocation(1, 2, 3), uid="3")
         self._object_dict = {
             "uid": "3",
             "ssh_config": {
@@ -66,7 +66,7 @@ class WorkerMachineDictTest(AbstractSerializableTest):
             "ssh_config": {
                 "hostname": "127.0.1.2",
                 "username": "someuser"
-            }
+            },
             "resource_allocation": {
                 "cpu_threads": 1,
                 "memory": 2,
