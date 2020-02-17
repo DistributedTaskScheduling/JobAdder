@@ -9,7 +9,7 @@ class WorkerConfig(Config):
     Config for the worker client.
     """
 
-    def __init__(self, uid: str, ssh_config: SSHConfig, resource_allocation: ResourceAllocation):
+    def __init__(self, uid: str = None, ssh_config: SSHConfig = None, resource_allocation: ResourceAllocation = None):
         """!
         creates resource allocation instance
         """
