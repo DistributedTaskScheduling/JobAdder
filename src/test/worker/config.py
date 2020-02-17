@@ -54,7 +54,7 @@ class WorkerMachineDictTest(AbstractSerializableTest):
             "ssh_config": {
                 "hostname": "127.0.1.1",
                 "username": "someuser"
-            }
+            },
             "resource_allocation": {
                 "cpu_threads": 1,
                 "memory": 2,
