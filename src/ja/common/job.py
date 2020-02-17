@@ -108,8 +108,8 @@ class Job(Serializable):
                  scheduling_constraints: JobSchedulingConstraints,
                  docker_context: DockerContext,
                  docker_constraints: DockerConstraints,
-                 label: str = None
-                 ):
+                 label: str = None,
+                 status: JobStatus = JobStatus.NEW):
         self._owner_id = owner_id
         self._email = email
         self._scheduling_constraints = scheduling_constraints
@@ -117,7 +117,7 @@ class Job(Serializable):
         self._docker_constraints = docker_constraints
         self._label = label
         self._uid: Optional[str] = None
-        self._status = JobStatus.NEW
+        self._status = status
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, Job):
