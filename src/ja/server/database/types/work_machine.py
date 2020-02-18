@@ -1,8 +1,11 @@
 import enum
+from typing import Dict
+
+from ja.common.message.base import Serializable
 from ja.common.work_machine import ResourceAllocation
 
 
-class WorkMachineResources:
+class WorkMachineResources(Serializable):
     """
     Represents the resources of a work machine which is currently connected to
     the central server.
@@ -80,11 +83,30 @@ class WorkMachineResources:
             return self._total_resources == other.total_resources and self._free_resources == other.free_resources
         return False
 
+    def to_dict(self) -> Dict[str, object]:
+        n_dict: Dict[str, object] = dict()
+        n_dict["total_resources"] = self.total_resources.to_dict()
+        return n_dict
 
-class WorkMachineConnectionDetails:
+    @classmethod
+    def from_dict(cls, property_dict: Dict[str, object]) -> "WorkMachineResources":
+        total_resources = ResourceAllocation.from_dict(
+            cls._get_dict_from_dict(property_dict=property_dict, key="total_resources", mandatory=True))
+        return WorkMachineResources(total_resources)
+
+
+class WorkMachineConnectionDetails(Serializable):
     """
     A collection of the data needed to communicate with a work machine.
     """
+
+    def to_dict(self) -> Dict[str, object]:
+        pass
+
+    @classmethod
+    def from_dict(cls, property_dict: Dict[str, object]) -> "Serializable":
+        pass
+
     # TODO: this class is incomplete
 
 
@@ -94,7 +116,7 @@ class WorkMachineState(enum.Enum):
     OFFLINE = 20
 
 
-class WorkMachine:
+class WorkMachine(Serializable):
     """
     Represents the data stored about a work machine in the database.
     Each work machine is uniquely determined by its UID.
@@ -187,3 +209,23 @@ class WorkMachine:
         @param value The new connection details of the work machine.
         """
         self._connection_details = value
+
+    def to_dict(self) -> Dict[str, object]:
+        n_dict: Dict[str, object] = dict()
+        n_dict["uid"] = self.uid
+        n_dict["state"] = self.state
+        n_dict["resources"] = self._resources.to_dict()
+        return n_dict
+
+    @classmethod
+    def from_dict(cls, property_dict: Dict[str, object]) -> "WorkMachine":
+        uid = cls._get_str_from_dict(property_dict, key="uid", mandatory=True)
+        state = WorkMachineState(cls._get_from_dict(property_dict, key="state", mandatory=True))
+        # I still have no idea how to fix this
+        if "resources" in property_dict:
+            resources = WorkMachineResources.from_dict(
+                cls._get_dict_from_dict(property_dict, key="resources", mandatory=False))
+        else:
+            resources = None
+        cls._assert_all_properties_used(property_dict)
+        return WorkMachine(uid, state, resources)

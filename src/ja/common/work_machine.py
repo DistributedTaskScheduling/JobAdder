@@ -1,7 +1,9 @@
 from typing import Dict, cast
 
+from ja.common.message.base import Serializable
 
-class ResourceAllocation:
+
+class ResourceAllocation(Serializable):
     """
     Represents a group of resources on a work machine.
     """
