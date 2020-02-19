@@ -13,13 +13,21 @@ class AddCommand(ServerCommand):
         """!
         @param config: Config to create the add command from.
         """
+        self._config = config
+
+    @property
+    def config(self) -> AddCommandConfig:
+        """!
+        @return the AddCommandConfig for this Command.
+        """
+        return self._config
 
     def to_dict(self) -> Dict[str, object]:
-        pass
+        return self._config.to_dict()
 
     @classmethod
     def from_dict(cls, property_dict: Dict[str, object]) -> "AddCommand":
-        pass
+        return AddCommand(AddCommandConfig.from_dict(property_dict))
 
     def execute(self, database: ServerDatabase) -> ServerResponse:
         pass

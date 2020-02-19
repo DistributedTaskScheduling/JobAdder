@@ -13,7 +13,7 @@ class QueryCommand(ServerCommand):
     """
     datetime_format: str = "%Y-%d-%m %H:%M:%S"
 
-    def __init__(self, config: UserConfig, uid: List[str] = None, label: List[str] = None, owner: List[str] = None,
+    def __init__(self, config: UserConfig, uid: List[str] = None, label: List[str] = None, owner: List[int] = None,
                  priority: List[JobPriority] = None, status: List[JobStatus] = None, is_preemptible: bool = None,
                  special_resources: List[List[str]] = None, cpu_threads: Tuple[int, int] = None,
                  memory: Tuple[int, int] = None, before: datetime = None, after: datetime = None):
@@ -22,8 +22,8 @@ class QueryCommand(ServerCommand):
         if memory is not None and (memory[0] > memory[1] or memory[0] < 1):
             raise ValueError("Invalid range for memory.")
         if after is not None and before is not None:
-            if after < before:
-                raise ValueError("incorrect datetime")
+            if after > before:
+                raise ValueError("'after' argument must be a date that comes before the 'before' argument!")
         self._config = config
         self._uid = uid
         self._label = label
@@ -52,7 +52,7 @@ class QueryCommand(ServerCommand):
         return self._label
 
     @property
-    def owner(self) -> List[str]:
+    def owner(self) -> List[int]:
         """!
         @return: Job owner name(s) to filter query results by.
         """
@@ -147,14 +147,14 @@ class QueryCommand(ServerCommand):
         q_dict["uid"] = self._uid
         q_dict["label"] = self._label
         q_dict["owner"] = self._owner
-        q_dict["priority"] = [a.value for a in self._priority]
-        q_dict["status"] = [a.value for a in self._status]
+        q_dict["priority"] = None if self._priority is None else [a.value for a in self._priority]
+        q_dict["status"] = None if self._status is None else [a.value for a in self._status]
         q_dict["is_preemptible"] = self._is_preemptible
         q_dict["special_resources"] = self._special_resources
         q_dict["cpu_threads"] = self._cpu_threads
         q_dict["memory"] = self._memory
-        q_dict["before"] = self._before.strftime(self.datetime_format)
-        q_dict["after"] = self._after.strftime(self.datetime_format)
+        q_dict["before"] = None if self._before is None else self._before.strftime(self.datetime_format)
+        q_dict["after"] = None if self._after is None else self._after.strftime(self.datetime_format)
         return q_dict
 
     @classmethod
@@ -170,6 +170,7 @@ class QueryCommand(ServerCommand):
         owner = None
         if "owner" in property_dict:
             owner = cls._get_str_list_from_dict(property_dict=property_dict, key="owner", mandatory=False)
+            owner = cast(List[int], owner)
 
         job_priority_list: List[JobPriority] = []
         if "priority" in property_dict:

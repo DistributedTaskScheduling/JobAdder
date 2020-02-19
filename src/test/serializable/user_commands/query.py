@@ -19,26 +19,26 @@ class QueryCommandTest(AbstractSerializableTest):
         time_now_datetime = datetime.strptime(time_now, time_now)
         config = UserConfig(ssh_config=SSHConfig(hostname="ies", username="pettto",
                                                  password="1234567890"), verbosity=Verbosity.DETAILED)
-        self._object = QueryCommand(config=config, uid=["asdf", "sdf"], label=["fqwe", "dalfs"], owner=["safd", "sad"],
+        self._object = QueryCommand(config=config, uid=["asdf", "sdf"], label=["fqwe", "dalfs"], owner=[1000, 2000],
                                     priority=[JobPriority.HIGH],
                                     status=[JobStatus.CRASHED],
                                     is_preemptible=True, special_resources=[["abc", "bcd"], ["ops", "123"]],
-                                    cpu_threads=(1, 2), memory=(2000, 3000), before=time_now_datetime,
-                                    after=time_now_datetime + timedelta(hours=2))
+                                    cpu_threads=(1, 2), memory=(2000, 3000),
+                                    before=time_now_datetime + timedelta(hours=2), after=time_now_datetime)
         v_list: List[str] = list(QueryCommand.__dir__(self._object))
         self._optional_properties = [a[1:] for a in v_list]
         self._object_dict = {
             "uid": ["asdf", "sdf"],
             "label": ["fqwe", "dalfs"],
-            "owner": ["safd", "sad"],
+            "owner": [1000, 2000],
             "priority": [2],
             "status": [6],
             "is_preemptible": True,
             "special_resources": [["abc", "bcd"], ["ops", "123"]],
             "cpu_threads": (1, 2),
             "memory": (2000, 3000),
-            "before": time_now_datetime.strftime(QueryCommand.datetime_format),
-            "after": (time_now_datetime + timedelta(hours=2)).strftime(QueryCommand.datetime_format),
+            "after": time_now_datetime.strftime(QueryCommand.datetime_format),
+            "before": (time_now_datetime + timedelta(hours=2)).strftime(QueryCommand.datetime_format),
             "config": {
                 "verbosity": 2,
                 "ssh_config": {
@@ -54,15 +54,15 @@ class QueryCommandTest(AbstractSerializableTest):
         self._other_object_dict = {
             "uid": ["adlfjs", "alsfjslkfj"],
             "label": ["fqwe", "lasjdfafj"],
-            "owner": ["safd", "salfdjsaf"],
+            "owner": [3, 4],
             "priority": [2],
             "status": [6],
             "is_preemptible": True,
             "special_resources": [["bc", "bcd"], ["ops", "123"]],
             "cpu_threads": (1, 2),
             "memory": (200, 300),
-            "before": time_now_datetime.strftime(QueryCommand.datetime_format),
-            "after": (time_now_datetime + timedelta(hours=2)).strftime(QueryCommand.datetime_format),
+            "after": time_now_datetime.strftime(QueryCommand.datetime_format),
+            "before": (time_now_datetime + timedelta(hours=2)).strftime(QueryCommand.datetime_format),
             "config": {
                 "verbosity": 2,
                 "ssh_config": {
