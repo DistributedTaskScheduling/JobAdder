@@ -169,8 +169,8 @@ class QueryCommand(ServerCommand):
             label = cls._get_str_list_from_dict(property_dict=property_dict, key="label", mandatory=False)
         owner = None
         if "owner" in property_dict:
-            owner = cls._get_str_list_from_dict(property_dict=property_dict, key="owner", mandatory=False)
-            owner = cast(List[int], owner)
+            owner_str = cls._get_str_list_from_dict(property_dict=property_dict, key="owner", mandatory=False)
+            owner = cast(List[int], owner_str)
 
         job_priority_list: List[JobPriority] = []
         if "priority" in property_dict:

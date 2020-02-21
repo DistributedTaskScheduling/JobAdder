@@ -172,7 +172,7 @@ class UserClientCLIHandler:
             return add_command
 
         elif args.command == "query":
-            uids: List[str] = args.name
+            uids: List[str] = args.uid
             labels: List[str] = args.label
             owners: List[int] = args.owner
             priorities: List[JobPriority] = None if args.priority is None else [UserClientCLIHandler._pr[priority]
