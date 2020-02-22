@@ -1,21 +1,11 @@
 from copy import deepcopy
 from ja.common.job import JobStatus, Job
-from ja.common.work_machine import ResourceAllocation
 from ja.server.database.database import ServerDatabase
 from ja.server.database.types.job_entry import DatabaseJobEntry, JobRuntimeStatistics
 from ja.server.database.types.work_machine import WorkMachine
 from ja.server.scheduler.algorithm import SchedulingAlgorithm, JobDistributionPolicy, CostFunction
+from ja.server.scheduler.algorithm import get_allocation_for_job
 from typing import List, Dict, Tuple
-
-
-def get_allocation_for_job(job: Job, other_status: JobStatus = None) -> ResourceAllocation:
-    """
-    Get the resource allocation for a job depending on its status.
-    """
-    status = other_status if other_status else job.status
-    if status is JobStatus.PAUSED:
-        return ResourceAllocation(0, 0, job.docker_constraints.memory)
-    return ResourceAllocation(job.docker_constraints.cpu_threads, job.docker_constraints.memory, 0)
 
 
 class DefaultSchedulingAlgorithm(SchedulingAlgorithm):
