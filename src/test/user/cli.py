@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0, "C:/Users/malik/Desktop/JobAdder/src")
 from unittest import TestCase
 from typing import List, cast
 
@@ -14,19 +16,22 @@ class CLITest(TestCase):
     """
     Class to test the command line interface.
     """
-    commands: List[List[str]] = ["add -s path -l lab --mount f l a r -p high -t 8 -m 8 --pe --bl --owner 13".split(),
-                                 "add -s usr/cool-path -e a@e.de -p low -t 1 -m 2 --owner 9".split(),
-                                 "add -s usr/another-path -e a@e.de -p low -t 6 -m 4 --owner 9".split(),
-                                 "add -s usr/yet-another-path -e a@e.de -p high -t 1 -m 4 --owner 9".split()]
+    commands: List[List[str]] = ["add -s program.py -l lab --mount f l a r -p high -t 8 -m 8 --pe --bl --owner 13".split(),
+                                 "add -s program.py -e a@e.de -p low -t 1 -m 2 --owner 9".split(),
+                                 "add -s program.py -e a@e.de -p low -t 6 -m 4 --owner 9".split(),
+                                 "add -s program.py -e a@e.de -p high -t 1 -m 4 --owner 9".split(),
+                                 "add -c add.yaml".split()]
     jobs: List[Job] = [Job(13, "anon@biz.org", JobSchedulingConstraints(JobPriority.HIGH, True, []),
-                           DockerContext("path", [MountPoint("f", "l"), MountPoint("a", "r")]),
+                           DockerContext("print(2 + 3)\n", [MountPoint("f", "l"), MountPoint("a", "r")]),
                            DockerConstraints(8, 8), "lab", status=JobStatus.QUEUED),
                        Job(9, "a@e.de", JobSchedulingConstraints(JobPriority.LOW, False, []),
-                           DockerContext("usr/cool-path", []), DockerConstraints(1, 2), status=JobStatus.RUNNING),
+                           DockerContext("print(2 + 3)\n", []), DockerConstraints(1, 2), status=JobStatus.RUNNING),
                        Job(9, "a@e.de", JobSchedulingConstraints(JobPriority.LOW, False, []),
-                           DockerContext("usr/another-path", []), DockerConstraints(6, 4), status=JobStatus.QUEUED),
+                           DockerContext("print(2 + 3)\n", []), DockerConstraints(6, 4), status=JobStatus.QUEUED),
                        Job(9, "a@e.de", JobSchedulingConstraints(JobPriority.HIGH, False, []),
-                           DockerContext("usr/yet-another-path", []), DockerConstraints(1, 4), status=JobStatus.QUEUED)]
+                           DockerContext("print(2 + 3)\n", []), DockerConstraints(1, 4), status=JobStatus.QUEUED),
+                       Job(-1, "anon@biz.org", JobSchedulingConstraints(JobPriority.URGENT, False, ["lic", "lic1"]),
+                           DockerContext("print(2 + 3)\n", []), DockerConstraints(5, 8), status=JobStatus.QUEUED)]
 
     def setUp(self) -> None:
         self._proxy = ServerProxyDummy([])
@@ -37,7 +42,7 @@ class CLITest(TestCase):
         for i, command in enumerate(CLITest.commands):
             if command[0] == "add":
                 parsed_command: AddCommand = cast(AddCommand, self._cli.get_server_command(command))
-                self._proxy.add_job(parsed_command)
+                self._proxy.add_job(parsed_command.config)
                 if i == 1:
                     parsed_command.config.job.status = JobStatus.RUNNING
 
@@ -46,45 +51,50 @@ class CLITest(TestCase):
 
     def test_query_threads(self) -> None:
         command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("query -t 6 8".split()))
-        response: List[Job] = self._proxy.query(command)
-        self.assertCountEqual(response, [CLITest.jobs[0], CLITest.jobs[2]])
+        response: str = self._proxy.query(command).result_string
+        self.assertEqual(response, "\n".join([str(CLITest.jobs[0]), str(CLITest.jobs[2])]))
 
     def test_query_owner(self) -> None:
         command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("query --owner 9".split()))
-        response: List[Job] = self._proxy.query(command)
-        self.assertCountEqual(response, [CLITest.jobs[1], CLITest.jobs[2], CLITest.jobs[3]])
+        response: str = self._proxy.query(command).result_string
+        self.assertEqual(response, "\n".join([str(CLITest.jobs[1]), str(CLITest.jobs[2]), str(CLITest.jobs[3])]))
 
     def test_query_priority(self) -> None:
         command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("query -p low".split()))
-        response: List[Job] = self._proxy.query(command)
-        self.assertCountEqual(response, [CLITest.jobs[1], CLITest.jobs[2]])
+        response: str = self._proxy.query(command).result_string
+        self.assertEqual(response, "\n".join([str(CLITest.jobs[1]), str(CLITest.jobs[2])]))
 
     def test_query_uid(self) -> None:
         command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("query --uid 1 3".split()))
-        response: List[Job] = self._proxy.query(command)
-        self.assertCountEqual(response, [CLITest.jobs[1], CLITest.jobs[3]])
+        response: str = self._proxy.query(command).result_string
+        self.assertEqual(response, "\n".join([str(CLITest.jobs[1]), str(CLITest.jobs[3])]))
 
     def test_query_memory(self) -> None:
         command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("query --memory 1 4".split()))
-        response: List[Job] = self._proxy.query(command)
-        self.assertCountEqual(response, [CLITest.jobs[1], CLITest.jobs[2], CLITest.jobs[3]])
+        response: str = self._proxy.query(command).result_string
+        self.assertEqual(response, "\n".join([str(CLITest.jobs[1]), str(CLITest.jobs[2]), str(CLITest.jobs[3])]))
 
     def test_query_status(self) -> None:
         command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("query --status running".split()))
-        response: List[Job] = self._proxy.query(command)
-        self.assertCountEqual(response, [CLITest.jobs[1]])
+        response: str = self._proxy.query(command).result_string
+        self.assertEqual(response, "\n".join([str(CLITest.jobs[1])]))
 
     def test_query_memory_empty(self) -> None:
         command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("query --memory 10 40".split()))
-        response: List[Job] = self._proxy.query(command)
-        self.assertFalse(response)
+        response: str = self._proxy.query(command).result_string
+        self.assertEqual(response, "No jobs satisfy these constraints.")
+
+    def test_query_sresources(self) -> None:
+        command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("query --sr lic,lic1".split()))
+        response: str = self._proxy.query(command).result_string
+        self.assertEqual(response, "\n".join([str(CLITest.jobs[4])]))
 
     def test_cancel_label(self) -> None:
-        command: CancelCommand = cast(CancelCommand, self._cli.get_server_command("cancel label lab".split()))
+        command: CancelCommand = cast(CancelCommand, self._cli.get_server_command("cancel --label lab".split()))
         self._proxy.cancel_job(command)
         self.assertEqual(self._proxy.jobs[0].status, JobStatus.CANCELLED)
 
     def test_cancel_uid(self) -> None:
-        command: CancelCommand = cast(CancelCommand, self._cli.get_server_command("cancel uid 2".split()))
+        command: CancelCommand = cast(CancelCommand, self._cli.get_server_command("cancel --uid 2".split()))
         self._proxy.cancel_job(command)
         self.assertEqual(self._proxy.jobs[2].status, JobStatus.CANCELLED)
