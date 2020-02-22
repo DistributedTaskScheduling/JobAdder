@@ -12,8 +12,10 @@ class CancelCommandTest(AbstractSerializableTest):
     def setUp(self) -> None:
         self._optional_properties = []
 
-        config = UserConfig(ssh_config=SSHConfig(hostname="ies", username="pettto",
-                                                 password="1234567890"), verbosity=Verbosity.DETAILED)
+        config = UserConfig(
+            ssh_config=SSHConfig(
+                hostname="ies", username="pettto", password="1234567890", key_filename="~/.ssh/id_rsa"),
+            verbosity=Verbosity.DETAILED)
         self._object = CancelCommand(config=config, label="ies")
 
         self._object_dict = {

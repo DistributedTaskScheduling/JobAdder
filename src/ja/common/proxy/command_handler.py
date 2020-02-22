@@ -1,4 +1,9 @@
-from abc import ABC
+import os
+import socket
+from abc import ABC, abstractmethod
+from threading import Thread
+import yaml
+from typing import Dict
 
 
 class CommandHandler(ABC):
@@ -17,7 +22,51 @@ class CommandHandler(ABC):
     success property of the Response is True if both validations were passed
     and the Command was executed without error, and is false otherwise.
     """
-    def __init__(self, socket: str):
+    def __init__(self, socket_path: str):
         """!
-        @param socket: The Unix named socket to listen for Commands on.
+        @param socket_path: The Unix named socket to listen for Commands on.
         """
+        self._socket_path = socket_path
+        self._listen_thread = Thread(target=self._listen)
+        self._listen_thread.daemon = True  # Ensures that the thread is killed when main thread exits
+        self._listen_thread.start()
+
+    def _listen(self) -> None:
+        # Make sure the socket does not already exist
+        try:
+            os.unlink(self._socket_path)
+        except OSError:
+            if os.path.exists(self._socket_path):
+                raise
+        named_socket = socket.socket(family=socket.AF_UNIX, type=socket.SOCK_STREAM)
+        named_socket.bind(self._socket_path)
+        named_socket.listen(1)
+
+        while True:
+            connection, client_address = named_socket.accept()
+            try:
+                command_bytes = bytes(0)  # First 8 bytes encode command length
+                command_length = None
+                while command_length is None or len(command_bytes) < command_length:
+                    command_bytes += connection.recv(1024)
+                    if command_length is None and len(command_bytes) >= 8:
+                        command_length = int.from_bytes(bytes=command_bytes[:8], byteorder="big")
+                        command_bytes = command_bytes[8:]
+
+                input_string = command_bytes.decode()
+
+                input_dict = yaml.load(input_string, yaml.SafeLoader)
+                response_dict = self._process_command_dict(
+                    command_dict=input_dict["command"],
+                    type_name=input_dict["type_name"],
+                    username=input_dict["username"]
+                )
+                response_string = yaml.dump(response_dict)
+                connection.sendall(response_string.encode())
+            finally:
+                connection.close()
+
+    @abstractmethod
+    def _process_command_dict(
+            self, command_dict: Dict[str, object], type_name: str, username: str) -> Dict[str, object]:
+        pass

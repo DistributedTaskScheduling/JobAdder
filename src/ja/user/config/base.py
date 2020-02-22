@@ -54,15 +54,15 @@ class UserConfig(Config):
             setattr(self, "_verbosity", getattr(other_config, "_verbosity"))
 
     def to_dict(self) -> Dict[str, object]:
-        _dict: Dict[str, object] = dict()
-        _dict["ssh_config"] = self._ssh_config.to_dict()
-        _dict["verbosity"] = self._verbosity
-        return _dict
+        property_dict: Dict[str, object] = dict()
+        property_dict["ssh_config"] = self._ssh_config.to_dict()
+        property_dict["verbosity"] = self._verbosity.value
+        return property_dict
 
     @classmethod
     def from_dict(cls, property_dict: Dict[str, object]) -> "UserConfig":
-        _ssh_config = SSHConfig.from_dict(
+        ssh_config = SSHConfig.from_dict(
             cls._get_dict_from_dict(property_dict=property_dict, key="ssh_config", mandatory=True))
-        _verbosity = Verbosity(cls._get_from_dict(property_dict=property_dict, key="verbosity", mandatory=True))
+        verbosity = Verbosity(cls._get_from_dict(property_dict=property_dict, key="verbosity", mandatory=True))
         cls._assert_all_properties_used(property_dict)
-        return UserConfig(ssh_config=_ssh_config, verbosity=_verbosity)
+        return UserConfig(ssh_config=ssh_config, verbosity=verbosity)

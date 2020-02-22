@@ -28,6 +28,12 @@ class WorkerResponse(Response):
     Corresponding Response class for WorkerCommand.
     """
 
+    # TODO remove WorkerResponse class if no extra functionality is implemented
+
     @classmethod
     def from_dict(cls, property_dict: Dict[str, object]) -> "WorkerResponse":
         return cast(WorkerResponse, super().from_dict(property_dict))
+
+    @classmethod
+    def from_string(cls, yaml_string: str) -> "WorkerResponse":
+        return cast(WorkerResponse, super().from_string(yaml_string))

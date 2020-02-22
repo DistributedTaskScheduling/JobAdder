@@ -11,8 +11,10 @@ class UserConfigTest(AbstractSerializableTest):
 
     def setUp(self) -> None:
         self._optional_properties = []
-        self._object = UserConfig(ssh_config=SSHConfig(hostname="ies", username="pettto",
-                                                       password="1234567890"), verbosity=Verbosity.DETAILED)
+        self._object = UserConfig(
+            ssh_config=SSHConfig(
+                hostname="ies", username="pettto", password="1234567890", key_filename="~/.ssh/id_rsa"),
+            verbosity=Verbosity.DETAILED)
 
         self._object_dict = {
             "verbosity": 2,
