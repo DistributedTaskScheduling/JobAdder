@@ -1,5 +1,3 @@
-import sys
-sys.path.insert(0, "C:/Users/malik/Desktop/JobAdder/src")
 from unittest import TestCase
 from typing import List, cast
 
@@ -16,12 +14,12 @@ class CLITest(TestCase):
     """
     Class to test the command line interface.
     """
-    commands: List[List[str]] = ["add -s program.py -l lab --mount f l a r -p high -t 8 -m 8 --pe --bl --owner 13".split(),
+    commands: List[List[str]] = ["add -s program.py -l lab --mount f l a r -p 2 -t 8 -m 8 --pe --bl --owner 1".split(),
                                  "add -s program.py -e a@e.de -p low -t 1 -m 2 --owner 9".split(),
                                  "add -s program.py -e a@e.de -p low -t 6 -m 4 --owner 9".split(),
                                  "add -s program.py -e a@e.de -p high -t 1 -m 4 --owner 9".split(),
                                  "add -c add.yaml".split()]
-    jobs: List[Job] = [Job(13, "anon@biz.org", JobSchedulingConstraints(JobPriority.HIGH, True, []),
+    jobs: List[Job] = [Job(1, "anon@biz.org", JobSchedulingConstraints(JobPriority.HIGH, True, []),
                            DockerContext("print(2 + 3)\n", [MountPoint("f", "l"), MountPoint("a", "r")]),
                            DockerConstraints(8, 8), "lab", status=JobStatus.QUEUED),
                        Job(9, "a@e.de", JobSchedulingConstraints(JobPriority.LOW, False, []),

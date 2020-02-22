@@ -59,7 +59,7 @@ class UserClientCLIHandler:
         return self.get_server_command(sys.argv[1:])
 
     @staticmethod
-    def _get_option(option: str, arg: Any, default: Any, config: Dict[str, Any]):
+    def _get_option(option: str, arg: Any, default: Any, config: Dict[str, Any]) -> Any:
         if arg is None:
             if option in config:
                 return config[option]
@@ -223,17 +223,17 @@ class UserClientCLIHandler:
                 is_preemptible = False
             elif args.preemptible is None:
                 is_preemptible = None
-            special_resources: List[List[str]] = None if args.special_resources is None else \
+            special_resources_query: List[List[str]] = None if args.special_resources is None else \
                                                 [sr.split(",") for sr in args.special_resources.split(".")]
-            threads: Tuple[int, int] = None if args.threads is None else (args.threads[0], args.threads[1])
-            memory: Tuple[int, int] = None if args.memory is None else (args.memory[0], args.memory[1])
+            threads_query: Tuple[int, int] = None if args.threads is None else (args.threads[0], args.threads[1])
+            memory_query: Tuple[int, int] = None if args.memory is None else (args.memory[0], args.memory[1])
             # these only work in python 3.7 and newer
             before = None if args.before is None else datetime.fromisoformat(args.before)
             after = None if args.after is None else datetime.fromisoformat(args.after)
 
             query_command = QueryCommand(user_config, uids, labels, owners,
                                          priorities, statuses, is_preemptible,
-                                         special_resources, threads, memory,
+                                         special_resources_query, threads_query, memory_query,
                                          before, after)
 
             return query_command
