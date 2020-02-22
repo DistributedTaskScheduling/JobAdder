@@ -8,8 +8,9 @@ class SSHConfigTest(AbstractSerializableTest):
     """
 
     def setUp(self) -> None:
-        self._optional_properties = ["password", "passphrase", "key_filename"]
-        self._object = SSHConfig(hostname="ies", username="pettto", password="1234567890")
+        self._optional_properties = ["username", "password", "passphrase", "key_filename"]
+        self._object = SSHConfig(
+            hostname="ies", username="pettto", password="1234567890", key_filename="~/.ssh/id_rsa")
         self._object_dict = {
             "hostname": "ies",
             "username": "pettto",

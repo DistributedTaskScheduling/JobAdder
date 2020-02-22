@@ -1,9 +1,20 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional, Tuple, Dict
-from ja.common.job import Job
+from ja.common.job import Job, JobStatus
+from ja.common.work_machine import ResourceAllocation
 from ja.server.database.database import ServerDatabase
 from ja.server.database.types.job_entry import DatabaseJobEntry
 from ja.server.database.types.work_machine import WorkMachine
+
+
+def get_allocation_for_job(job: Job, other_status: JobStatus = None) -> ResourceAllocation:
+    """
+    Get the resource allocation for a job depending on its status.
+    """
+    status = other_status if other_status else job.status
+    if status is JobStatus.PAUSED:
+        return ResourceAllocation(0, 0, job.docker_constraints.memory)
+    return ResourceAllocation(job.docker_constraints.cpu_threads, job.docker_constraints.memory, 0)
 
 
 class CostFunction(ABC):

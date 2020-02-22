@@ -1,5 +1,7 @@
+from copy import deepcopy
+from typing import List, Optional, Callable
 from datetime import datetime
-from typing import List
+from sqlalchemy import create_engine
 
 from ja.common.work_machine import ResourceAllocation
 from ja.common.docker_context import DockerContext, DockerConstraints, MountPoint
@@ -9,7 +11,7 @@ from ja.server.database.types.work_machine import WorkMachine, WorkMachineResour
     WorkMachineState
 from ja.server.database.database import ServerDatabase
 from sqlalchemy import Table, Column, Integer, String, MetaData, DateTime, Enum, ForeignKey, Boolean, ARRAY
-from sqlalchemy.orm import mapper, synonym, relationship
+from sqlalchemy.orm import mapper, synonym, relationship, sessionmaker, scoped_session, joinedload
 
 
 class SQLDatabase(ServerDatabase):
@@ -26,6 +28,9 @@ class SQLDatabase(ServerDatabase):
         @param user The username to use for the connection.
         @param password The password to use for the connection.
         """
+        self.scheduler_callback: Callable[["ServerDatabase"], None] = lambda *args: None
+        self.status_callback: Callable[["Job"], None] = lambda *args: None
+        self.in_scheduler_callback: bool = False
         if SQLDatabase._metadata:
             return
 
@@ -149,30 +154,118 @@ class SQLDatabase(ServerDatabase):
             "statistics": synonym("_statistics", descriptor=DatabaseJobEntry.statistics),
             "machine": synonym("_machine", descriptor=DatabaseJobEntry.assigned_machine)
         })
+        if user is not None and password is not None and host is not None:
+            # example: "postgresql://pesho:pesho@127.0.0.1:5432/jobadd"
+            _conn: str = "postgresql://" + user + ":" + password + "@" + host + "/jobadder"
+            self.engine = create_engine(_conn)
+            self.scoped = scoped_session(sessionmaker(self.engine))
+            SQLDatabase._metadata.create_all(self.engine)
 
-    def find_job_by_id(self, job_id: str) -> DatabaseJobEntry:
-        pass
+    def __del__(self) -> None:
+        self.scoped.remove()  # type: ignore
+
+    def find_job_by_id(self, job_id: str) -> Optional[DatabaseJobEntry]:
+        session = self.scoped()
+        job: Optional[Job] = session.query(Job).filter(Job.uid == job_id).options(joinedload("*")).first()
+        jobs_entry: Optional[DatabaseJobEntry] = session.query(DatabaseJobEntry). \
+            join(Job, DatabaseJobEntry.job == job).first()
+        if jobs_entry is not None:
+            if jobs_entry.job.status is JobStatus.RUNNING:
+                jobs_entry.statistics.running_time \
+                    = (datetime.now() - jobs_entry.statistics.time_started).seconds - jobs_entry.statistics.paused_time
+            if jobs_entry.job.status is JobStatus.PAUSED:
+                jobs_entry.statistics.paused_time \
+                    = (datetime.now() - jobs_entry.statistics.time_started).seconds - jobs_entry.statistics.running_time
+            session.commit()
+        return jobs_entry
 
     def update_job(self, job: Job) -> None:
-        pass
+        session = self.scoped()
+        old_job_entry: Optional[DatabaseJobEntry] = self.find_job_by_id(job.uid)
+        old_job = old_job_entry.job if old_job_entry else None
+        if old_job is None:
+            job_entry = DatabaseJobEntry(job=deepcopy(job),
+                                         stats=JobRuntimeStatistics(datetime.now(), None,
+                                                                    0, 0),
+                                         machine=None)
+            session.add(job_entry)
+        else:
+            if old_job.status == JobStatus.PAUSED and job.status != JobStatus.PAUSED:
+                old_job_entry.statistics.paused_time = \
+                    (datetime.now() - old_job_entry.statistics.time_started).seconds \
+                    - old_job_entry.statistics.running_time
+            # first start
+            elif old_job.status != JobStatus.RUNNING and job.status == JobStatus.RUNNING:
+                old_job_entry.statistics.time_started = datetime.now()
+            elif old_job.status == JobStatus.RUNNING and job.status != JobStatus.RUNNING:
+                old_job_entry.statistics.running_time = \
+                    (datetime.now() - old_job_entry.statistics.time_started).seconds \
+                    - old_job_entry.statistics.paused_time
+            if old_job != job:
+                if job.status != old_job.status:
+                    old_job_entry.job.status = job.status
+                    self.status_callback(job)
+        session.commit()
+        self._call_scheduler()
+
+    def get_jobs_on_machine(self, machine: WorkMachine) -> Optional[List[Job]]:
+        session = self.scoped()
+        jobs: Optional[List[Job]] = session.query(Job).join(DatabaseJobEntry). \
+            join(WorkMachine, WorkMachine.uid == machine.uid).options(joinedload("*")).all()
+        return jobs
 
     def assign_job_machine(self, job: Job, machine: WorkMachine) -> None:
-        pass
+        session = self.scoped()
+        job_entry = self.find_job_by_id(job.uid)
+        job_entry.assigned_machine = machine
+        session.commit()
+        self._call_scheduler()
 
     def update_work_machine(self, machine: WorkMachine) -> None:
-        pass
+        session = self.scoped()
+        work_machine: WorkMachine = session.query(WorkMachine).filter(WorkMachine.uid == machine.uid).first()
+        if work_machine is None:
+            session.add(machine)
+        else:
+            work_machine.state = machine.state
+            work_machine.connection_details = machine.connection_details
+            work_machine.resources = machine.resources
+        session.commit()
+        self._call_scheduler()
 
-    def get_work_machines(self) -> List[WorkMachine]:
-        pass
+    def get_work_machines(self) -> Optional[List[WorkMachine]]:
+        session = self.scoped()
+        work_machines: Optional[List[WorkMachine]] = session.query(WorkMachine).options(joinedload("*")).all()
+        return work_machines
 
-    def get_current_schedule(self) -> ServerDatabase.JobDistribution:
-        pass
+    def get_current_schedule(self) -> Optional[ServerDatabase.JobDistribution]:
+        session = self.scoped()
+        jobs: Optional[List[DatabaseJobEntry]] = session.query(DatabaseJobEntry).join(Job) \
+            .filter((Job.status == JobStatus.RUNNING) | (Job.status == JobStatus.NEW) | (
+                Job.status == JobStatus.PAUSED) | (Job.status == JobStatus.QUEUED)).all()
+        return jobs
 
-    def query_jobs(self, since: datetime, user_id: int, work_machine: WorkMachine) -> List[DatabaseJobEntry]:
-        pass
+    def query_jobs(self, since: Optional[datetime], user_id: Optional[int], work_machine: Optional[WorkMachine]) \
+            -> List[DatabaseJobEntry]:
+        session = self.scoped()
+        jobs_query = session.query(DatabaseJobEntry)
+        if work_machine is not None:
+            jobs_query = jobs_query.join(WorkMachine).filter(WorkMachine.uid == work_machine.uid)
+        if user_id != -1:
+            jobs_query = jobs_query.join(Job).filter(Job.owner_id == user_id)
+        jobs: List[DatabaseJobEntry] = jobs_query.all()
+        if since is None:
+            return jobs
+        return [job for job in jobs if job.statistics.time_added >= since]
+
+    def _call_scheduler(self) -> None:
+        if not self.in_scheduler_callback:
+            self.in_scheduler_callback = True
+            self.scheduler_callback(self)
+            self.in_scheduler_callback = False
 
     def set_scheduler_callback(self, callback: ServerDatabase.RescheduleCallback) -> None:
-        pass
+        self.scheduler_callback = callback
 
     def set_job_status_callback(self, callback: ServerDatabase.JobStatusCallback) -> None:
-        pass
+        self.status_callback = callback

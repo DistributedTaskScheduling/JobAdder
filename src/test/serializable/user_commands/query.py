@@ -17,9 +17,11 @@ class QueryCommandTest(AbstractSerializableTest):
     def setUp(self) -> None:
         time_now = datetime.now().strftime(QueryCommand.datetime_format)
         time_now_datetime = datetime.strptime(time_now, time_now)
-        config = UserConfig(ssh_config=SSHConfig(hostname="ies", username="pettto",
-                                                 password="1234567890"), verbosity=Verbosity.DETAILED)
-        self._object = QueryCommand(config=config, uid=["asdf", "sdf"], label=["fqwe", "dalfs"], owner=[1000, 2000],
+        config = UserConfig(
+            ssh_config=SSHConfig(
+                hostname="ies", username="pettto", password="1234567890", key_filename="~/.ssh/id_rsa"),
+            verbosity=Verbosity.DETAILED)
+        self._object = QueryCommand(config=config, uid=["asdf", "sdf"], label=["fqwe", "dalfs"], owner=["safd", "sad"],
                                     priority=[JobPriority.HIGH],
                                     status=[JobStatus.CRASHED],
                                     is_preemptible=True, special_resources=[["abc", "bcd"], ["ops", "123"]],
