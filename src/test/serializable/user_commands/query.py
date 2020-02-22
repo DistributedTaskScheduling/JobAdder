@@ -32,7 +32,7 @@ class QueryCommandTest(AbstractSerializableTest):
         self._object_dict = {
             "uid": ["asdf", "sdf"],
             "label": ["fqwe", "dalfs"],
-            "owner": [1000, 2000],
+            "owner": ["safd", "sad"],
             "priority": [2],
             "status": [6],
             "is_preemptible": True,
@@ -56,7 +56,7 @@ class QueryCommandTest(AbstractSerializableTest):
         self._other_object_dict = {
             "uid": ["adlfjs", "alsfjslkfj"],
             "label": ["fqwe", "lasjdfafj"],
-            "owner": [3, 4],
+            "owner": ["safd", "salfdjsaf"],
             "priority": [2],
             "status": [6],
             "is_preemptible": True,
