@@ -1,4 +1,5 @@
 from unittest import TestCase
+from unittest.mock import Mock
 from datetime import datetime, timedelta
 from ja.common.work_machine import ResourceAllocation
 from ja.server.database.sql.mock_database import MockDatabase
@@ -6,6 +7,8 @@ from ja.common.job import Job, JobSchedulingConstraints, JobPriority, JobStatus
 from ja.common.docker_context import DockerContext, MountPoint, DockerConstraints
 from ja.server.database.types.work_machine import WorkMachine, WorkMachineState, WorkMachineResources
 import time
+
+from ja.server.database.database import ServerDatabase
 
 
 class DatabaseTest(TestCase):
@@ -49,38 +52,17 @@ class DatabaseTest(TestCase):
                                         WorkMachineResources(ResourceAllocation(12, 32, 12)))
         self.work_machine2 = WorkMachine("machi2", WorkMachineState.ONLINE,
                                          WorkMachineResources(ResourceAllocation(2, 2, 2)))
+        self.work_machine3 = WorkMachine("machi1", WorkMachineState.ONLINE,
+                                         WorkMachineResources(ResourceAllocation(2, 2, 2)))
 
     def test_insert_job(self) -> None:
         self.mockDatabase.update_job(self.job)
         self.assertTrue(self.job == self.job)
 
-    # test update same object
-    def test_update_job1(self) -> None:
-        self.mockDatabase.update_job(self.job)
-        self.job.email = "new@email"
-        self.mockDatabase.update_job(self.job)
-        self.job.label = "newlabel"
-        self.mockDatabase.update_job(self.job)
-        self.job.email = "ps"
-        new_job = self.mockDatabase.find_job_by_id(self.job.uid).job
-        self.assertTrue(new_job.email == "new@email")
-        self.assertTrue(new_job.label == "newlabel")
-
-    # test update with different object but same uid
-    def test_update_job2(self) -> None:
-        # add job to the database
-        self.mockDatabase.update_job(self.job)
-        # update with job2
-        self.job2.status = JobStatus.QUEUED
-        self.mockDatabase.update_job(self.job2)
-        self.job2.status = JobStatus.RUNNING
-        self.mockDatabase.update_job(self.job2)
-        self.assertTrue(self.mockDatabase.find_job_by_id(self.job2.uid).job == self.job2)
-        self.assertFalse(self.mockDatabase.find_job_by_id(self.job2.uid).job == self.job)
-
     def test_update_job_running_time(self) -> None:
         self.mockDatabase.update_job(self.job)
         self.job.status = JobStatus.QUEUED
+        self.mockDatabase.update_job(self.job)
         self.job.status = JobStatus.RUNNING
         self.mockDatabase.update_job(self.job)
         time.sleep(1)
@@ -99,6 +81,7 @@ class DatabaseTest(TestCase):
     def test_get_job_entry_running_type(self) -> None:
         self.mockDatabase.update_job(self.job)
         self.job.status = JobStatus.QUEUED
+        self.mockDatabase.update_job(self.job)
         self.job.status = JobStatus.RUNNING
         self.mockDatabase.update_job(self.job)
         time.sleep(1)
@@ -106,11 +89,10 @@ class DatabaseTest(TestCase):
         self.assertEqual(j_entry.statistics.running_time, 1)
 
     def test_start_time(self) -> None:
+        self.mockDatabase.update_job(self.job2)
         self.job2.status = JobStatus.QUEUED
+        self.mockDatabase.update_job(self.job2)
         self.job2.status = JobStatus.RUNNING
-        # add job to the database
-        self.mockDatabase.update_job(self.job)
-        # update with job2
         self.mockDatabase.update_job(self.job2)
         job_entry = self.mockDatabase.find_job_by_id(self.job2.uid)
         self.assertFalse(job_entry.statistics.time_started is None)
@@ -146,6 +128,12 @@ class DatabaseTest(TestCase):
         self.mockDatabase.update_work_machine(self.work_machine)
         self.mockDatabase.update_job(self.job)
         self.mockDatabase.assign_job_machine(self.job, self.work_machine)
+        self.assertEqual(self.mockDatabase.get_jobs_on_machine(self.work_machine), [self.job])
+
+    def test_update_wm_with_job(self) -> None:
+        self.mockDatabase.update_job(self.job)
+        self.mockDatabase.update_work_machine(self.work_machine)
+        self.mockDatabase.update_work_machine(self.work_machine3)
         self.assertEqual(self.mockDatabase.get_jobs_on_machine(self.work_machine), [self.job])
 
     def test_schedule(self) -> None:
@@ -208,3 +196,39 @@ class DatabaseTest(TestCase):
 
         jobs = self.mockDatabase.query_jobs(None, -1, self.work_machine)
         self.assertEqual(jobs, [self.mockDatabase.find_job_by_id(self.job.uid)])
+
+    def test_scheduler_callback(self) -> None:
+        call: Mock = Mock()
+        self.mockDatabase.set_scheduler_callback(call)
+        self.mockDatabase.update_job(self.job)
+        call.assert_called_once_with(self.mockDatabase)
+        self.assertEqual(self.mockDatabase.in_scheduler_callback, False)
+
+    def test_scheduler_callback2(self) -> None:
+        call: Mock = Mock()
+        self.mockDatabase.set_scheduler_callback(call)
+        self.mockDatabase.update_job(self.job)
+        call.assert_called_once_with(self.mockDatabase)
+        self.mockDatabase.find_job_by_id(self.job.uid)
+        self.mockDatabase.query_jobs(None, 1008, None)
+        self.assertEqual(1, call.call_count)
+
+    def test_status_callback(self) -> None:
+        call: Mock = Mock()
+        self.mockDatabase.set_job_status_callback(call)
+        self.mockDatabase.update_job(self.job)
+        self.assertEqual(0, call.call_count)
+        self.job.status = JobStatus.QUEUED
+        self.mockDatabase.update_job(self.job)
+        call.assert_called_once_with(self.job)
+
+    count: int = 0
+
+    def callback_count(self, database: ServerDatabase) -> None:
+        self.count += 1
+        self.mockDatabase.update_job(self.job)
+
+    def test_recursion(self) -> None:
+        self.mockDatabase.set_scheduler_callback(self.callback_count)
+        self.mockDatabase.update_job(self.job)
+        self.assertEqual(self.count, 1)
