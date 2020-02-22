@@ -13,7 +13,7 @@ class QueryCommand(ServerCommand):
     """
     datetime_format: str = "%Y-%d-%m %H:%M:%S"
 
-    def __init__(self, config: UserConfig, uid: List[str] = None, label: List[str] = None, owner: List[int] = None,
+    def __init__(self, config: UserConfig, uid: List[str] = None, label: List[str] = None, owner: List[str] = None,
                  priority: List[JobPriority] = None, status: List[JobStatus] = None, is_preemptible: bool = None,
                  special_resources: List[List[str]] = None, cpu_threads: Tuple[int, int] = None,
                  memory: Tuple[int, int] = None, before: datetime = None, after: datetime = None):
@@ -52,7 +52,7 @@ class QueryCommand(ServerCommand):
         return self._label
 
     @property
-    def owner(self) -> List[int]:
+    def owner(self) -> List[str]:
         """!
         @return: Job owner name(s) to filter query results by.
         """
@@ -169,8 +169,7 @@ class QueryCommand(ServerCommand):
             label = cls._get_str_list_from_dict(property_dict=property_dict, key="label", mandatory=False)
         owner = None
         if "owner" in property_dict:
-            owner_str = cls._get_str_list_from_dict(property_dict=property_dict, key="owner", mandatory=False)
-            owner = cast(List[int], owner_str)
+            owner = cls._get_str_list_from_dict(property_dict=property_dict, key="owner", mandatory=False)
 
         job_priority_list: List[JobPriority] = []
         if "priority" in property_dict:
