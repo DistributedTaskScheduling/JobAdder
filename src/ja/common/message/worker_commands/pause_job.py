@@ -9,6 +9,23 @@ from ja.worker.main import JobWorker
 
 class PauseJobCommand(WorkerCommand):
 
+    RESPONSE_SUCCESS = "Successfully paused job with UID %s on worker with UID %s."
+    RESPONSE_NOT_RUNNING = "Could not pause job with UID %s on worker with UID %s because the job is not running."
+    RESPONSE_UNKNOWN_JOB = "Could not pause job with UID %s because worker with UID %s does not have this job."
+
+    def __init__(self, uid: str):
+        """!
+        @param uid: The uid of the Job to pause on the worker client.
+        """
+        self._uid = uid
+
+    @property
+    def uid(self) -> str:
+        """!
+        @return: The uid of the Job to pause on the worker client.
+        """
+        return self._uid
+
     def execute(self, worker_client: JobWorker) -> WorkerResponse:
         """!
         Pause the job on the worker machine using the provided @worker_client
@@ -20,6 +37,7 @@ class PauseJobCommand(WorkerCommand):
         """!
         @return: returns a dictionary that represents this object
         """
+        return {"uid": self._uid}
 
     @classmethod
     def from_dict(cls, property_dict: Dict[str, object]) -> "PauseJobCommand":
@@ -28,3 +46,6 @@ class PauseJobCommand(WorkerCommand):
         @return A new Serializable object based on the property entries of the
         specified dictionary.
         """
+        uid = cls._get_str_from_dict(property_dict=property_dict, key="uid")
+        cls._assert_all_properties_used(property_dict)
+        return PauseJobCommand(uid)
