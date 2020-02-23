@@ -13,7 +13,7 @@ class ServerConfigTest(AbstractSerializableTest):
         email_config: LoginConfig = LoginConfig("email-host", 25, "friendly-user", "Password")
         self._object: ServerConfig = ServerConfig("techfa", database_config, email_config,
                                                   special_resources={"lic": 4, "bloke": 5},
-                                                  blocking_enabled=False)
+                                                  blocking_enabled=False, web_server_port=678)
 
         self._object_dict = {"admin_group": "techfa",
                              "database_config":
@@ -30,7 +30,7 @@ class ServerConfigTest(AbstractSerializableTest):
                              {"lic": 4, "bloke": 5},
                              "blocking_enabled": False,
                              "preemption_enabled": True,
-                             "web_server_enabled": True}
+                             "web_server_port": 678}
         self._other_object_dict = {"admin_group": "kit",
                                    "database_config":
                                    {"host": "database-host23",
@@ -46,4 +46,4 @@ class ServerConfigTest(AbstractSerializableTest):
                                    {"lic45": 3, "bloke23": 5},
                                    "blocking_enabled": True,
                                    "preemption_enabled": True,
-                                   "web_server_enabled": False}
+                                   "web_server_port": 0}
