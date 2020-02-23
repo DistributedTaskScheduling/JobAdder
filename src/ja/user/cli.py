@@ -224,7 +224,7 @@ class UserClientCLIHandler:
             elif args.preemptible is None:
                 is_preemptible = None
             special_resources_query: List[List[str]] = None if args.special_resources is None else \
-                                                [sr.split(",") for sr in args.special_resources.split(".")]
+                                                       [sr.split(",") for sr in args.special_resources.split(".")]
             threads_query: Tuple[int, int] = None if args.threads is None else (args.threads[0], args.threads[1])
             memory_query: Tuple[int, int] = None if args.memory is None else (args.memory[0], args.memory[1])
             # these only work in python 3.7 and newer

@@ -1,7 +1,7 @@
 from ja.user.proxy import IUserServerProxy
 from ja.common.message.base import Response
 from ja.common.job import Job, JobStatus, JobPriority
-
+from ja.common.proxy.ssh import SSHConfig
 from ja.user.config.add import AddCommandConfig
 from ja.user.message.query import QueryCommand
 from ja.user.message.cancel import CancelCommand
@@ -12,8 +12,9 @@ import copy
 
 class ServerProxyDummy(IUserServerProxy):
 
-    def __init__(self, jobs: List[Job]):
-        self._jobs = copy.deepcopy(jobs)
+    def __init__(self, ssh_config: SSHConfig):
+        self._ssh = ssh_config
+        self._jobs = []
         self._counter = 0
 
     @property
