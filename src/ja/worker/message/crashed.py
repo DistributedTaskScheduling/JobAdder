@@ -10,6 +10,7 @@ class JobCrashedCommand(WorkerServerCommand):
     """
     Informs the server that a job has crashed.
     """
+
     def __init__(self, job_uid: str):
         """!
         @param job_uid: The UID of the job that has crashed.
@@ -25,9 +26,11 @@ class JobCrashedCommand(WorkerServerCommand):
 
     def execute(self, database: ServerDatabase) -> Response:
         job_entry = database.find_job_by_id(self._job_uid)
+        if job_entry is None:
+            raise ValueError("There is no job with %s id on the server" % self._job_uid)
         job_entry.job.status = JobStatus.CRASHED
         database.update_job(job_entry.job)
-        return Response("", True)
+        return Response("Job crashed!", True)
 
     def __eq__(self, o: object) -> bool:
         if isinstance(o, JobCrashedCommand):

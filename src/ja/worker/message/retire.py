@@ -10,6 +10,7 @@ class RetireWorkerCommand(WorkerServerCommand):
     """
     Informs the server that this work machine is retiring and cannot accept further jobs.
     """
+
     def __init__(self, work_machine_uid: str):
         """!
         @param work_machine_uid: The UID of the work machine that is retiring.
@@ -30,10 +31,12 @@ class RetireWorkerCommand(WorkerServerCommand):
 
     def execute(self, database: ServerDatabase) -> Response:
         work_machines = database.get_work_machines()
+        if work_machines is None:
+            raise ValueError("There is no work machine with %s id on the server" % self._work_machine_uid)
         work_machine: WorkMachine = next(x for x in work_machines if x.uid == self._work_machine_uid)
         work_machine.state = WorkMachineState.RETIRED
         database.update_work_machine(work_machine)
-        return Response("", True)
+        return Response("Successfully retired the Work machine", True)
 
     def to_dict(self) -> Dict[str, object]:
         n_dict: Dict[str, object] = dict()

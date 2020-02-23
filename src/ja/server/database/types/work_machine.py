@@ -221,7 +221,6 @@ class WorkMachine(Serializable):
     def from_dict(cls, property_dict: Dict[str, object]) -> "WorkMachine":
         uid = cls._get_str_from_dict(property_dict, key="uid", mandatory=True)
         state = WorkMachineState(cls._get_from_dict(property_dict, key="state", mandatory=True))
-        # I still have no idea how to fix this
         if "resources" in property_dict:
             resources = WorkMachineResources.from_dict(
                 cls._get_dict_from_dict(property_dict, key="resources", mandatory=False))

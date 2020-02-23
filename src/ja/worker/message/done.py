@@ -26,9 +26,11 @@ class JobDoneCommand(WorkerServerCommand):
 
     def execute(self, database: ServerDatabase) -> Response:
         job_entry = database.find_job_by_id(self._job_uid)
+        if job_entry is None:
+            raise ValueError("There is no job with %s id on the server" % self._job_uid)
         job_entry.job.status = JobStatus.DONE
         database.update_job(job_entry.job)
-        return Response("", True)
+        return Response("Job has finished executing.", True)
 
     def __eq__(self, o: object) -> bool:
         if isinstance(o, JobDoneCommand):

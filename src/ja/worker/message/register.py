@@ -33,9 +33,9 @@ class RegisterWorkerCommand(WorkerServerCommand):
         work_machines = database.get_work_machines()
         for x in work_machines:
             if x.uid == self._work_machine.uid:
-                return Response("", False)
+                return Response("Work machine with this id already exists!", False)
         database.update_work_machine(self._work_machine)
-        return Response("", True)
+        return Response("Registered Work machine.", True)
 
     def to_dict(self) -> Dict[str, object]:
         n_dict: Dict[str, object] = dict()

@@ -33,7 +33,7 @@ class CrashedJobCommand(AbstractSerializableTest):
         self._object_dict = {"uid": "52"}
         self._other_object_dict = {"uid": "41"}
 
-    def test_job_done(self) -> None:
+    def test_job_crashed(self) -> None:
         command = JobCrashedCommand("mrazqte")
         command.execute(self.mock_db)
         self.assertEqual(self.mock_db.find_job_by_id("mrazqte").job.status, JobStatus.CRASHED)
