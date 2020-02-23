@@ -36,7 +36,7 @@ class RetireWorkerCommand(WorkerServerCommand):
         work_machine: WorkMachine = next(x for x in work_machines if x.uid == self._work_machine_uid)
         work_machine.state = WorkMachineState.RETIRED
         database.update_work_machine(work_machine)
-        return Response("Successfully retired the Work machine", True)
+        return Response("Successfully retired Work machine with uid: {}".format(self._work_machine_uid), True)
 
     def to_dict(self) -> Dict[str, object]:
         n_dict: Dict[str, object] = dict()
