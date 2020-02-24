@@ -1,7 +1,6 @@
 import os
 import socket
 from abc import ABC, abstractmethod
-from threading import Thread
 import yaml
 from typing import Dict
 
@@ -27,11 +26,11 @@ class CommandHandler(ABC):
         @param socket_path: The Unix named socket to listen for Commands on.
         """
         self._socket_path = socket_path
-        self._listen_thread = Thread(target=self._listen)
-        self._listen_thread.daemon = True  # Ensures that the thread is killed when main thread exits
-        self._listen_thread.start()
 
-    def _listen(self) -> None:
+    def main_loop(self) -> None:
+        """!
+        Run the main loop of a JobAdder daemon (server or worker).
+        """
         # Make sure the socket does not already exist
         try:
             os.unlink(self._socket_path)

@@ -4,10 +4,10 @@ from unittest import TestCase
 from getpass import getuser
 from typing import Dict
 
-from ja.common.proxy.command_handler import CommandHandler
+from test.proxy.threaded_command_handler import ThreadedCommandHandler
 
 
-class CommandHandlerDummy(CommandHandler):
+class CommandHandlerDummy(ThreadedCommandHandler):
 
     def _process_command_dict(
             self, command_dict: Dict[str, object], type_name: str, username: str) -> Dict[str, object]:
