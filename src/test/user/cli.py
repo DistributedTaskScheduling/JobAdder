@@ -25,13 +25,17 @@ class CLITest(TestCase):
                                      DockerContext("print(2 + 3)\n", [MountPoint("f", "l"), MountPoint("a", "r")]),
                                      DockerConstraints(8, 8), "lab", status=JobStatus.QUEUED),
                                  Job(9, "a@e.de", JobSchedulingConstraints(JobPriority.LOW, False, []),
-                                     DockerContext("print(2 + 3)\n", []), DockerConstraints(1, 2), status=JobStatus.RUNNING),
+                                     DockerContext("print(2 + 3)\n", []),
+                                     DockerConstraints(1, 2), status=JobStatus.RUNNING),
                                  Job(9, "a@e.de", JobSchedulingConstraints(JobPriority.LOW, False, []),
-                                     DockerContext("print(2 + 3)\n", []), DockerConstraints(6, 4), status=JobStatus.QUEUED),
+                                     DockerContext("print(2 + 3)\n", []),
+                                     DockerConstraints(6, 4), status=JobStatus.QUEUED),
                                  Job(9, "a@e.de", JobSchedulingConstraints(JobPriority.HIGH, False, []),
-                                     DockerContext("print(2 + 3)\n", []), DockerConstraints(1, 4), status=JobStatus.QUEUED),
-                                 Job(-1, "anon@biz.org", JobSchedulingConstraints(JobPriority.URGENT, False, ["lic", "lic1"]),
-                                     DockerContext("print(2 + 3)\n", []), DockerConstraints(5, 8), status=JobStatus.QUEUED)]
+                                     DockerContext("print(2 + 3)\n", []),
+                                     DockerConstraints(1, 4), status=JobStatus.QUEUED),
+                                 Job(-1, "anon@biz.org", JobSchedulingConstraints(JobPriority.URGENT, False,
+                                     ["lic", "lic1"]), DockerContext("print(2 + 3)\n", []),
+                                     DockerConstraints(5, 8), status=JobStatus.QUEUED)]
 
         self._proxy = ServerProxyDummy(ssh_config=None)
         self._cli = UserClientCLIHandler("p.yaml")

@@ -14,7 +14,7 @@ class ServerProxyDummy(IUserServerProxy):
 
     def __init__(self, ssh_config: SSHConfig):
         self._ssh = ssh_config
-        self._jobs = []
+        self._jobs: List[Job] = []
         self._counter = 0
 
     @property
