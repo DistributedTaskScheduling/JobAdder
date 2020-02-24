@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0, "C:/Users/malik/Desktop/JobAdder/src")
 from unittest import TestCase
 from typing import List, cast
 
@@ -14,11 +16,11 @@ class CLITest(TestCase):
     """
     Class to test the command line interface.
     """
-    commands: List[List[str]] = ["add -s program.py -l lab --mount f l a r -p 2 -t 8 -m 8 --pe --bl --owner 1".split(),
-                                 "add -s program.py -e a@e.de -p low -t 1 -m 2 --owner 9".split(),
-                                 "add -s program.py -e a@e.de -p low -t 6 -m 4 --owner 9".split(),
-                                 "add -s program.py -e a@e.de -p high -t 1 -m 4 --owner 9".split(),
-                                 "add -c add.yaml".split()]
+    commands: List[List[str]] = ["add -s user/program.py -l lab --mount f l a r -p 2 -t 8 -m 8 --pe --bl --owner 1".split(),
+                                 "add -s user/program.py -e a@e.de -p low -t 1 -m 2 --owner 9".split(),
+                                 "add -s user/program.py -e a@e.de -p low -t 6 -m 4 --owner 9".split(),
+                                 "add -s user/program.py -e a@e.de -p high -t 1 -m 4 --owner 9".split(),
+                                 "add -c user/add.yaml".split()]
 
     def setUp(self) -> None:
         self._jobs: List[Job] = [Job(1, "anon@biz.org", JobSchedulingConstraints(JobPriority.HIGH, True, []),
@@ -38,7 +40,7 @@ class CLITest(TestCase):
                                      DockerConstraints(5, 8), status=JobStatus.QUEUED)]
 
         self._proxy = ServerProxyDummy(ssh_config=None)
-        self._cli = UserClientCLIHandler("p.yaml")
+        self._cli = UserClientCLIHandler("user/p.yaml")
         for i, job in enumerate(self._jobs):
             job.uid = str(i)
         # Adding jobs.

@@ -1,4 +1,5 @@
 from ja.user.proxy import IUserServerProxy
+from ja.common.proxy.ssh import SSHConfig, ISSHConnection
 from ja.common.message.base import Response
 from ja.common.job import Job, JobStatus, JobPriority
 from ja.common.proxy.ssh import SSHConfig
@@ -133,3 +134,6 @@ class ServerProxyDummy(IUserServerProxy):
         if message == "":
             message = "No jobs satisfy these constraints."
         return Response(message, is_success=True)
+
+    def _get_ssh_connection(self, ssh_config: SSHConfig) -> ISSHConnection:
+        pass
