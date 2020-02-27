@@ -6,10 +6,10 @@ from ja.server.email import EmailNotifier, BasicEmailServer
 from ja.server.scheduler.algorithm import SchedulingAlgorithm
 from ja.server.scheduler.default_algorithm import DefaultSchedulingAlgorithm
 from ja.server.scheduler.scheduler import Scheduler
+from ja.server.proxy.command_handler import ServerCommandHandler
 from ja.server.web.api_server import StatisticsWebServer
 
 import ja.server.scheduler.default_policies as dp
-import time
 
 
 class JobCenter:
@@ -60,13 +60,10 @@ class JobCenter:
 
         self._database.set_scheduler_callback(self._scheduler.reschedule)
         self._database.set_job_status_callback(self._email.handle_job_status_updated)
-
-        # TODO: create command handler
+        self._handler = ServerCommandHandler(self._database, config.admin_group)
 
     def run(self) -> None:
         """!
         Run the main loop of the server daemon.
         """
-
-        while True:
-            time.sleep(1e9)
+        self._handler.main_loop()
