@@ -2,8 +2,9 @@ from abc import ABC, abstractmethod
 
 from ja.common.proxy.proxy import SingleMessageProxy
 from ja.common.message.base import Response
-from ja.common.proxy.ssh import SSHConfig
+from ja.common.proxy.ssh import SSHConnection, ISSHConnection, SSHConfig
 from ja.user.config.add import AddCommandConfig
+from ja.user.message.add import AddCommand
 from ja.user.message.cancel import CancelCommand
 from ja.user.message.query import QueryCommand
 
@@ -46,11 +47,17 @@ class UserServerProxy(IUserServerProxy):
     """
 
     def add_job(self, add_config: AddCommandConfig) -> Response:
-        # Establish connection with server, get the db: ServerDatabase and call execute(db)
-        pass
+        # TODO: Create remote_module
+        connection = SSHConnection(add_config.ssh_config, None)
+        return connection.send_server_command(AddCommand(add_config))
 
     def cancel_job(self, cancel_command: CancelCommand) -> Response:
-        pass
+        connection = SSHConnection(cancel_command.config.ssh_config, None)
+        return connection.send_server_command(cancel_command)
 
     def query(self, query_command: QueryCommand) -> Response:
+        connection = SSHConnection(query_command.config.ssh_config, None)
+        return connection.send_server_command(query_command)
+
+    def _get_ssh_connection(self, ssh_config: SSHConfig) -> ISSHConnection:
         pass
