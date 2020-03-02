@@ -9,7 +9,7 @@ from ja.common.message.server import ServerCommand, ServerResponse
 from ja.common.message.worker import WorkerCommand, WorkerResponse
 from ja.common.proxy.ssh import ISSHConnection
 from ja.common.proxy.remote import Remote
-from ja.common.proxy.command_handler import CommandHandler
+from test.proxy.threaded_command_handler import ThreadedCommandHandler
 from ja.server.database.database import ServerDatabase
 
 
@@ -57,8 +57,7 @@ class ServerCommandDummy(ServerCommand):
         return cls(cls._get_str_from_dict(property_dict=property_dict, key="payload"))
 
 
-class CommandHandlerDummy(CommandHandler):
-
+class CommandHandlerDummy(ThreadedCommandHandler):
     def _process_command_dict(
             self, command_dict: Dict[str, object], type_name: str, username: str) -> Dict[str, object]:
         assert username == getuser()

@@ -7,9 +7,9 @@ from ja.common.message.worker_commands.cancel_job import CancelJobCommand
 from ja.common.message.worker_commands.pause_job import PauseJobCommand
 from ja.common.message.worker_commands.resume_job import ResumeJobCommand
 from ja.common.message.worker_commands.start_job import StartJobCommand
-from ja.common.proxy.command_handler import CommandHandler
 from ja.common.proxy.ssh import SSHConfig, ISSHConnection
 from ja.server.proxy.proxy import WorkerProxyBase
+from test.proxy.threaded_command_handler import ThreadedCommandHandler
 from test.proxy.abstract import AbstractWorkerProxyTest
 from test.proxy.worker_proxy_dummy import WorkerProxyDummy
 from test.ssh.test_ssh_dummy import SSHConnectionDummy
@@ -24,7 +24,7 @@ class SSHDummyWorkerProxy(WorkerProxyBase):
         return SSHConnectionDummy(socket_path="./dummy_socket_%s" % ssh_config.hostname)
 
 
-class WorkerCommandHandlerDummy(CommandHandler):
+class WorkerCommandHandlerDummy(ThreadedCommandHandler):
 
     def __init__(self, socket_path: str, jobs: List[Job]):
         super().__init__(socket_path=socket_path)

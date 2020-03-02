@@ -78,7 +78,7 @@ class Serializable(ABC):
     def _get_bool_from_dict(cls, property_dict: Dict[str, object], key: str, mandatory: bool = True) -> bool:
         prop = cls._get_from_dict(property_dict=property_dict, key=key, mandatory=mandatory)
         if mandatory and not isinstance(prop, bool):
-            cls._raise_error_wrong_type(key=key, expected_type="int", actual_type=prop.__class__.__name__)
+            cls._raise_error_wrong_type(key=key, expected_type="bool", actual_type=prop.__class__.__name__)
         return cast(bool, prop)
 
     @abstractmethod
