@@ -1,5 +1,5 @@
-from abc import ABC
-from ja.common.proxy.ssh import SSHConfig
+from abc import ABC, abstractmethod
+from ja.common.proxy.ssh import SSHConfig, ISSHConnection
 
 
 class Proxy(ABC):
@@ -9,24 +9,35 @@ class Proxy(ABC):
     sends a Command object to Remote. Proxy then receives a Response object
     from Remote to determine the result of the Command message.
     """
-    def __init__(self, ssh_config: SSHConfig, remote: str):
-        """!
-        @param ssh_config: Config for paramiko.
-        @param remote: The name of the Remote to execute on the host.
-        """
+    @abstractmethod
+    def _get_ssh_connection(self, ssh_config: SSHConfig) -> ISSHConnection:
+        pass
 
 
-class SingleMessageProxy(Proxy):
+class SingleMessageProxy(Proxy, ABC):
     """
     Abstract base class for proxies that create a new SSHConnection object for
     each Message sent. SSHConnection objects are automatically closed after the
     Message object is sent.
     """
+    def __init__(self, ssh_config: SSHConfig):
+        """!
+        @param ssh_config: Config for paramiko.
+        """
+        self._ssh_config = ssh_config
 
 
-class ContinuousProxy(Proxy):
+class ContinuousProxy(Proxy, ABC):
     """
     Abstract base class for proxies that immediately establish an
     SSHConnection. Multiple Message objects can be sent via the SSHConnection.
     The SSHConnection remains open until manually closed.
     """
+    def __init__(self, ssh_config: SSHConfig):
+        """!
+        @param ssh_config: Config for paramiko.
+        """
+        self._ssh_connection = self._get_ssh_connection(ssh_config=ssh_config)
+
+    def close_ssh_connection(self) -> None:
+        self._ssh_connection.close()

@@ -75,7 +75,7 @@ class JobSchedulingConstraints(Serializable):
 
     def to_dict(self) -> Dict[str, object]:
         return_dict: Dict[str, object] = dict()
-        return_dict["priority"] = self.priority
+        return_dict["priority"] = self.priority.value
         return_dict["is_preemptible"] = self.is_preemptible
         return_dict["special_resources"] = self.special_resources
         return return_dict
@@ -253,7 +253,7 @@ class Job(Serializable):
         return_dict["scheduling_constraints"] = self.scheduling_constraints.to_dict()
         return_dict["docker_context"] = self.docker_context.to_dict()
         return_dict["docker_constraints"] = self.docker_constraints.to_dict()
-        return_dict["status"] = self.status
+        return_dict["status"] = self.status.value
         return_dict["label"] = self.label
         return return_dict
 

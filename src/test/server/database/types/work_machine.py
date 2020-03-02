@@ -1,12 +1,14 @@
 from ja.common.work_machine import ResourceAllocation
 from ja.server.database.types.work_machine import WorkMachineResources, WorkMachine, WorkMachineState
 from unittest import TestCase
+from test.serializable.base import AbstractSerializableTest
 
 
 class WorkMachineResourcesTest(TestCase):
     """
     Class for testing WorkMachineResources
     """
+
     def setUp(self) -> None:
         self._wmr: WorkMachineResources = WorkMachineResources(ResourceAllocation(1, 2, 3))
 
@@ -31,6 +33,7 @@ class WorkMachineTest(TestCase):
     """
     Class for testing WorkMachine database type.
     """
+
     def test_resources_getter(self) -> None:
         wmr: WorkMachineResources = WorkMachineResources(ResourceAllocation(1, 2, 3))
         wm: WorkMachine = WorkMachine("cray", WorkMachineState.OFFLINE, wmr)
@@ -40,3 +43,32 @@ class WorkMachineTest(TestCase):
         wmr: WorkMachineResources = WorkMachineResources(ResourceAllocation(1, 2, 3))
         wm: WorkMachine = WorkMachine("cray", WorkMachineState.RETIRED, wmr)
         self.assertEqual(wm.resources, wmr)
+
+
+class WorkMachineSerializableTest(AbstractSerializableTest):
+    def setUp(self) -> None:
+        self._optional_properties = ["resources"]
+        self._object = WorkMachine("machina1", WorkMachineState.ONLINE,
+                                   WorkMachineResources(ResourceAllocation(1, 2, 3)))
+        self._object_dict = {
+            "uid": "machina1",
+            "state": 0,
+            "resources": {
+                "total_resources": {
+                    "cpu_threads": 1,
+                    "memory": 2,
+                    "swap": 3
+                }
+            }
+        }
+        self._other_object_dict = {
+            "uid": "machi1",
+            "state": 20,
+            "resources": {
+                "total_resources": {
+                    "cpu_threads": 1,
+                    "memory": 2,
+                    "swap": 3
+                }
+            }
+        }
