@@ -132,6 +132,9 @@ class Job(Serializable):
         else:
             return False
 
+    def __str__(self) -> str:
+        return str(self.to_dict())
+
     @property
     def uid(self) -> str:
         """!
