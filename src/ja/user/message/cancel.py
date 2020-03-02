@@ -102,4 +102,4 @@ class CancelCommand(ServerCommand):
         if self.label is not None:
             return Response(result_string="Successfully removed job with label: %s" % self.label,
                             is_success=True)
-        return Response("Unreachable code.")
+        return Response("Unreachable code.", is_success=False)
