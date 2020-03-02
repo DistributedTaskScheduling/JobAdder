@@ -1,9 +1,10 @@
-from ja.common.message.server import ServerCommand, ServerResponse
+from ja.common.message.base import Response
+from ja.common.message.server import ServerCommand
 from ja.user.config.base import UserConfig
-from ja.common.job import JobPriority, JobStatus
+from ja.common.job import JobPriority, JobStatus, Job
 from datetime import datetime
 from typing import List, Tuple, Dict, Iterable, cast
-
+from ja.server.database.types.job_entry import DatabaseJobEntry
 from ja.server.database.database import ServerDatabase
 
 
@@ -259,5 +260,42 @@ class QueryCommand(ServerCommand):
                          special_resources_list, cpu_threads, memory, before, after)
         return a
 
-    def execute(self, database: ServerDatabase) -> "ServerResponse":
-        pass
+    def execute(self, database: ServerDatabase) -> Response:
+        jobs: List[DatabaseJobEntry] = database.query_jobs(None, -1, None)  # Query all DatabaseJobEntries
+        if self.uid is not None:
+            jobs = [entry for entry in jobs if entry.job.uid in self.uid]
+        if self.label is not None:
+            jobs = [entry for entry in jobs if entry.job.label in self.label]
+        if self.owner is not None:
+            jobs = [entry for entry in jobs if entry.job.owner in self.owner]
+        if self.priority is not None:
+            jobs = [entry for entry in jobs if entry.job.scheduling_constraints.priority in self.priority]
+        if self.label is not None:
+            jobs = [entry for entry in jobs if entry.job.status in self.status]
+        if self.is_preemptible is not None:
+            jobs = [entry for entry in jobs if entry.job.scheduling_constraints.is_preemptible == self.is_preemptible]
+        if self.special_resources is not None:
+            jobs_temp: List[DatabaseJobEntry] = []
+            for entry in jobs:
+                for res in self.special_resources:
+                    if set(res) == set(entry.job.scheduling_constraints.special_resources):
+                        jobs_temp.append(entry)
+                        break
+            jobs = jobs_temp
+        if self.cpu_threads is not None:
+            jobs = [entry for entry in jobs if
+                    self.cpu_threads[0] <= entry.job.docker_constraints.cpu_threads <= self.cpu_threads[1]]
+        if self.memory is not None:
+            jobs = [entry for entry in jobs if self.memory[0] <= entry.job.docker_constraints.memory <= self.memory[1]]
+        if self.after is not None:
+            jobs = [entry for entry in jobs if entry.statistics.time_added >= self.after]
+        if self.before is not None:
+            jobs = [entry for entry in jobs if entry.statistics.time_added <= self.before]
+        
+        message: str = ""
+        for entry in jobs:
+            message += str(entry.job) + "\n"
+        message = message[:-1]
+        if message == "":
+            message = "No jobs satisfy these constraints."
+        return Response(message, is_success=True)

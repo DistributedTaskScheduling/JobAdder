@@ -175,7 +175,7 @@ class Response(Message):
     @property
     def uid(self) -> str:
         """!
-        @return: UID of an added job/registered worker, None otherwise.
+        @return: UID of an added/finished/cancelled job or a registered/retired worker, None otherwise.
         """
         return self._uid
 

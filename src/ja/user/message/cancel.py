@@ -1,8 +1,9 @@
 from typing import Dict
-
-from ja.common.message.server import ServerCommand, ServerResponse
+from ja.common.message.server import ServerCommand 
+from ja.common.message.base import Response
 from ja.server.database.database import ServerDatabase
 from ja.user.config.base import UserConfig
+from ja.common.job import Job, JobStatus
 
 
 class CancelCommand(ServerCommand):
@@ -27,6 +28,13 @@ class CancelCommand(ServerCommand):
             return self._config == o._config and self._label == o._label and self._uid == o._uid
         else:
             return False
+
+    @property
+    def config(self) -> UserConfig:
+        """!
+        @return: The UserConfig of this command.
+        """
+        return self._config
 
     @property
     def label(self) -> str:
@@ -59,5 +67,34 @@ class CancelCommand(ServerCommand):
         cls._assert_all_properties_used(property_dict)
         return CancelCommand(label=_label, uid=_uid, config=_config)
 
-    def execute(self, database: ServerDatabase) -> ServerResponse:
-        pass
+    def execute(self, database: ServerDatabase) -> Response:
+        """!
+        Executes this command on the database.
+        @return: A Response 
+        """
+        if self.uid is not None:
+            job: Job = database.find_job_by_id(self.uid)
+            if job is None:
+                return Response(result_string="Job with uid %s does not exist!" % self.uid,
+                                is_success=False)
+        if self.label is not None:
+            job: Job = database.find_job_by_label(job.label)
+            if job is None:
+                return Response(result_string="Job with label %s does not exist!" % self.label,
+                                is_success=False)
+        if job.owner_id != self.config.ssh_config.username:  # Might not be the right way to verify a user.
+            if self.label is not None:
+                return Response(result_string="You do not have the permission to cancel the job with label %s" \
+                                % self.label, is_success=False)
+            else:
+                return Response(result_string="You do not have the permission to cancel the job with uid %s" \
+                                % self.uid, is_success=False)
+
+        job.status = JobStatus.CANCELLED
+        self._db.update_job(job)
+        if self.uid is not None:
+            return Response(result_string="Successfully removed job with uid: %s" % self.uid,
+                            is_success=True)
+        if self.label is not None:
+            return Response(result_string="Successfully removed job with label: %s" % self.label,
+                            is_success=True)

@@ -44,11 +44,10 @@ class CLITest(TestCase):
             job.uid = str(i)
         # Adding jobs.
         for i, command in enumerate(CLITest.commands):
-            if command[0] == "add":
-                parsed_command: AddCommand = cast(AddCommand, self._cli.get_server_command(command))
-                self._proxy.add_job(parsed_command.config)
-                if i == 1:
-                    parsed_command.config.job.status = JobStatus.RUNNING
+            parsed_command: AddCommand = cast(AddCommand, self._cli.get_server_command(command))
+            self._proxy.add_job(parsed_command.config)
+            if i == 1:
+                parsed_command.config.job.status = JobStatus.RUNNING
 
     def test_jobs_added(self) -> None:
         self.assertCountEqual(self._proxy.jobs, self._jobs)

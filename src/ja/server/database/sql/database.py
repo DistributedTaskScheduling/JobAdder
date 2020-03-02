@@ -179,6 +179,16 @@ class SQLDatabase(ServerDatabase):
             session.commit()
         return jobs_entry
 
+    def find_job_by_label(self, label: str) -> Job:
+        """!
+        @return The job entry in the database with the given label.
+        """
+        if label is None:
+            return None
+        session = self.scoped()
+        job: Job = session.query(Job).filter(Job.label == label).options(joinedload("*")).first()
+        return job
+
     def update_job(self, job: Job) -> None:
         session = self.scoped()
         old_job_entry: Optional[DatabaseJobEntry] = self.find_job_by_id(job.uid)

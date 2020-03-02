@@ -46,7 +46,7 @@ class UserServerProxy(IUserServerProxy):
     """
 
     def add_job(self, add_config: AddCommandConfig) -> Response:
-        # Establish connection with server, get the d: ServerDatabase and call execute(d)
+        # Establish connection with server, get the db: ServerDatabase and call execute(db)
         pass
 
     def cancel_job(self, cancel_command: CancelCommand) -> Response:
