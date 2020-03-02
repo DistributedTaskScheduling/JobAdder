@@ -21,6 +21,15 @@ class ServerDatabase(ABC):
         """
 
     @abstractmethod
+    def find_job_by_label(self, label: str) -> Job:
+        """!
+        Load a job from the database by its label.
+
+        @param label label of the job.
+        @return The stored data about the job, or None if no such job was found.
+        """
+
+    @abstractmethod
     def update_job(self, job: Job) -> None:
         """!
         Update the job in the database.

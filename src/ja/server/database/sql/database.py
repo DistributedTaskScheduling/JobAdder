@@ -180,9 +180,6 @@ class SQLDatabase(ServerDatabase):
         return jobs_entry
 
     def find_job_by_label(self, label: str) -> Job:
-        """!
-        @return The job entry in the database with the given label.
-        """
         if label is None:
             return None
         session = self.scoped()

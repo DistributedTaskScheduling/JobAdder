@@ -4,6 +4,7 @@ from ja.common.message.base import Response
 from ja.server.database.database import ServerDatabase
 from ja.user.config.add import AddCommandConfig
 from ja.common.job import Job, JobStatus
+from ja.server.database.types.job_entry import DatabaseJobEntry
 
 
 class AddCommand(ServerCommand):
@@ -30,14 +31,14 @@ class AddCommand(ServerCommand):
     def from_dict(cls, property_dict: Dict[str, object]) -> "AddCommand":
         return AddCommand(AddCommandConfig.from_dict(property_dict))
 
-    def execute(self, database: ServerDatabase) -> Response:        
+    def execute(self, database: ServerDatabase) -> Response:
         job: Job = self.config.job
-        db_job: Job = database.find_job_by_id(job.uid)
-        if db_job is not None:
+        db_job_id: DatabaseJobEntry = database.find_job_by_id(job.uid)
+        if db_job_id is not None:
             return Response(result_string="Job with id %s already exists" % job.uid,
                             is_success=False)
-        db_job: Job = database.find_job_by_label(job.label)
-        if db_job is not None:
+        db_job_label: Job = database.find_job_by_label(job.label)
+        if db_job_label is not None:
             return Response(result_string="Job with label %s already exists" % job.label,
                             is_success=False)
         job.status = JobStatus.QUEUED

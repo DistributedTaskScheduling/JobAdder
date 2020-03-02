@@ -1,7 +1,7 @@
 from ja.common.message.base import Response
 from ja.common.message.server import ServerCommand
 from ja.user.config.base import UserConfig
-from ja.common.job import JobPriority, JobStatus, Job
+from ja.common.job import JobPriority, JobStatus
 from datetime import datetime
 from typing import List, Tuple, Dict, Iterable, cast
 from ja.server.database.types.job_entry import DatabaseJobEntry
@@ -267,7 +267,7 @@ class QueryCommand(ServerCommand):
         if self.label is not None:
             jobs = [entry for entry in jobs if entry.job.label in self.label]
         if self.owner is not None:
-            jobs = [entry for entry in jobs if entry.job.owner in self.owner]
+            jobs = [entry for entry in jobs if entry.job.owner_id in self.owner]
         if self.priority is not None:
             jobs = [entry for entry in jobs if entry.job.scheduling_constraints.priority in self.priority]
         if self.label is not None:
@@ -291,7 +291,7 @@ class QueryCommand(ServerCommand):
             jobs = [entry for entry in jobs if entry.statistics.time_added >= self.after]
         if self.before is not None:
             jobs = [entry for entry in jobs if entry.statistics.time_added <= self.before]
-        
+
         message: str = ""
         for entry in jobs:
             message += str(entry.job) + "\n"
