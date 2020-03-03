@@ -7,6 +7,7 @@ script:
   - MYPYPATH=$(pwd)/src mypy -p ja --no-strict-optional --strict --config-file $(pwd)/mypy.ini
   - MYPYPATH=$(pwd)/src mypy -p test --no-strict-optional --strict
   - cd src && coverage run --source=ja -m unittest discover -v -s test -p '*.py'
-  - cd src && ./setup.py test
+  - coverage report -m
+    #  - cd src && ./setup.py test
 services:
   - docker
