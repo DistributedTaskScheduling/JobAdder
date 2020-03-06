@@ -19,6 +19,10 @@ from ja.user.message.add import AddCommand
 from ja.user.message.query import QueryCommand
 from ja.user.message.cancel import CancelCommand
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class ServerCommandHandler(CommandHandler):
     """
@@ -51,7 +55,12 @@ class ServerCommandHandler(CommandHandler):
     }
 
     def _execute_command(self, command: ServerCommand) -> Dict[str, object]:
-        return command.execute(self._database).to_dict()
+        logger.info("executing %s command" % type(command).__name__)
+        logger.debug(str(command))
+        r_dict = command.execute(self._database)
+        logger.info("Command executed successfully: %s" % r_dict.is_success)
+        logger.debug("Response: %s" % str(r_dict))
+        return r_dict.to_dict()
 
     def _process_exit_message(self, type_name: str, user: str) -> Dict[str, object]:
         if type_name != "KillCommand":

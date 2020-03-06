@@ -2,7 +2,7 @@ import datetime as dt
 
 from copy import deepcopy
 from ja.common.job import Job, JobPriority, JobSchedulingConstraints, JobStatus
-from ja.common.docker_context import DockerConstraints
+from ja.common.docker_context import DockerConstraints, DockerContext, MountPoint
 from ja.common.work_machine import ResourceAllocation
 from ja.server.database.database import ServerDatabase
 from ja.server.database.types.job_entry import DatabaseJobEntry, JobRuntimeStatistics
@@ -29,7 +29,8 @@ def get_job(prio: JobPriority = JobPriority.MEDIUM,
     global _global_job_counter
     job = Job(owner_id=user, email="hey@you",
               scheduling_constraints=JobSchedulingConstraints(prio, False, special_resources),
-              docker_context=None, docker_constraints=DockerConstraints(cpu, ram), status=status)
+              docker_context=DockerContext("file", [MountPoint("adfsds", "jfaldsfj")]),
+              docker_constraints=DockerConstraints(cpu, ram), status=status)
 
     job.uid = str(_global_job_counter)
     _global_job_counter += 1

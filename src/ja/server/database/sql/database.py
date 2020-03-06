@@ -13,6 +13,10 @@ from sqlalchemy import Table, Column, Integer, String, MetaData, DateTime, Enum,
 from sqlalchemy.orm import mapper, synonym, relationship, sessionmaker, scoped_session, joinedload
 from ja.common.proxy.ssh import SSHConfig
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class SQLDatabase(ServerDatabase):
     """!
@@ -160,6 +164,7 @@ class SQLDatabase(ServerDatabase):
             self.engine = create_engine(_conn)
             self.scoped = scoped_session(sessionmaker(self.engine))
             SQLDatabase._metadata.create_all(self.engine)
+            logger.info("connection on %s to the database: %s" % (host, database_name))
 
     def __del__(self) -> None:
         self.scoped.remove()  # type: ignore
@@ -177,6 +182,10 @@ class SQLDatabase(ServerDatabase):
                 jobs_entry.statistics.paused_time \
                     = (datetime.now() - jobs_entry.statistics.time_started).seconds - jobs_entry.statistics.running_time
             session.commit()
+            logger.info("job entry with job id: %s found." % job_id)
+            logger.debug(str(jobs_entry.job))
+        else:
+            logger.error("job with id: %s not found" % job_id)
         return jobs_entry
 
     def find_job_by_label(self, label: str) -> List[Job]:
@@ -196,6 +205,8 @@ class SQLDatabase(ServerDatabase):
                                                                     0, 0),
                                          machine=None)
             session.add(job_entry)
+            logger.info("first add for job: %s" % job.uid)
+            logger.debug(str(job))
         else:
             if old_job.status == JobStatus.PAUSED and job.status != JobStatus.PAUSED:
                 old_job_entry.statistics.paused_time = \
@@ -212,6 +223,8 @@ class SQLDatabase(ServerDatabase):
                 if job.status != old_job.status:
                     old_job_entry.job.status = job.status
                     self.status_callback(job)
+            logger.info("update job: %s" % job.uid)
+            logger.debug("old job: \n%s \n new job: \n%s" % (str(old_job), str(job)))
         session.commit()
         self._call_scheduler()
 
@@ -219,6 +232,10 @@ class SQLDatabase(ServerDatabase):
         session = self.scoped()
         jobs: Optional[List[Job]] = session.query(Job).join(DatabaseJobEntry). \
             join(WorkMachine, WorkMachine.uid == machine.uid).options(joinedload("*")).all()
+        if jobs is not None:
+            logger.info("jobs on machine %s: " % machine.uid + str([job.uid for job in jobs]))
+        else:
+            logger.info("no jobs on machine %s" % machine.uid)
         return jobs
 
     def assign_job_machine(self, job: Job, machine: WorkMachine) -> None:
@@ -226,6 +243,7 @@ class SQLDatabase(ServerDatabase):
         job_entry = self.find_job_by_id(job.uid)
         job_entry.assigned_machine = machine
         session.commit()
+        logger.info("assign job: %s, to machine %s" % (job.uid, (machine.uid if machine is not None else None)))
         self._call_scheduler()
 
     def update_work_machine(self, machine: WorkMachine) -> None:
@@ -233,7 +251,12 @@ class SQLDatabase(ServerDatabase):
         work_machine: WorkMachine = session.query(WorkMachine).filter(WorkMachine.uid == machine.uid).first()
         if work_machine is None:
             session.add(machine)
+            logger.info("adding work machine: %s" % machine.uid)
+            logger.debug(str(machine))
         else:
+            logger.info("updated work machine with uid: %s" % machine.uid)
+            logger.debug(
+                "old machine: \n %s \n new machine: \n %s" % (str(machine), str(work_machine)))
             work_machine.state = machine.state
             work_machine.ssh_config = machine.ssh_config
             work_machine.resources = machine.resources
@@ -261,6 +284,8 @@ class SQLDatabase(ServerDatabase):
         if user_id != -1:
             jobs_query = jobs_query.join(Job).filter(Job.owner_id == user_id)
         jobs: List[DatabaseJobEntry] = jobs_query.all()
+        if len(jobs) == 0:
+            logger.info("no jobs found")
         if since is None:
             return jobs
         return [job for job in jobs if job.statistics.time_added >= since]
@@ -268,6 +293,7 @@ class SQLDatabase(ServerDatabase):
     def _call_scheduler(self) -> None:
         if not self.in_scheduler_callback:
             self.in_scheduler_callback = True
+            logger.info("calling scheduler callback")
             self.scheduler_callback(self)
             self.in_scheduler_callback = False
 

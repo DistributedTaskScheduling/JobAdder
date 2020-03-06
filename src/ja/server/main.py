@@ -13,6 +13,9 @@ from ja.server.web.api_server import StatisticsWebServer
 
 import ja.server.scheduler.default_policies as dp
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class JobCenter:
     """
@@ -31,7 +34,8 @@ class JobCenter:
 
     @staticmethod
     def _read_config() -> ServerConfig:
-        with open('/etc/jobadder/server.conf') as f:
+        with open("/etc/jobadder/server.conf") as f:
+            logger.info("reading /etc/jobadder/server.conf config file")
             return ServerConfig.from_string(f.read())
 
     def _cleanup(self) -> None:
@@ -86,5 +90,6 @@ class JobCenter:
         """!
         Run the main loop of the server daemon.
         """
+        logger.info("starting main loop")
         self._handler.main_loop()
         self._cleanup()

@@ -7,3 +7,10 @@ It has four sub-packages:
 * common for components used on at least two of: user client, central server,
   worker client.
 """
+import logging
+import os
+# set JA_LOGLEVEL to DEBUG-> more info
+# set JA_LOGLEVEL to INFO -> less info
+
+LOGLEVEL = os.environ.get("JA_LOGLEVEL", "WARNING").upper()
+logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=LOGLEVEL)
