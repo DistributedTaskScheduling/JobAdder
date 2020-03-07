@@ -84,12 +84,13 @@ class ServerCommandHandler(CommandHandler):
                 return Response(self._INSUFFICIENT_PERM_TEMPLATE % (user, type_name), False).to_dict()
         return self._execute_command(server_command)
 
-    def _process_command_dict(self, command_dict: Dict[str, object], type_name: str, user: str) -> Dict[str, object]:
-        response = self._process_worker_message(command_dict, type_name, user)
+    def _process_command_dict(self, command_dict: Dict[str, object],
+                              type_name: str, username: str) -> Dict[str, object]:
+        response = self._process_worker_message(command_dict, type_name, username)
         if response:
             return response
 
-        response = self._process_user_message(command_dict, type_name, user)
+        response = self._process_user_message(command_dict, type_name, username)
         if response:
             return response
 
