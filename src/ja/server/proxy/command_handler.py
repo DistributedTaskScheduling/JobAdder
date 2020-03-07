@@ -58,7 +58,8 @@ class ServerCommandHandler(CommandHandler):
 
     def _user_is_admin(self, user: str) -> bool:
         groups = [g.gr_name for g in grp.getgrall() if user in g.gr_mem]
-        return self._admin_group in groups
+        # seems like the user is not reported to be in its own group ...
+        return self._admin_group in groups or user == self._admin_group
 
     def _execute_command(self, command: ServerCommand) -> Dict[str, object]:
         return command.execute(self._database).to_dict()
