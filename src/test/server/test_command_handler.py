@@ -69,7 +69,7 @@ class MockGroup:
 
 class ServerCommandHandlerTest(TestCase):
     def setUp(self) -> None:
-        grp.getgrall = MagicMock(return_value=[MockGroup("root", ["root", "user1"]), MockGroup("users", ["user2"])])
+        grp.getgrall = MagicMock(return_value=[MockGroup("root", ["user1"]), MockGroup("users", ["user2"])])
         self._handler = ServerCommandHandlerNoExecute(self, "root")
 
     def test_admin_checks(self) -> None:
