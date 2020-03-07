@@ -2,7 +2,7 @@ from ja.server.config import ServerConfig
 from ja.server.database.sql.database import SQLDatabase
 from ja.server.dispatcher.dispatcher import Dispatcher
 from ja.server.dispatcher.proxy_factory import WorkerProxyFactory
-from ja.server.email import EmailNotifier, BasicEmailServer
+from ja.server.email_notifier import EmailNotifier, BasicEmailServer
 from ja.server.scheduler.algorithm import SchedulingAlgorithm
 from ja.server.scheduler.default_algorithm import DefaultSchedulingAlgorithm
 from ja.server.scheduler.scheduler import Scheduler
