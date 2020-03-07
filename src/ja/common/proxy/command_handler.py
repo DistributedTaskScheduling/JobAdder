@@ -26,6 +26,7 @@ class CommandHandler(ABC):
         @param socket_path: The Unix named socket to listen for Commands on.
         """
         self._socket_path = socket_path
+        self._running = True
 
     def main_loop(self) -> None:
         """!
@@ -41,7 +42,7 @@ class CommandHandler(ABC):
         named_socket.bind(self._socket_path)
         named_socket.listen(1)
 
-        while True:
+        while self._running:
             connection, client_address = named_socket.accept()
             try:
                 command_bytes = bytes(0)  # First 8 bytes encode command length

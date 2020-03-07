@@ -23,6 +23,7 @@ import grp
 
 
 class ServerCommandHandler(CommandHandler):
+    SOCKET_PATH = '/run/jobadder-server.socket'
     """
     ServerCommandHandler receives ServerMessages and performs the corresponding
     actions on the server.
@@ -32,7 +33,7 @@ class ServerCommandHandler(CommandHandler):
         @param database The server database.
         @param admin_group The name of the administrator group.
         """
-        super().__init__('/run/jobadder-server.socket')
+        super().__init__(self.SOCKET_PATH)
         self._database = database
         self._admin_group = admin_group
 
@@ -62,6 +63,14 @@ class ServerCommandHandler(CommandHandler):
     def _execute_command(self, command: ServerCommand) -> Dict[str, object]:
         return command.execute(self._database).to_dict()
 
+    def _process_exit_message(self, type_name: str, user: str) -> Dict[str, object]:
+        if type_name != 'KillCommand':
+            return None
+        if not self._user_is_admin(user):
+            return Response('Insufficient permissions to shut down the server.', False).to_dict()
+        self._running = False
+        return Response('Shutting down server ...', True).to_dict()
+
     def _process_worker_message(self, command_dict: Dict[str, object], type_name: str, user: str) -> Dict[str, object]:
         if type_name not in self._worker_commands:
             return None
@@ -86,6 +95,10 @@ class ServerCommandHandler(CommandHandler):
 
     def _process_command_dict(self, command_dict: Dict[str, object],
                               type_name: str, username: str) -> Dict[str, object]:
+        response = self._process_exit_message(type_name, username)
+        if response:
+            return response
+
         response = self._process_worker_message(command_dict, type_name, username)
         if response:
             return response
