@@ -17,11 +17,10 @@ def kill_server() -> None:
         'type_name': 'KillCommand'
     }
 
-    response = ""
-    Remote(ServerCommandHandler.SOCKET_PATH, StringIO(yaml.dump(kill_command_dict)), StringIO(response))
-    print(response)
-    typed_response: Response = cast(Response, yaml.load(response, Loader=yaml.SafeLoader))
-    print(typed_response.result_string)
+    response_buffer = StringIO()
+    Remote(ServerCommandHandler.SOCKET_PATH, StringIO(yaml.dump(kill_command_dict)), response_buffer)
+    response = cast(Response, Response.from_string(response_buffer.getvalue()))
+    print(response.result_string)
 
 
 if __name__ == "__main__":
