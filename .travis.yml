@@ -2,10 +2,21 @@ language: python
 python: 3.7
 install: "pip3 install flake8 mypy==0.761 PyYAML psycopg2 SQLAlchemy testing.postgresql sqlalchemy-stubs paramiko freezegun docker"
 script:
+  - sudo groupadd jobadder
+  - sudo usermod -a -G jobadder travis
+  - ssh-keygen -f ~/.ssh/id_rsa -P "" -t rsa -m PEM
+  - cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
+  - echo PYTHONPATH=$PWD/src >> ~/.ssh/environment
+  - echo "PermitUserEnvironment yes" | sudo tee -a /etc/ssh/sshd_config
+  - sudo systemctl reload sshd
+  - sudo -u postgres createuser jobadder
+  - sudo -u postgres psql -c "ALTER USER jobadder PASSWORD 'jobadder';"
+  - sudo -u postgres createdb jobadder-test
   - flake8 src/ --ignore F821 --max-line-length=120
   - ./.travis/check_init_py.sh src/
   - MYPYPATH=$(pwd)/src mypy -p ja --no-strict-optional --strict --config-file $(pwd)/mypy.ini
   - MYPYPATH=$(pwd)/src mypy -p test --no-strict-optional --strict
-  - cd src && ./setup.py test
+  - cd src && python3 -m unittest discover --verbose --start-directory test --pattern "*.py"
 services:
   - docker
+  - postgresql

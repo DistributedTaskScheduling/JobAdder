@@ -7,7 +7,7 @@ def _check_port(port: int) -> None:
     """
     Check if the given port is valid, and raise a ValueError otherwise.
     """
-    if port < 1 or port > 65535:
+    if port is not None and (port < 1 or port > 65535):
         raise ValueError("Port number must be in range [1, 65535].")
 
 
@@ -71,7 +71,7 @@ class LoginConfig(Config):
     @classmethod
     def from_dict(cls, property_dict: Dict[str, object]) -> "LoginConfig":
         host = cls._get_str_from_dict(property_dict=property_dict, key="host")
-        port = cls._get_int_from_dict(property_dict=property_dict, key="port")
+        port = cls._get_int_from_dict(property_dict=property_dict, key="port", mandatory=False)
         username = cls._get_str_from_dict(property_dict=property_dict, key="username")
         password = cls._get_str_from_dict(property_dict=property_dict, key="password")
 

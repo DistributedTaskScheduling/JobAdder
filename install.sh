@@ -14,8 +14,10 @@ SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 # FIXME: how to make setup.py ignore test folder??
 cd $SCRIPTPATH
 mv ./src/test/__init__.py ./src/test/init
+mv ./src/ja_integration/__init__.py ./src/ja_integration/init
 pip3 install ./src --prefix=$PREFIX
 mv ./src/test/init ./src/test/__init__.py
+mv ./src/ja_integration/init ./src/ja_integration/__init__.py
 
 install ./data/bin/ja-server /usr/bin -m 755
 
