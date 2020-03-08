@@ -21,7 +21,7 @@ setup(
     url='https://github.com/DistributedTaskScheduling/JobAdder',
     packages=find_packages(exclude=('test')),
     package_data={},
-    scripts=['bin/ja-server'],
+    scripts=['../data/bin/ja-server'],
     test_suite='setup.discover_ja_tests',
     keywords=[],
     license='GPL3',
