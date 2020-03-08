@@ -7,11 +7,11 @@ from ja.common.work_machine import ResourceAllocation
 from ja.common.docker_context import DockerContext, DockerConstraints, MountPoint
 from ja.common.job import Job, JobStatus, JobSchedulingConstraints, JobPriority
 from ja.server.database.types.job_entry import DatabaseJobEntry, JobRuntimeStatistics
-from ja.server.database.types.work_machine import WorkMachine, WorkMachineResources, WorkMachineConnectionDetails, \
-    WorkMachineState
+from ja.server.database.types.work_machine import WorkMachine, WorkMachineResources, WorkMachineState
 from ja.server.database.database import ServerDatabase
 from sqlalchemy import Table, Column, Integer, String, MetaData, DateTime, Enum, ForeignKey, Boolean, ARRAY
 from sqlalchemy.orm import mapper, synonym, relationship, sessionmaker, scoped_session, joinedload
+from ja.common.proxy.ssh import SSHConfig
 
 
 class SQLDatabase(ServerDatabase):
@@ -20,13 +20,14 @@ class SQLDatabase(ServerDatabase):
     """
     _metadata: MetaData = None
 
-    def __init__(self, host: str = None, user: str = None, password: str = None):
+    def __init__(self, host: str = None, user: str = None, password: str = None, database_name: str = "jobadder"):
         """!
         Create the SQLDatabase object and connect to the given database.
 
         @param host The host of the database to connect to.
         @param user The username to use for the connection.
         @param password The password to use for the connection.
+        @param database_name The name of the database to use.
         """
         self.scheduler_callback: Callable[["ServerDatabase"], None] = lambda *args: None
         self.status_callback: Callable[["Job"], None] = lambda *args: None
@@ -55,9 +56,8 @@ class SQLDatabase(ServerDatabase):
                                             uselist=False),
         })
 
-        work_machine_connection = Table("work_machine_connection", metadata,
-                                        Column("id", Integer, primary_key=True))
-        mapper(WorkMachineConnectionDetails, work_machine_connection)
+        ssh_config = Table("work_machine_connection", metadata, Column("id", Integer, primary_key=True))
+        mapper(SSHConfig, ssh_config)
 
         work_machine = Table("work_machine", metadata,
                              Column("id", Integer, primary_key=True),
@@ -67,7 +67,7 @@ class SQLDatabase(ServerDatabase):
                              Column("connection_id", Integer, ForeignKey("work_machine_connection.id")))
         mapper(WorkMachine, work_machine, properties={
             "_resources": relationship(WorkMachineResources, uselist=False),
-            "_connection": relationship(WorkMachineConnectionDetails, uselist=False),
+            "_ssh_config": relationship(SSHConfig, uselist=False),
             "uid": synonym("_uid", descriptor=WorkMachine.uid)
         })
 
@@ -156,7 +156,7 @@ class SQLDatabase(ServerDatabase):
         })
         if user is not None and password is not None and host is not None:
             # example: "postgresql://pesho:pesho@127.0.0.1:5432/jobadd"
-            _conn: str = "postgresql://" + user + ":" + password + "@" + host + "/jobadder"
+            _conn: str = "postgresql://" + user + ":" + password + "@" + host + "/" + database_name
             self.engine = create_engine(_conn)
             self.scoped = scoped_session(sessionmaker(self.engine))
             SQLDatabase._metadata.create_all(self.engine)
@@ -235,7 +235,7 @@ class SQLDatabase(ServerDatabase):
             session.add(machine)
         else:
             work_machine.state = machine.state
-            work_machine.connection_details = machine.connection_details
+            work_machine.ssh_config = machine.ssh_config
             work_machine.resources = machine.resources
         session.commit()
         self._call_scheduler()

@@ -31,8 +31,8 @@ class WorkerCommandHandlerDummy(ThreadedCommandHandler):
         self._worker_proxy_dummy = WorkerProxyDummy(uid=None, jobs=jobs)
 
     def _process_command_dict(
-            self, command_dict: Dict[str, object], type_name: str, username: str) -> Dict[str, object]:
-        assert username == getuser()
+            self, command_dict: Dict[str, object], type_name: str, user: str) -> Dict[str, object]:
+        assert user == getuser()
         if type_name == "StartJobCommand":
             start_command = StartJobCommand.from_dict(command_dict)
             response = self._worker_proxy_dummy.dispatch_job(start_command.job)

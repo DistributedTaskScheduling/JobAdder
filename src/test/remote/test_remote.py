@@ -10,8 +10,8 @@ from test.proxy.threaded_command_handler import ThreadedCommandHandler
 class CommandHandlerDummy(ThreadedCommandHandler):
 
     def _process_command_dict(
-            self, command_dict: Dict[str, object], type_name: str, username: str) -> Dict[str, object]:
-        assert username == getuser()
+            self, command_dict: Dict[str, object], type_name: str, user: str) -> Dict[str, object]:
+        assert user == getuser()
         assert type_name == "COMMAND"
         command_string = str(command_dict["payload"])
         response_string = ""

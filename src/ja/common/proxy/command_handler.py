@@ -35,7 +35,7 @@ class CommandHandler(ABC):
 
     @abstractmethod
     def _process_command_dict(
-            self, command_dict: Dict[str, object], type_name: str, username: str) -> Dict[str, object]:
+            self, command_dict: Dict[str, object], type_name: str, user: str) -> Dict[str, object]:
         pass
 
     def _user_is_admin(self, user: str) -> bool:
@@ -73,7 +73,7 @@ class CommandHandler(ABC):
                 response_dict = self._process_command_dict(
                     command_dict=input_dict["command"],
                     type_name=input_dict["type_name"],
-                    username=input_dict["username"]
+                    user=input_dict["username"]
                 )
                 response_string = yaml.dump(response_dict)
                 connection.sendall(response_string.encode())

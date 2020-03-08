@@ -1,7 +1,7 @@
 from ja.server.config import ServerConfig
 from ja.server.database.sql.database import SQLDatabase
 from ja.server.dispatcher.dispatcher import Dispatcher
-from ja.server.dispatcher.proxy_factory import WorkerProxyFactory
+from ja.server.dispatcher.proxy_factory import WorkerProxyFactory, WorkerProxyFactoryBase
 from ja.server.email import EmailNotifier, BasicEmailServer
 from ja.server.scheduler.algorithm import SchedulingAlgorithm
 from ja.server.scheduler.default_algorithm import DefaultSchedulingAlgorithm
@@ -32,7 +32,7 @@ class JobCenter:
         with open('/etc/jobadder/server.conf') as f:
             return ServerConfig.from_string(f.read())
 
-    def __init__(self) -> None:
+    def __init__(self, socket_path: str = "/run/jobadder-server.socket", database_name: str = "jobadder") -> None:
         """!
         Initialize the JobAdder server daemon.
         This includes:
@@ -40,13 +40,16 @@ class JobCenter:
         2. Connecting to the configured database.
         3. Initializing the scheduler and the dispatcher.
         4. Starting the web server and the email notifier.
+        @param socket_path: the path to the unix named socket for the command handler to listen on.
+        @param database_name: the name of the database to use.
         """
 
         config = self._read_config()
         self._database = SQLDatabase(host=config.database_config.host,
                                      user=config.database_config.username,
-                                     password=config.database_config.password)
-        proxy_factory = WorkerProxyFactory(self._database)
+                                     password=config.database_config.password,
+                                     database_name=database_name)
+        proxy_factory = self._get_proxy_factory()
         self._dispatcher = Dispatcher(proxy_factory)
         self._scheduler = Scheduler(self._init_algorithm(), self._dispatcher, config.special_resources)
 
@@ -60,7 +63,10 @@ class JobCenter:
 
         self._database.set_scheduler_callback(self._scheduler.reschedule)
         self._database.set_job_status_callback(self._email.handle_job_status_updated)
-        self._handler = ServerCommandHandler(self._database, config.admin_group)
+        self._handler = ServerCommandHandler(self._database, socket_path, config.admin_group)
+
+    def _get_proxy_factory(self) -> WorkerProxyFactoryBase:
+        return WorkerProxyFactory(self._database)
 
     def run(self) -> None:
         """!

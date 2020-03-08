@@ -25,11 +25,13 @@ class ServerCommandHandler(CommandHandler):
     ServerCommandHandler receives ServerMessages and performs the corresponding
     actions on the server.
     """
-    def __init__(self, database: ServerDatabase, admin_group: str):
+    def __init__(self, database: ServerDatabase, socket_path: str, admin_group: str):
         """!
         @param database The server database.
+        @param socket_path: the path to the unix named socket to listen on.
+        @param admin_group: the Unix group to grant administrative privileges to.
         """
-        super().__init__('/run/jobadder-server.socket', admin_group)
+        super().__init__(socket_path, admin_group)
         self._database = database
 
     _user_commands = {

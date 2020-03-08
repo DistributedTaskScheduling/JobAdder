@@ -1,6 +1,7 @@
 from typing import Dict
 from abc import ABC, abstractmethod
 from paramiko import SSHClient, AutoAddPolicy  # type: ignore
+import yaml
 
 from ja.common.message.server import ServerCommand, ServerResponse
 from ja.common.message.worker import WorkerCommand, WorkerResponse
@@ -42,7 +43,7 @@ class ISSHConnection(ABC):
 
 
 class SSHConnection(ISSHConnection):
-    def __init__(self, ssh_config: "SSHConfig", remote_module: str):
+    def __init__(self, ssh_config: "SSHConfig", remote_module: str, command_string: str = "python3 -m %s"):
         """!
         Creates a new SSHConnection object. Arguments for establishing the
         actual ssh connection are packaged in @ssh_config. If no credentials
@@ -50,6 +51,7 @@ class SSHConnection(ISSHConnection):
         constructor prompts the user for input.
         @param ssh_config: Config for paramiko.
         @param remote_module: The Python module to execute on the host.
+        @param command string: the template for executing commands on the remote component.
         """
         self._username = ssh_config.username
         self._client = SSHClient()
@@ -59,21 +61,24 @@ class SSHConnection(ISSHConnection):
             key_filename=ssh_config.key_filename, passphrase=ssh_config.passphrase
         )
         self._remote_module = remote_module
+        self._command_string = command_string
 
     def send_server_command(self, command: ServerCommand) -> ServerResponse:
-        stdin, stdout, stderr = self._client.exec_command("python3 -m %s" % self._remote_module)
-        stdin.write(command)
-        response = ServerResponse.from_string(stdout.read())
+        command_dict = dict(command=command.to_dict(), type_name=command.__class__.__name__)
+        stdin, stdout, stderr = self._client.exec_command(self._command_string % self._remote_module)
+        stdin.write(yaml.dump(command_dict))
         stdin.close()
+        response = ServerResponse.from_string(stdout.read())
         stdout.close()
         stderr.close()
         return response
 
     def send_worker_command(self, command: WorkerCommand) -> WorkerResponse:
-        stdin, stdout, stderr = self._client.exec_command("python3 -m %s" % self._remote_module)
-        stdin.write(command)
-        response = WorkerResponse.from_string(stdout.read())
+        command_dict = dict(command=command.to_dict(), type_name=command.__class__.__name__)
+        stdin, stdout, stderr = self._client.exec_command(self._command_string % self._remote_module)
+        stdin.write(yaml.dump(command_dict))
         stdin.close()
+        response = WorkerResponse.from_string(stdout.read())
         stdout.close()
         stderr.close()
         return response
@@ -161,6 +166,8 @@ class SSHConfig(Config):
 
     @classmethod
     def from_dict(cls, property_dict: Dict[str, object]) -> "SSHConfig":
+        if property_dict is None:
+            return None
         hostname = cls._get_str_from_dict(property_dict=property_dict, key="hostname")
         username = cls._get_str_from_dict(property_dict=property_dict, key="username", mandatory=False)
         password = cls._get_str_from_dict(property_dict=property_dict, key="password", mandatory=False)
