@@ -11,8 +11,9 @@ from ja.worker.proxy.proxy import IWorkerServerProxy
 
 
 class DockerInterface:
-    def __init__(self, server_proxy: IWorkerServerProxy):
+    def __init__(self, server_proxy: IWorkerServerProxy, worker_uid: str):
         self._server_proxy = server_proxy
+        self._worker_uid = worker_uid
         self._client = docker.from_env()
         self._jobs_by_container_id: Dict[str, Job] = dict()
         self._containers_by_job_uid: Dict[str, Container] = dict()
@@ -35,7 +36,13 @@ class DockerInterface:
                     else:
                         self._server_proxy.notify_job_crashed(job.uid)
 
+    @property
+    def worker_uid(self) -> str:
+        return self._worker_uid
+
     def add_job(self, job: Job) -> None:
+        if job.uid in self._containers_by_job_uid:
+            raise ValueError("Job with UID %s already exists." % job.uid)
         image, build_log = self._client.images.build(fileobj=BytesIO(job.docker_context.dockerfile_source.encode()))
         mounts = [Mount(target=mount_point.mount_path, source=mount_point.source_path, type="bind")
                   for mount_point in job.docker_context.mount_points]

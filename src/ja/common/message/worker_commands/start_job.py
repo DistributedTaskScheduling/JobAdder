@@ -4,8 +4,9 @@ This command will start a new job on the work machine
 from typing import Dict
 
 from ja.common.job import Job
-from ja.common.message.worker import WorkerCommand, WorkerResponse
-from ja.worker.main import JobWorker
+from ja.common.message.worker import WorkerCommand
+from ja.common.message.base import Response
+from ja.worker.docker import DockerInterface
 
 
 class StartJobCommand(WorkerCommand):
@@ -26,12 +27,17 @@ class StartJobCommand(WorkerCommand):
         """
         return self._job
 
-    def execute(self, worker_client: JobWorker) -> WorkerResponse:
+    def execute(self, docker_interface: DockerInterface) -> Response:
         """!
         Start the job on the worker machine using the provided @worker_client
-        @param worker_client:  the Worker object to use for the execution
+        @param docker_interface: the docker interface to use for the execution.
         @return: a WorkerResponse with the appropriate response
         """
+        try:
+            docker_interface.add_job(job=self.job)
+            return Response(self.RESPONSE_SUCCESS % (self.job.uid, docker_interface.worker_uid), is_success=True)
+        except ValueError:
+            return Response(self.RESPONSE_DUPLICATE % (self.job.uid, docker_interface.worker_uid), is_success=False)
 
     def to_dict(self) -> Dict[str, object]:
         """!

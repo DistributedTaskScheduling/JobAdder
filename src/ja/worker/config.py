@@ -9,7 +9,7 @@ class WorkerConfig(Config):
     Config for the worker client.
     """
 
-    def __init__(self, uid: str, ssh_config: SSHConfig, resource_allocation: ResourceAllocation):
+    def __init__(self, uid: str, ssh_config: SSHConfig, resource_allocation: ResourceAllocation, admin_group: str):
         """!
         creates resource allocation instance
         """
@@ -21,6 +21,7 @@ class WorkerConfig(Config):
         self._ssh_config = ssh_config
         self._resource_allocation = resource_allocation
         self._uid = uid
+        self._admin_group = admin_group
 
     def __eq__(self, o: object) -> bool:
         if isinstance(o, WorkerConfig):
@@ -37,6 +38,10 @@ class WorkerConfig(Config):
         """
         return str(self._uid)
 
+    @uid.setter
+    def uid(self, new_uid: str) -> None:
+        self._uid = new_uid
+
     @property
     def ssh_config(self) -> SSHConfig:
         """!
@@ -51,11 +56,19 @@ class WorkerConfig(Config):
         """
         return self._resource_allocation
 
+    @property
+    def admin_group(self) -> str:
+        """!
+        @return: Name of the group of admins.
+        """
+        return self._admin_group
+
     def to_dict(self) -> Dict[str, object]:
         d: Dict[str, object] = dict()
         d["ssh_config"] = self._ssh_config.to_dict()
         d["resource_allocation"] = self._resource_allocation.to_dict()
         d["uid"] = self._uid
+        d["admin_group"] = self.admin_group
         return d
 
     @classmethod
@@ -65,5 +78,6 @@ class WorkerConfig(Config):
         resource_allocation = ResourceAllocation.from_dict(
             cls._get_dict_from_dict(property_dict=property_dict, key="resource_allocation", mandatory=True))
         uid = cls._get_str_from_dict(property_dict, "uid", mandatory=False)
+        admin_group = cls._get_str_from_dict(property_dict, "admin_group", mandatory=True)
         cls._assert_all_properties_used(property_dict)
-        return WorkerConfig(uid, ssh_config, resource_allocation)
+        return WorkerConfig(uid, ssh_config, resource_allocation, admin_group)

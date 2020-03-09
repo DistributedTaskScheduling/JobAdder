@@ -3,6 +3,7 @@ import socket
 from abc import ABC, abstractmethod
 import yaml
 from typing import Dict
+import grp
 
 
 class CommandHandler(ABC):
@@ -21,11 +22,25 @@ class CommandHandler(ABC):
     success property of the Response is True if both validations were passed
     and the Command was executed without error, and is false otherwise.
     """
-    def __init__(self, socket_path: str):
+    def __init__(self, socket_path: str, admin_group: str = "jobadder"):
         """!
         @param socket_path: The Unix named socket to listen for Commands on.
+        @param admin_group The name of the administrator group.
         """
         self._socket_path = socket_path
+        self._admin_group = admin_group
+
+    _INSUFFICIENT_PERM_TEMPLATE = "User %s has insufficient permissions for the requested action %s."
+    _UNKNOWN_COMMAND_TEMPLATE = "Unknown command: %s."
+
+    @abstractmethod
+    def _process_command_dict(
+            self, command_dict: Dict[str, object], type_name: str, username: str) -> Dict[str, object]:
+        pass
+
+    def _user_is_admin(self, user: str) -> bool:
+        groups = [g.gr_name for g in grp.getgrall() if user in g.gr_mem]
+        return self._admin_group in groups
 
     def main_loop(self) -> None:
         """!
@@ -64,8 +79,3 @@ class CommandHandler(ABC):
                 connection.sendall(response_string.encode())
             finally:
                 connection.close()
-
-    @abstractmethod
-    def _process_command_dict(
-            self, command_dict: Dict[str, object], type_name: str, username: str) -> Dict[str, object]:
-        pass

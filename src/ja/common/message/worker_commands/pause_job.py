@@ -2,9 +2,11 @@
 This command will pause a running job on the work machine
 """
 from typing import Dict
+from docker.errors import APIError  # type: ignore
 
-from ja.common.message.worker import WorkerCommand, WorkerResponse
-from ja.worker.main import JobWorker
+from ja.common.message.worker import WorkerCommand
+from ja.common.message.base import Response
+from ja.worker.docker import DockerInterface
 
 
 class PauseJobCommand(WorkerCommand):
@@ -26,12 +28,19 @@ class PauseJobCommand(WorkerCommand):
         """
         return self._uid
 
-    def execute(self, worker_client: JobWorker) -> WorkerResponse:
+    def execute(self, docker_interface: DockerInterface) -> Response:
         """!
         Pause the job on the worker machine using the provided @worker_client
-        @param worker_client:  the Worker object to use for the execution
+        @param docker_interface: the docker interface to use for the execution.
         @return: a WorkerResponse with the appropriate response
         """
+        try:
+            docker_interface.pause_job(uid=self.uid)
+            return Response(self.RESPONSE_SUCCESS % (self.uid, docker_interface.worker_uid), is_success=True)
+        except KeyError:
+            return Response(self.RESPONSE_UNKNOWN_JOB % (self.uid, docker_interface.worker_uid), is_success=False)
+        except APIError:
+            return Response(self.RESPONSE_NOT_RUNNING % (self.uid, docker_interface.worker_uid), is_success=False)
 
     def to_dict(self) -> Dict[str, object]:
         """!

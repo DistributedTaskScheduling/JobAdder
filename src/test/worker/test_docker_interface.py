@@ -38,7 +38,8 @@ class DockerInterfaceTest(TestCase):
     Class for testing DockerInterface
     """
     def setUp(self) -> None:
-        self._docker_interface = DockerInterface(server_proxy=WorkerServerProxyDummy(wmcs=dict(), jobs=dict()))
+        self._docker_interface = DockerInterface(
+            server_proxy=WorkerServerProxyDummy(wmcs=dict(), jobs=dict()), worker_uid="worker")
         self._mount_point_source_path = os.path.dirname(os.path.abspath(__file__)) + "/mount_directory/"
         generic_job_dict = {
             "status": 0,
