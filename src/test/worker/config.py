@@ -13,7 +13,7 @@ class WorkMachineConfigTest(TestCase):
     def setUp(self) -> None:
         ssh_config: SSHConfig = SSHConfig(hostname="127.0.1.1", username="someuser")
         resource_allocation: ResourceAllocation = ResourceAllocation(1, 2, 3)
-        self._wmc: WorkerConfig = WorkerConfig("3", ssh_config, resource_allocation)
+        self._wmc: WorkerConfig = WorkerConfig("3", ssh_config, resource_allocation, "jobadder")
 
     def test_uid_getter(self) -> None:
         self.assertEqual(self._wmc.uid, "3")
@@ -32,6 +32,7 @@ class WorkMachineConfigTest(TestCase):
         d["ssh_config"] = self._wmc.ssh_config.to_dict()
         d["resource_allocation"] = self._wmc.resources.to_dict()
         d["uid"] = self._wmc.uid
+        d["admin_group"] = self._wmc.admin_group
         wc = WorkerConfig.to_dict(self._wmc)
         self.assertDictEqual(wc, d)
 
@@ -44,8 +45,10 @@ class WorkerMachineDictTest(AbstractSerializableTest):
     def setUp(self) -> None:
         self._optional_properties = ["uid"]
         ssh_config = SSHConfig(hostname="127.0.1.1", username="someuser", key_filename=None)
-        self._object = WorkerConfig(uid="3", ssh_config=ssh_config,
-                                    resource_allocation=ResourceAllocation(cpu_threads=1, memory=2, swap=3))
+        self._object = WorkerConfig(
+            uid="3", ssh_config=ssh_config, resource_allocation=ResourceAllocation(cpu_threads=1, memory=2, swap=3),
+            admin_group="jobadder"
+        )
         self._object_dict = {
             "uid": "3",
             "ssh_config": {
@@ -59,7 +62,8 @@ class WorkerMachineDictTest(AbstractSerializableTest):
                 "cpu_threads": 1,
                 "memory": 2,
                 "swap": 3
-            }
+            },
+            "admin_group": "jobadder"
         }
         self._other_object_dict = {
             "uid": "3",
@@ -75,5 +79,6 @@ class WorkerMachineDictTest(AbstractSerializableTest):
                 "cpu_threads": 1,
                 "memory": 2,
                 "swap": 3
-            }
+            },
+            "admin_group": "jobadder"
         }
