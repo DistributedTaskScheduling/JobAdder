@@ -110,7 +110,7 @@ class SQLDatabase(ServerDatabase):
                     Column("_status", Enum(JobStatus)),
                     Column("_owner_id", Integer),
                     Column("_email", String),
-                    Column("_label", String, unique=True),
+                    Column("_label", String),
                     Column("_uid", String, unique=True),
                     Column("scheduling_constraints_id", Integer, ForeignKey("job_constrains.id")),
                     Column("docker_context_id", Integer, ForeignKey("docker_context.id")),
