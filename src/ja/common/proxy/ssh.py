@@ -2,7 +2,8 @@ from typing import Dict
 from abc import ABC, abstractmethod
 from paramiko import SSHClient, AutoAddPolicy  # type: ignore
 
-from ja.common.message.server import ServerCommand, ServerResponse
+from ja.common.message.base import Response, Command
+from ja.common.message.server import ServerCommand
 from ja.common.message.worker import WorkerCommand, WorkerResponse
 from ja.common.config import Config
 
@@ -16,7 +17,7 @@ class ISSHConnection(ABC):
     """
 
     @abstractmethod
-    def send_server_command(self, command: ServerCommand) -> ServerResponse:
+    def send_server_command(self, command: ServerCommand) -> Response:
         """!
         Sends a ServerCommand to the Remote on the host. Automatically attaches the username specified in ssh_config to
         the ServerCommand.
@@ -25,7 +26,7 @@ class ISSHConnection(ABC):
         """
 
     @abstractmethod
-    def send_worker_command(self, command: WorkerCommand) -> WorkerResponse:
+    def send_worker_command(self, command: WorkerCommand) -> Response:
         """!
         Sends a WorkerCommand to the Remote on the host. Automatically attaches the username specified in ssh_config to
         the WorkerCommand.
@@ -60,18 +61,19 @@ class SSHConnection(ISSHConnection):
         )
         self._remote_module = remote_module
 
-    def send_server_command(self, command: ServerCommand) -> ServerResponse:
-        stdin, stdout, stderr = self._client.exec_command("python3 -m %s" % self._remote_module)
-        stdin.write(command)
-        response = ServerResponse.from_string(stdout.read())
-        stdin.close()
-        stdout.close()
-        stderr.close()
-        return response
+    def send_server_command(self, command: ServerCommand) -> Response:
+        return self._send_command(command)
 
-    def send_worker_command(self, command: WorkerCommand) -> WorkerResponse:
+    def send_worker_command(self, command: WorkerCommand) -> Response:
+        return self._send_command(command)
+
+    def _send_command(self, command: Command) -> Response:
         stdin, stdout, stderr = self._client.exec_command("python3 -m %s" % self._remote_module)
-        stdin.write(command)
+        dict_to_send: Dict[str, object] = dict()
+        dict_to_send["command"] = command
+        dict_to_send["type_name"] = command.__class__.__name__
+        dict_to_send["username"] = self._username
+        stdin.write(dict_to_send)
         response = WorkerResponse.from_string(stdout.read())
         stdin.close()
         stdout.close()
@@ -86,6 +88,7 @@ class SSHConfig(Config):
     """
     Specifies all properties used for establishing a paramiko SSHConnection.
     """
+
     def __init__(self, hostname: str, username: str = None, password: str = None,
                  key_filename: str = None, passphrase: str = None):
         """!

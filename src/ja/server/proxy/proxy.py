@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from ja.common.proxy.proxy import ContinuousProxy
 from ja.common.proxy.ssh import SSHConfig, ISSHConnection, SSHConnection
-from ja.common.message.worker import WorkerResponse
+from ja.common.message.base import Response
 from ja.common.message.worker_commands.cancel_job import CancelJobCommand
 from ja.common.message.worker_commands.pause_job import PauseJobCommand
 from ja.common.message.worker_commands.resume_job import ResumeJobCommand
@@ -23,28 +23,28 @@ class IWorkerProxy(ContinuousProxy, ABC):
         """
 
     @abstractmethod
-    def dispatch_job(self, job: Job) -> WorkerResponse:
+    def dispatch_job(self, job: Job) -> Response:
         """!
         @param job: A Job to be dispatched to the worker client.
         @return: The Response from the worker client.
         """
 
     @abstractmethod
-    def cancel_job(self, uid: str) -> WorkerResponse:
+    def cancel_job(self, uid: str) -> Response:
         """!
         @param uid: uid of the Job to be cancelled.
         @return: The Response from the worker client.
         """
 
     @abstractmethod
-    def pause_job(self, uid: str) -> WorkerResponse:
+    def pause_job(self, uid: str) -> Response:
         """!
         @param uid: uid of the Job to be paused.
         @return: The Response from the worker client.
         """
 
     @abstractmethod
-    def resume_job(self, uid: str) -> WorkerResponse:
+    def resume_job(self, uid: str) -> Response:
         """!
         @param uid: uid of the Job to be resumed.
         @return: The Response from the worker client.
@@ -68,22 +68,22 @@ class WorkerProxyBase(IWorkerProxy, ABC):
     def uid(self) -> str:
         return self._uid
 
-    def dispatch_job(self, job: Job) -> WorkerResponse:
+    def dispatch_job(self, job: Job) -> Response:
         command = StartJobCommand(job)
         response = self._ssh_connection.send_worker_command(command)
         return response
 
-    def cancel_job(self, uid: str) -> WorkerResponse:
+    def cancel_job(self, uid: str) -> Response:
         command = CancelJobCommand(uid)
         response = self._ssh_connection.send_worker_command(command)
         return response
 
-    def pause_job(self, uid: str) -> WorkerResponse:
+    def pause_job(self, uid: str) -> Response:
         command = PauseJobCommand(uid)
         response = self._ssh_connection.send_worker_command(command)
         return response
 
-    def resume_job(self, uid: str) -> WorkerResponse:
+    def resume_job(self, uid: str) -> Response:
         command = ResumeJobCommand(uid)
         response = self._ssh_connection.send_worker_command(command)
         return response
