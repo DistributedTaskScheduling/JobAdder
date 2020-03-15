@@ -16,7 +16,7 @@ class ServerCommand(Command, ABC):
     """
 
     @abstractmethod
-    def execute(self, database: ServerDatabase) -> "Response":
+    def execute(self, database: ServerDatabase) -> Response:
         """!
         Executes a ServerCommand object on the server and generates a
         ServerResponse object to be sent back in return.

@@ -1,0 +1,7 @@
+source: test/user/program.py
+threads: 5
+memory: 8
+special-resources: 
+  - lic
+  - lic1
+priority: urgent

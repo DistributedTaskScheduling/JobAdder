@@ -1,9 +1,10 @@
-from ja.common.message.server import ServerCommand, ServerResponse
+from ja.common.message.base import Response
+from ja.common.message.server import ServerCommand
 from ja.user.config.base import UserConfig
 from ja.common.job import JobPriority, JobStatus
 from datetime import datetime
 from typing import List, Tuple, Dict, Iterable, cast
-
+from ja.server.database.types.job_entry import DatabaseJobEntry
 from ja.server.database.database import ServerDatabase
 
 
@@ -22,8 +23,8 @@ class QueryCommand(ServerCommand):
         if memory is not None and (memory[0] > memory[1] or memory[0] < 1):
             raise ValueError("Invalid range for memory.")
         if after is not None and before is not None:
-            if after < before:
-                raise ValueError("incorrect datetime")
+            if after > before:
+                raise ValueError("'after' argument must be a date that comes before the 'before' argument!")
         self._config = config
         self._uid = uid
         self._label = label
@@ -147,14 +148,14 @@ class QueryCommand(ServerCommand):
         q_dict["uid"] = self._uid
         q_dict["label"] = self._label
         q_dict["owner"] = self._owner
-        q_dict["priority"] = [a.value for a in self._priority]
-        q_dict["status"] = [a.value for a in self._status]
+        q_dict["priority"] = None if self._priority is None else [a.value for a in self._priority]
+        q_dict["status"] = None if self._status is None else [a.value for a in self._status]
         q_dict["is_preemptible"] = self._is_preemptible
         q_dict["special_resources"] = self._special_resources
         q_dict["cpu_threads"] = self._cpu_threads
         q_dict["memory"] = self._memory
-        q_dict["before"] = self._before.strftime(self.datetime_format)
-        q_dict["after"] = self._after.strftime(self.datetime_format)
+        q_dict["before"] = None if self._before is None else self._before.strftime(self.datetime_format)
+        q_dict["after"] = None if self._after is None else self._after.strftime(self.datetime_format)
         return q_dict
 
     @classmethod
@@ -259,5 +260,40 @@ class QueryCommand(ServerCommand):
                          special_resources_list, cpu_threads, memory, before, after)
         return a
 
-    def execute(self, database: ServerDatabase) -> "ServerResponse":
-        pass
+    def execute(self, database: ServerDatabase) -> Response:
+        jobs: List[DatabaseJobEntry] = database.query_jobs(self.after, -1, None)  # Query all DatabaseJobEntries
+        if self.uid is not None:
+            jobs = [entry for entry in jobs if entry.job.uid in self.uid]
+        if self.label is not None:
+            jobs = [entry for entry in jobs if entry.job.label in self.label]
+        if self.owner is not None:
+            jobs = [entry for entry in jobs if entry.job.owner_id in self.owner]
+        if self.priority is not None:
+            jobs = [entry for entry in jobs if entry.job.scheduling_constraints.priority in self.priority]
+        if self.label is not None:
+            jobs = [entry for entry in jobs if entry.job.status in self.status]
+        if self.is_preemptible is not None:
+            jobs = [entry for entry in jobs if entry.job.scheduling_constraints.is_preemptible == self.is_preemptible]
+        if self.special_resources is not None:
+            jobs_temp: List[DatabaseJobEntry] = []
+            for entry in jobs:
+                for res in self.special_resources:
+                    if set(res) == set(entry.job.scheduling_constraints.special_resources):
+                        jobs_temp.append(entry)
+                        break
+            jobs = jobs_temp
+        if self.cpu_threads is not None:
+            jobs = [entry for entry in jobs if
+                    self.cpu_threads[0] <= entry.job.docker_constraints.cpu_threads <= self.cpu_threads[1]]
+        if self.memory is not None:
+            jobs = [entry for entry in jobs if self.memory[0] <= entry.job.docker_constraints.memory <= self.memory[1]]
+        if self.before is not None:
+            jobs = [entry for entry in jobs if entry.statistics.time_added <= self.before]
+
+        message: str = ""
+        for entry in jobs:
+            message += str(entry.job) + "\n"
+        message = message[:-1]
+        if message == "":
+            message = "No jobs satisfy these constraints."
+        return Response(message, is_success=True)

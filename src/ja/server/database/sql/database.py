@@ -179,6 +179,13 @@ class SQLDatabase(ServerDatabase):
             session.commit()
         return jobs_entry
 
+    def find_job_by_label(self, label: str) -> List[Job]:
+        if label is None:
+            return None
+        session = self.scoped()
+        jobs: List[Job] = session.query(Job).filter(Job.label == label)
+        return jobs
+
     def update_job(self, job: Job) -> None:
         session = self.scoped()
         old_job_entry: Optional[DatabaseJobEntry] = self.find_job_by_id(job.uid)
