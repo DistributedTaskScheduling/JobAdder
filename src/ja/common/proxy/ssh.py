@@ -51,7 +51,7 @@ class SSHConnection(ISSHConnection):
         constructor prompts the user for input.
         @param ssh_config: Config for paramiko.
         @param remote_module: The Python module to execute on the host.
-        @param command string: the template for executing commands on the remote component.
+        @param command_string: the template for executing commands on the remote component.
         """
         self._username = ssh_config.username
         self._client = SSHClient()
@@ -68,7 +68,6 @@ class SSHConnection(ISSHConnection):
         stdin, stdout, stderr = self._client.exec_command(self._command_string % self._remote_module)
         stdin.write(yaml.dump(command_dict))
         stdin.close()
-        print("LAMO", stdout.read().decode(), stderr.read().decode())
         response = ServerResponse.from_string(stdout.read())
         stdout.close()
         stderr.close()

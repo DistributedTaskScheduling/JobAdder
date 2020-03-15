@@ -93,10 +93,6 @@ class IntegrationTest(TestCase):
             self._workers.append(worker)
         sleep(1)
 
-    def tearDown(self) -> None:
-        database = self._server._database
-        for table in reversed(database._metadata.sorted_tables):
-            database.engine.execute(table.delete())
 
     @property
     def ssh_config(self) -> SSHConfig:
