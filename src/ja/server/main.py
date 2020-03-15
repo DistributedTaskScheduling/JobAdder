@@ -1,5 +1,7 @@
+from ja.common.job import JobStatus
 from ja.server.config import ServerConfig
 from ja.server.database.sql.database import SQLDatabase
+from ja.server.database.types.work_machine import WorkMachineState
 from ja.server.dispatcher.dispatcher import Dispatcher
 from ja.server.dispatcher.proxy_factory import WorkerProxyFactory
 from ja.server.email_notifier import EmailNotifier, BasicEmailServer
@@ -32,6 +34,17 @@ class JobCenter:
         with open('/etc/jobadder/server.conf') as f:
             return ServerConfig.from_string(f.read())
 
+    def _cleanup(self) -> None:
+        for job in self._database.get_current_schedule():
+            if job.job.status in [JobStatus.RUNNING, JobStatus.PAUSED]:
+                job.job.status = JobStatus.CRASHED
+                self._database.update_job(job.job)
+
+        for machine in self._database.get_work_machines():
+            machine.resources.deallocate(machine.resources.total_resources - machine.resources.free_resources)
+            machine.state = WorkMachineState.OFFLINE
+            self._database.update_work_machine(machine)
+
     def __init__(self) -> None:
         """!
         Initialize the JobAdder server daemon.
@@ -46,6 +59,8 @@ class JobCenter:
         self._database = SQLDatabase(host=config.database_config.host,
                                      user=config.database_config.username,
                                      password=config.database_config.password)
+        self._cleanup()
+
         proxy_factory = WorkerProxyFactory(self._database)
         self._dispatcher = Dispatcher(proxy_factory)
         self._scheduler = Scheduler(self._init_algorithm(), self._dispatcher, config.special_resources)
@@ -67,3 +82,4 @@ class JobCenter:
         Run the main loop of the server daemon.
         """
         self._handler.main_loop()
+        self._cleanup()
