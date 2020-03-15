@@ -68,6 +68,7 @@ class SSHConnection(ISSHConnection):
         stdin, stdout, stderr = self._client.exec_command(self._command_string % self._remote_module)
         stdin.write(yaml.dump(command_dict))
         stdin.close()
+        print("LAMO", stdout.read().decode(), stderr.read().decode())
         response = ServerResponse.from_string(stdout.read())
         stdout.close()
         stderr.close()
