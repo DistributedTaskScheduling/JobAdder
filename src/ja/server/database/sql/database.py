@@ -110,7 +110,7 @@ class SQLDatabase(ServerDatabase):
                     Column("_status", Enum(JobStatus)),
                     Column("_owner_id", Integer),
                     Column("_email", String),
-                    Column("_label", String, unique=True),
+                    Column("_label", String),
                     Column("_uid", String, unique=True),
                     Column("scheduling_constraints_id", Integer, ForeignKey("job_constrains.id")),
                     Column("docker_context_id", Integer, ForeignKey("docker_context.id")),
@@ -178,6 +178,13 @@ class SQLDatabase(ServerDatabase):
                     = (datetime.now() - jobs_entry.statistics.time_started).seconds - jobs_entry.statistics.running_time
             session.commit()
         return jobs_entry
+
+    def find_job_by_label(self, label: str) -> List[Job]:
+        if label is None:
+            return None
+        session = self.scoped()
+        jobs: List[Job] = session.query(Job).filter(Job.label == label)
+        return jobs
 
     def update_job(self, job: Job) -> None:
         session = self.scoped()
