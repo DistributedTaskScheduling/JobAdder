@@ -93,7 +93,6 @@ class IntegrationTest(TestCase):
             self._workers.append(worker)
         sleep(1)
 
-
     @property
     def ssh_config(self) -> SSHConfig:
         return SSHConfig(hostname="localhost", username=getuser())
