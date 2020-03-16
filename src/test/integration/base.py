@@ -91,10 +91,11 @@ class IntegrationTest(TestCase):
             worker = TestJobWorker(index=i)
             Thread(target=worker.run, name="worker-%s" % i, daemon=True).start()
             self._workers.append(worker)
-        sleep(10)
+        sleep(1)
 
     def tearDown(self) -> None:
         self._server._database.delete_all_records()
+        self._server._database.__del__()
 
     @property
     def ssh_config(self) -> SSHConfig:
