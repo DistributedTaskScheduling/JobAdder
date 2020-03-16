@@ -129,5 +129,5 @@ class IntegrationTest(TestCase):
     def test_sanity_checks(self) -> None:
         self.assertEqual(len(self._server._database.get_work_machines()), self.num_workers)
 
-    def test_empty(self):
+    def test_empty(self) -> None:
         pass

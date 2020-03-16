@@ -276,7 +276,7 @@ class SQLDatabase(ServerDatabase):
     def set_job_status_callback(self, callback: ServerDatabase.JobStatusCallback) -> None:
         self.status_callback = callback
 
-    def delete_all_records(self):
+    def delete_all_records(self) -> None:
         session = self.scoped()
         session.query(DatabaseJobEntry).delete()
         session.query(JobRuntimeStatistics).delete()

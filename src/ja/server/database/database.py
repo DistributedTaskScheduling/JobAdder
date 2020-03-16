@@ -109,7 +109,7 @@ class ServerDatabase(ABC):
         """
 
     @abstractmethod
-    def delete_all_records(self):
+    def delete_all_records(self) -> None:
         """
         Deletes all records in the database.
         """
