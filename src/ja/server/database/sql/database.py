@@ -276,3 +276,18 @@ class SQLDatabase(ServerDatabase):
 
     def set_job_status_callback(self, callback: ServerDatabase.JobStatusCallback) -> None:
         self.status_callback = callback
+
+    def delete_all_records(self):
+        session = self.scoped()
+        session.query(DatabaseJobEntry).delete()
+        session.query(JobRuntimeStatistics).delete()
+        session.query(Job).delete()
+        session.query(JobSchedulingConstraints).delete()
+        session.query(DockerConstraints).delete()
+        session.query(DockerContext).delete()
+        session.query(MountPoint).delete()
+        session.query(WorkMachine).delete()
+        session.query(SSHConfig).delete()
+        session.query(WorkMachineResources).delete()
+        session.query(ResourceAllocation).delete()
+        session.commit()
