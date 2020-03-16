@@ -162,6 +162,7 @@ class SQLDatabase(ServerDatabase):
             SQLDatabase._metadata.create_all(self.engine)
 
     def __del__(self) -> None:
+        self.engine.dispose()
         self.scoped.remove()  # type: ignore
 
     def find_job_by_id(self, job_id: str) -> Optional[DatabaseJobEntry]:
