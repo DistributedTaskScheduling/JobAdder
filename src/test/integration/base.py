@@ -91,7 +91,7 @@ class IntegrationTest(TestCase):
             worker = TestJobWorker(index=i)
             Thread(target=worker.run, name="worker-%s" % i, daemon=True).start()
             self._workers.append(worker)
-        sleep(1)
+        sleep(10)
 
     def tearDown(self) -> None:
         self._server._database.delete_all_records()
