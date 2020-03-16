@@ -107,9 +107,3 @@ class ServerDatabase(ABC):
 
         @param callback The callback to execute when an update happens.
         """
-
-    @abstractmethod
-    def delete_all_records(self) -> None:
-        """
-        Deletes all records in the database.
-        """
