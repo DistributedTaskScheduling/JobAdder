@@ -89,7 +89,7 @@ class IntegrationTest(TestCase):
             with open(WORKER_CONF_PATH % i, "w") as f:
                 f.write(str(self.get_worker_config(i)))
             worker = TestJobWorker(index=i)
-            Thread(target=worker.run, name="worker-%s" % i, daemon=True).start()
+            Thread(target=worker.run, name="worker%s" % i, daemon=True).start()
             self._workers.append(worker)
         sleep(1)
 
@@ -129,7 +129,13 @@ class IntegrationTest(TestCase):
         return 1
 
     def test_sanity_checks(self) -> None:
-        self.assertEqual(len(self._server._database.get_work_machines()), self.num_workers)
-
-    def test_empty(self) -> None:
-        pass
+        work_machines = self._server._database.get_work_machines()
+        self.assertEqual(len(work_machines), self.num_workers)
+        for i in range(self.num_workers):
+            worker_i_exists = False
+            for work_machine in work_machines:
+                print(work_machine.uid)
+                if work_machine.uid == "worker%s" % i:
+                    worker_i_exists = True
+                    break
+            self.assertTrue(worker_i_exists, "Worker %s does not exist." % i)
