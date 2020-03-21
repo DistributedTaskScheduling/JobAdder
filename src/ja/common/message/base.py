@@ -114,7 +114,9 @@ class Serializable(ABC):
         @return A new Serializable object based on the properties encoded in
         the YAML document.
         """
+        print("!!!!!!!!!!!!!", yaml_string)
         as_dict = yaml.load(yaml_string, Loader=yaml.SafeLoader)
+        print(as_dict)
         assert isinstance(as_dict, dict)
         return cls.from_dict(as_dict)
 

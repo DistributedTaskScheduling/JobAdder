@@ -104,7 +104,7 @@ class IntegrationTest(TestCase):
 
     @property
     def server_config(self) -> ServerConfig:
-        database_config = LoginConfig(host="localhost", port=None, username="jobadder", password="")
+        database_config = LoginConfig(host="localhost", port=None, username="jobadder", password="test123")
         email_config = LoginConfig(host="localhost", port=1337, username="", password="")
         return ServerConfig(
             admin_group="jobadder", database_config=database_config, email_config=email_config,
