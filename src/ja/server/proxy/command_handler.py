@@ -85,17 +85,17 @@ class ServerCommandHandler(CommandHandler):
         return self._execute_command(server_command)
 
     def _process_command_dict(self, command_dict: Dict[str, object],
-                              type_name: str, username: str) -> Dict[str, object]:
-        print("process commmand ", command_dict, type_name, username)
-        response = self._process_exit_message(type_name, username)
+                              type_name: str, user: str) -> Dict[str, object]:
+        print("process commmand ", command_dict, type_name, user)
+        response = self._process_exit_message(type_name, user)
         if response:
             return response
 
-        response = self._process_worker_message(command_dict, type_name, username)
+        response = self._process_worker_message(command_dict, type_name, user)
         if response:
             return response
 
-        response = self._process_user_message(command_dict, type_name, username)
+        response = self._process_user_message(command_dict, type_name, user)
         if response:
             return response
 

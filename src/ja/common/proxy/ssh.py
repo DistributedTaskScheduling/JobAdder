@@ -67,10 +67,13 @@ class SSHConnection(ISSHConnection):
         command_dict = dict(command=command.to_dict(), type_name=command.__class__.__name__)
 
         print("77777777777777777777777777 executing ", self._command_string % self._remote_module)
+
+        print("All is ok")
         stdin, stdout, stderr = self._client.exec_command(self._command_string % self._remote_module)
-        print("got error ", stderr.read())
+        print("Hey here")
         stdin.write(yaml.dump(command_dict))
         stdin.close()
+        print("got error ", stderr.read())
         response = ServerResponse.from_string(stdout.read())
         stdout.close()
         stderr.close()
