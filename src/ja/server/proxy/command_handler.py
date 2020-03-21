@@ -19,8 +19,6 @@ from ja.user.message.add import AddCommand
 from ja.user.message.query import QueryCommand
 from ja.user.message.cancel import CancelCommand
 
-import grp
-
 
 class ServerCommandHandler(CommandHandler):
     """
@@ -30,11 +28,9 @@ class ServerCommandHandler(CommandHandler):
     def __init__(self, database: ServerDatabase, admin_group: str):
         """!
         @param database The server database.
-        @param admin_group The name of the administrator group.
         """
-        super().__init__('/run/jobadder-server.socket')
+        super().__init__('/run/jobadder-server.socket', admin_group)
         self._database = database
-        self._admin_group = admin_group
 
     _user_commands = {
         "AddCommand": AddCommand,
@@ -51,13 +47,6 @@ class ServerCommandHandler(CommandHandler):
         "JobCrashedCommand": JobCrashedCommand,
         "RetireWorkerCommand": RetireWorkerCommand,
     }
-
-    _INSUFFICIENT_PERM_TEMPLATE = "%s has insufficient permissions for the requested action %s."
-    _UNKNOWN_COMMAND_TEMPLATE = "Unknown command: %s."
-
-    def _user_is_admin(self, user: str) -> bool:
-        groups = [g.gr_name for g in grp.getgrall() if user in g.gr_mem]
-        return self._admin_group in groups
 
     def _execute_command(self, command: ServerCommand) -> Dict[str, object]:
         return command.execute(self._database).to_dict()

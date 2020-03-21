@@ -2,10 +2,11 @@
 This module provides interfaces for Messages
 """
 from abc import ABC
-from typing import Dict, cast
+from typing import Dict, cast, TYPE_CHECKING
 
 from ja.common.message.base import Command, Response
-from ja.worker.main import JobWorker
+if TYPE_CHECKING:
+    from ja.worker.docker import DockerInterface
 
 
 class WorkerCommand(Command, ABC):
@@ -14,11 +15,11 @@ class WorkerCommand(Command, ABC):
     and performed on the worker client.
     """
 
-    def execute(self, worker_client: JobWorker) -> "WorkerResponse":
+    def execute(self, docker_interface: "DockerInterface") -> Response:
         """!
         Executes a WorkerCommand object on the worker and generates a
         WorkerResponse object to be sent back in return.
-        @param worker_client: the Worker client that is going to be used to execute the command.
+        @param docker_interface: the docker interface to use for the execution.
         @return: The WorkerResponse to be sent back.
         """
 
