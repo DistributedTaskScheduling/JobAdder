@@ -26,7 +26,7 @@ class MockCommand(WorkerServerCommand):
 
     @classmethod
     def from_dict(cls, dct: Dict[str, object]) -> "MockCommand":
-        return MockCommand(cast(str, dct['user']))
+        return MockCommand(cast(str, dct["user"]))
 
 
 class ServerCommandHandlerNoExecute(ServerCommandHandler):
@@ -49,6 +49,7 @@ class ServerCommandHandlerNoExecute(ServerCommandHandler):
         self._test = test
         self._admin_group = admin_group
         self._execute_count = 0
+        self._running = True
         self.response: Dict[str, object] = {}
 
     def _execute_command(self, command: ServerCommand) -> Dict[str, object]:
@@ -68,7 +69,7 @@ class MockGroup:
 
 class ServerCommandHandlerTest(TestCase):
     def setUp(self) -> None:
-        grp.getgrall = MagicMock(return_value=[MockGroup("root", ["root", "user1"]), MockGroup("users", ["user2"])])
+        grp.getgrall = MagicMock(return_value=[MockGroup("root", ["user1"]), MockGroup("users", ["user2"])])
         self._handler = ServerCommandHandlerNoExecute(self, "root")
 
     def test_admin_checks(self) -> None:
@@ -123,3 +124,13 @@ class ServerCommandHandlerTest(TestCase):
         self._handler.assert_called(0)
         self.assertFalse(parsed_response.is_success, False)
         self.assertEqual(parsed_response.result_string, self._handler._UNKNOWN_COMMAND_TEMPLATE % "Bad")
+
+    def test_kill_ok(self) -> None:
+        response = self._handler._process_command_dict({"user": "root"}, "KillCommand", "root")
+        self.assertTrue(Response.from_dict(response).is_success)
+        self.assertFalse(self._handler._running)
+
+    def test_kill_fails_nonadmin(self) -> None:
+        response = self._handler._process_command_dict({"user": "user2"}, "KillCommand", "user2")
+        self.assertFalse(Response.from_dict(response).is_success)
+        self.assertTrue(self._handler._running)
