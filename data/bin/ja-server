@@ -1,0 +1,33 @@
+#!/usr/bin/env python3
+
+from argparse import ArgumentParser
+from io import StringIO
+from ja.common.message.base import Response
+from ja.common.proxy.remote import Remote
+from ja.server.proxy.command_handler import ServerCommandHandler
+from ja.server.main import JobCenter
+from typing import cast
+import yaml
+
+
+def kill_server() -> None:
+    # We construct a fake message and send it to the server.
+    kill_command_dict = {
+        'command': {},
+        'type_name': 'KillCommand'
+    }
+
+    response_buffer = StringIO()
+    Remote(ServerCommandHandler.SOCKET_PATH, StringIO(yaml.dump(kill_command_dict)), response_buffer)
+    response = cast(Response, Response.from_string(response_buffer.getvalue()))
+    print(response.result_string)
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument('-k', '--kill', help='Shut down the job adder server.', action='store_true')
+    args = parser.parse_args()
+    if args.kill:
+        kill_server()
+    else:
+        JobCenter().run()

@@ -1,5 +1,5 @@
 from ja.common.job import Job, JobStatus
-from ja.server.email import EmailNotifier, EmailServerBase
+from ja.server.email_notifier import EmailNotifier, EmailServerBase
 from unittest import TestCase
 
 

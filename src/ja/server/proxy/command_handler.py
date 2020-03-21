@@ -21,6 +21,7 @@ from ja.user.message.cancel import CancelCommand
 
 
 class ServerCommandHandler(CommandHandler):
+    SOCKET_PATH = '/run/jobadder-server.socket'
     """
     ServerCommandHandler receives ServerMessages and performs the corresponding
     actions on the server.
@@ -53,6 +54,14 @@ class ServerCommandHandler(CommandHandler):
     def _execute_command(self, command: ServerCommand) -> Dict[str, object]:
         return command.execute(self._database).to_dict()
 
+    def _process_exit_message(self, type_name: str, user: str) -> Dict[str, object]:
+        if type_name != 'KillCommand':
+            return None
+        if not self._user_is_admin(user):
+            return Response('Insufficient permissions to shut down the server.', False).to_dict()
+        self._running = False
+        return Response('Shutting down server ...', True).to_dict()
+
     def _process_worker_message(self, command_dict: Dict[str, object], type_name: str, user: str) -> Dict[str, object]:
         if type_name not in self._worker_commands:
             return None
@@ -75,12 +84,17 @@ class ServerCommandHandler(CommandHandler):
                 return Response(self._INSUFFICIENT_PERM_TEMPLATE % (user, type_name), False).to_dict()
         return self._execute_command(server_command)
 
-    def _process_command_dict(self, command_dict: Dict[str, object], type_name: str, user: str) -> Dict[str, object]:
-        response = self._process_worker_message(command_dict, type_name, user)
+    def _process_command_dict(self, command_dict: Dict[str, object],
+                              type_name: str, username: str) -> Dict[str, object]:
+        response = self._process_exit_message(type_name, username)
         if response:
             return response
 
-        response = self._process_user_message(command_dict, type_name, user)
+        response = self._process_worker_message(command_dict, type_name, username)
+        if response:
+            return response
+
+        response = self._process_user_message(command_dict, type_name, username)
         if response:
             return response
 

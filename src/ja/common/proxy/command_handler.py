@@ -29,6 +29,7 @@ class CommandHandler(ABC):
         """
         self._socket_path = socket_path
         self._admin_group = admin_group
+        self._running = True
 
     _INSUFFICIENT_PERM_TEMPLATE = "User %s has insufficient permissions for the requested action %s."
     _UNKNOWN_COMMAND_TEMPLATE = "Unknown command: %s."
@@ -40,7 +41,8 @@ class CommandHandler(ABC):
 
     def _user_is_admin(self, user: str) -> bool:
         groups = [g.gr_name for g in grp.getgrall() if user in g.gr_mem]
-        return self._admin_group in groups
+        # seems like the user is not reported to be in its own group ...
+        return self._admin_group in groups or user == self._admin_group
 
     def main_loop(self) -> None:
         """!
@@ -56,7 +58,7 @@ class CommandHandler(ABC):
         named_socket.bind(self._socket_path)
         named_socket.listen(1)
 
-        while True:
+        while self._running:
             connection, client_address = named_socket.accept()
             try:
                 command_bytes = bytes(0)  # First 8 bytes encode command length
