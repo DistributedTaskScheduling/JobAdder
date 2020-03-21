@@ -21,6 +21,9 @@ class Remote(object):
         @param socket_path: The Unix named socket to write the Command to.
         @param output_stream: The output stream to write the Response to.
         """
+        print("@@@@@@@@@@@@@@@@@@@@ Creating a socket")
+
+
         input_string = input_stream.read()
         command_dict = yaml.load(input_string, Loader=yaml.SafeLoader)
         command_dict["username"] = getuser()
@@ -29,6 +32,7 @@ class Remote(object):
         named_socket = socket.socket(family=socket.AF_UNIX, type=socket.SOCK_STREAM)
         try:
             named_socket.connect(socket_path)
+            print("(((((((((((((((((((((((()))))))))))))))))))))))) Connected to ", socket_path)
             command_string_bytes = command_string.encode()
             # First 8 bytes encode command length:
             named_socket.sendall(len(command_string_bytes).to_bytes(length=8, byteorder="big"))

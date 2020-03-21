@@ -86,6 +86,7 @@ class ServerCommandHandler(CommandHandler):
 
     def _process_command_dict(self, command_dict: Dict[str, object],
                               type_name: str, username: str) -> Dict[str, object]:
+        print("process commmand ", command_dict, type_name, username)
         response = self._process_exit_message(type_name, username)
         if response:
             return response

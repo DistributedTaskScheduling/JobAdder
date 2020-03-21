@@ -24,8 +24,8 @@ WORKER_CONF_PATH = TESTING_DIRECTORY + "worker-%s.conf"
 SSH_CONF_PATH = TESTING_DIRECTORY + "ssh.conf"
 SERVER_SOCKET_PATH = TESTING_DIRECTORY + "server.socket"
 WORKER_SOCKET_PATH = TESTING_DIRECTORY + "worker-%s.socket"
-SERVER_REMOTE_MODULE = "test.integration.remote.server"
-WORKER_REMOTE_MODULE = "test.integration.remote.%s"
+SERVER_REMOTE_MODULE = "ja_integration.remote.server"
+WORKER_REMOTE_MODULE = "ja_integration.remote.%s"
 if getuser() == "travis":
     COMMAND_STRING = "~/virtualenv/python3.7/bin/python3 -m %s"
 else:

@@ -59,8 +59,10 @@ class CommandHandler(ABC):
         named_socket.listen(1)
 
         while self._running:
+            print("$$$$$$$$$$$$$$$$$$$$$$$$$$$ Waiting for connection on ", self._socket_path)
             connection, client_address = named_socket.accept()
             try:
+                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& Starting")
                 command_bytes = bytes(0)  # First 8 bytes encode command length
                 command_length = None
                 while command_length is None or len(command_bytes) < command_length:
