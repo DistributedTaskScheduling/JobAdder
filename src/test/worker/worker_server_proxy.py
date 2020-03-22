@@ -2,7 +2,7 @@ from ja.worker.proxy.proxy import IWorkerServerProxy
 from ja.server.database.types.work_machine import WorkMachine, WorkMachineState, WorkMachineResources
 from ja.common.job import Job, JobStatus, JobPriority, JobSchedulingConstraints
 from ja.common.docker_context import DockerContext, DockerConstraints
-from ja.common.message.server import ServerResponse
+from ja.common.message.base import Response
 from ja.common.work_machine import ResourceAllocation
 from ja.common.proxy.ssh import SSHConfig, ISSHConnection
 from typing import Dict
@@ -16,37 +16,37 @@ class WorkerServerProxyDummy(IWorkerServerProxy):
         self._wmcs: Dict[str, WorkMachine] = copy.deepcopy(wmcs)
         self._jobs: Dict[str, Job] = copy.deepcopy(jobs)
 
-    def register_self(self, uid: str, work_machine_resources: WorkMachineResources) -> ServerResponse:
+    def register_self(self, uid: str, work_machine_resources: WorkMachineResources) -> Response:
         if uid in self._wmcs:
-            return ServerResponse("work machine already exist!", False)
+            return Response("work machine already exist!", False)
         self._wmcs[uid] = WorkMachine(
             uid=uid,
             state=WorkMachineState.ONLINE,
             resources=work_machine_resources
         )
-        return ServerResponse("work machine added!", True)
+        return Response("work machine added!", True)
 
-    def unregister_self(self, uid: str) -> ServerResponse:
+    def unregister_self(self, uid: str) -> Response:
         if uid in self._wmcs:
             self._wmcs[uid].state = WorkMachineState.RETIRED
-            return ServerResponse("work machine unregistred!", True)
-        return ServerResponse("work machine does not exist!", False)
+            return Response("work machine unregistred!", True)
+        return Response("work machine does not exist!", False)
 
-    def notify_job_finished(self, uid: str) -> ServerResponse:
+    def notify_job_finished(self, uid: str) -> Response:
         if uid in self._jobs:
             if self._jobs[uid].status == JobStatus.DONE:
-                return ServerResponse("job status is already set to DONE!", False)
+                return Response("job status is already set to DONE!", False)
             else:
-                return ServerResponse("job finished!", True)
-        return ServerResponse("job does not exist!", False)
+                return Response("job finished!", True)
+        return Response("job does not exist!", False)
 
-    def notify_job_crashed(self, uid: str) -> ServerResponse:
+    def notify_job_crashed(self, uid: str) -> Response:
         if uid in self._jobs:
             if self._jobs[uid].status == JobStatus.CRASHED:
-                return ServerResponse("job status already set to CRASHED!", False)
+                return Response("job status already set to CRASHED!", False)
             else:
-                return ServerResponse("job finished!", True)
-        return ServerResponse("job does not exist!", False)
+                return Response("job finished!", True)
+        return Response("job does not exist!", False)
 
     def _get_ssh_connection(self, ssh_config: SSHConfig) -> ISSHConnection:
         pass

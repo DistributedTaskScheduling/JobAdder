@@ -183,6 +183,10 @@ class Response(Message):
         return {"result_string": self.result_string, "is_success": self.is_success, "uid": self.uid}
 
     @classmethod
+    def from_string(cls, yaml_string: str) -> "Response":
+        return cast(Response, super().from_string(yaml_string))
+
+    @classmethod
     def from_dict(cls, property_dict: Dict[str, object]) -> "Response":
         result_string = cls._get_str_from_dict(property_dict=property_dict, key="result_string")
         is_success = cls._get_bool_from_dict(property_dict=property_dict, key="is_success")

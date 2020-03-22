@@ -77,20 +77,20 @@ class WorkerServerProxy(IWorkerServerProxy):
     def register_self(self, uid: str, work_machine_resources: WorkMachineResources) -> Response:
         wm: WorkMachine = WorkMachine(uid, WorkMachineState.ONLINE, work_machine_resources)
         register_command: RegisterWorkerCommand = RegisterWorkerCommand(wm)
-        response = self._ssh_connection.send_server_command(register_command)
+        response = self._ssh_connection.send_command(register_command)
         return response
 
     def unregister_self(self, uid: str) -> Response:
         retire_command = RetireWorkerCommand(uid)
-        response = self._ssh_connection.send_server_command(retire_command)
+        response = self._ssh_connection.send_command(retire_command)
         return response
 
     def notify_job_finished(self, uid: str) -> Response:
         done_command = JobDoneCommand(uid)
-        response = self._ssh_connection.send_server_command(done_command)
+        response = self._ssh_connection.send_command(done_command)
         return response
 
     def notify_job_crashed(self, uid: str) -> Response:
         crashed_command = JobCrashedCommand(uid)
-        response = self._ssh_connection.send_server_command(crashed_command)
+        response = self._ssh_connection.send_command(crashed_command)
         return response

@@ -1,7 +1,7 @@
 from typing import List
 
 from ja.common.job import Job, JobStatus
-from ja.common.message.worker import WorkerResponse
+from ja.common.message.base import Response
 from ja.common.message.worker_commands.cancel_job import CancelJobCommand
 from ja.common.message.worker_commands.pause_job import PauseJobCommand
 from ja.common.message.worker_commands.resume_job import ResumeJobCommand
@@ -36,54 +36,54 @@ class WorkerProxyDummy(IWorkerProxy):
     def uid(self) -> str:
         return self._uid
 
-    def dispatch_job(self, job: Job) -> WorkerResponse:
+    def dispatch_job(self, job: Job) -> Response:
         for existing_job in self._jobs:
             if job.uid == existing_job.uid:
-                return WorkerResponse.from_dict(WorkerResponse(
+                return Response.from_dict(Response(
                     result_string=StartJobCommand.RESPONSE_DUPLICATE % (job.uid, self.uid), is_success=False
                 ).to_dict())
         job_copy = Job.from_dict(job.to_dict())
         job_copy._status = JobStatus.RUNNING
         self._jobs.append(job_copy)
-        return WorkerResponse.from_dict(WorkerResponse(
+        return Response.from_dict(Response(
             result_string=StartJobCommand.RESPONSE_SUCCESS % (job.uid, self.uid), is_success=True).to_dict())
 
-    def cancel_job(self, uid: str) -> WorkerResponse:
+    def cancel_job(self, uid: str) -> Response:
         for job in self._jobs:
             if uid == job.uid:
                 job.status = JobStatus.CANCELLED
                 self._jobs.remove(job)
-                return WorkerResponse.from_dict(WorkerResponse(
+                return Response.from_dict(Response(
                     result_string=CancelJobCommand.RESPONSE_SUCCESS % (uid, self.uid), is_success=True).to_dict())
-        return WorkerResponse.from_dict(WorkerResponse(
+        return Response.from_dict(Response(
             result_string=CancelJobCommand.RESPONSE_UNKNOWN_JOB % (uid, self.uid), is_success=False).to_dict())
 
-    def pause_job(self, uid: str) -> WorkerResponse:
+    def pause_job(self, uid: str) -> Response:
         for job in self._jobs:
             if uid == job.uid:
                 try:
                     job.status = JobStatus.PAUSED
-                    return WorkerResponse.from_dict(WorkerResponse(
+                    return Response.from_dict(Response(
                         result_string=PauseJobCommand.RESPONSE_SUCCESS % (uid, self.uid), is_success=True).to_dict())
                 except ValueError:
-                    return WorkerResponse.from_dict(WorkerResponse(
+                    return Response.from_dict(Response(
                         result_string=PauseJobCommand.RESPONSE_NOT_RUNNING % (uid, self.uid), is_success=False
                     ).to_dict())
-        return WorkerResponse.from_dict(WorkerResponse(
+        return Response.from_dict(Response(
             result_string=PauseJobCommand.RESPONSE_UNKNOWN_JOB % (uid, self.uid), is_success=False).to_dict())
 
-    def resume_job(self, uid: str) -> WorkerResponse:
+    def resume_job(self, uid: str) -> Response:
         for job in self._jobs:
             if uid == job.uid:
                 try:
                     job.status = JobStatus.RUNNING
-                    return WorkerResponse.from_dict(WorkerResponse(
+                    return Response.from_dict(Response(
                         result_string=ResumeJobCommand.RESPONSE_SUCCESS % (uid, self.uid), is_success=True).to_dict())
                 except ValueError:
-                    return WorkerResponse.from_dict(WorkerResponse(
+                    return Response.from_dict(Response(
                         result_string=ResumeJobCommand.RESPONSE_NOT_PAUSED % (uid, self.uid), is_success=False
                     ).to_dict())
-        return WorkerResponse.from_dict(WorkerResponse(
+        return Response.from_dict(Response(
             result_string=ResumeJobCommand.RESPONSE_UNKNOWN_JOB % (uid, self.uid), is_success=False).to_dict())
 
 
