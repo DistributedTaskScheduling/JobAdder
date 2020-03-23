@@ -3,7 +3,7 @@ from typing import Dict
 
 from ja.server.database.database import ServerDatabase
 from ja.server.database.types.work_machine import WorkMachine
-from ja.server.proxy.proxy import IWorkerProxy
+from ja.server.proxy.proxy import IWorkerProxy, WorkerProxy
 
 
 class WorkerProxyFactoryBase(ABC):
@@ -45,4 +45,4 @@ class WorkerProxyFactory(WorkerProxyFactoryBase):
     """
 
     def _create_proxy(self, work_machine: WorkMachine) -> IWorkerProxy:
-        pass
+        return WorkerProxy(work_machine.uid, work_machine.ssh_config)

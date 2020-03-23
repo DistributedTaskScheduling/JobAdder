@@ -93,7 +93,7 @@ class WorkerProxy(WorkerProxyBase):
     """
     Implementation of the proxy for the worker client used on the central server.
     """
-
     def _get_ssh_connection(self, ssh_config: SSHConfig) -> ISSHConnection:
-        raise NotImplementedError("Remote module not defined")
-        return SSHConnection(ssh_config=ssh_config, remote_path=None)
+        return SSHConnection(ssh_config=ssh_config,
+                             remote_module="/run/jobadder-worker.socket",
+                             command_string="ja-remote %s")
