@@ -20,6 +20,7 @@ mv ./src/test/init ./src/test/__init__.py
 mv ./src/ja_integration/init ./src/ja_integration/__init__.py
 
 install ./data/bin/ja-server /usr/bin -m 755
+install ./data/bin/ja-worker /usr/bin -m 755
 
 # Install remote
 install ./data/bin/ja-remote /usr/bin -m 755
