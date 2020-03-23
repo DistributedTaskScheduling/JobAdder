@@ -25,6 +25,11 @@ install ./data/bin/ja-server /usr/bin -m 755
 install ./data/bin/ja-remote /usr/bin -m 755
 chmod u+s /usr/bin/ja-remote
 
+# Install suid-python helper
+cd $SCRIPTPATH/data/suid-python-helper
+make && make install
+cd $SCRIPTPATH
+
 # Install Systemd unit files
 SERVER_SRV_FILE=/etc/systemd/system/JobAdderServer.service
 
