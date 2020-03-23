@@ -8,11 +8,13 @@ from ja.worker.docker import DockerInterface
 from ja.common.job import Job, JobStatus, JobPriority, JobSchedulingConstraints
 from ja.common.docker_context import DockerContext, DockerConstraints
 from test.worker.test_docker_interface import DOCKERFILE_SOURCE_1, DOCKERFILE_SOURCE_2
+from test.worker.worker_server_proxy import WorkerServerProxyDummy
 
 
 class WorkerCommandTest(TestCase):
     def setUp(self) -> None:
-        self._docker_interface = DockerInterface(server_proxy=None, worker_uid="worker")
+        self._docker_interface = DockerInterface(
+            server_proxy=WorkerServerProxyDummy(wmcs=dict(), jobs=dict()), worker_uid="worker")
         self._uid_1 = "job-1"
         self._job_1 = Job(
             owner_id=1003,
