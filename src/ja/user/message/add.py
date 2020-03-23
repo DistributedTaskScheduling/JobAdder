@@ -1,5 +1,5 @@
 from typing import Dict
-from ja.common.message.server import ServerCommand
+from ja.user.message.base import UserServerCommand
 from ja.common.message.base import Response
 from ja.server.database.database import ServerDatabase
 from ja.user.config.add import AddCommandConfig
@@ -7,7 +7,7 @@ from ja.common.job import Job, JobStatus
 from ja.server.database.types.job_entry import DatabaseJobEntry
 
 
-class AddCommand(ServerCommand):
+class AddCommand(UserServerCommand):
     """
     Command for adding a job.
     """
@@ -33,6 +33,9 @@ class AddCommand(ServerCommand):
 
     def execute(self, database: ServerDatabase) -> Response:
         job: Job = self.config.job
+        if self.effective_user != 0 and self.effective_user != job.owner_id:
+            return Response(result_string="Cannot submit jobs for other users.", is_success=False)
+
         db_job_id: DatabaseJobEntry = database.find_job_by_id(job.uid)
         if db_job_id is not None:
             return Response(result_string="Job with id %s already exists" % job.uid,
