@@ -21,8 +21,9 @@ mv ./src/ja_integration/init ./src/ja_integration/__init__.py
 
 install ./data/bin/ja-server /usr/bin -m 755
 
-
-# TODO: when remote is ready, set SUID
+# Install remote
+install ./data/bin/ja-remote /usr/bin -m 755
+chmod u+s /usr/bin/ja-remote
 
 # Install Systemd unit files
 SERVER_SRV_FILE=/etc/systemd/system/JobAdderServer.service
