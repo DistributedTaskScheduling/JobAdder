@@ -15,20 +15,28 @@ class JobWorker:
     """
     The main class on the Worker Client
     """
-    def __init__(self, config_path: str = "/etc/jobadder/worker.conf") -> None:
+    def __init__(
+            self, config_path: str = "/etc/jobadder/worker.conf",
+            socket_path: str = "/run/jobadder-worker.socket",
+            remote_module: str = "ja.server.proxy.remote",
+            command_string: str = "python3 -m %s") -> None:
         """!
         Reads a WorkerConfig object from the disk.
         Creates WorkerServerProxy, DockerInterface, WorkerCommandHandler objects.
         @param config_path: the path to read a WorkerConfig object from.
+        @param socket_path: the path of the socket to listen on for commands.
+        @param remote_module: the module to execute on the server.
+        @param command_string: the command template to execute on the server.
         """
         self._config_path = config_path
         with open(self._config_path, "r") as f:
             self._config = cast(WorkerConfig, WorkerConfig.from_string(f.read()))
 
-        self._server_proxy = WorkerServerProxy(ssh_config=self._config.ssh_config)
+        self._server_proxy = WorkerServerProxy(
+            ssh_config=self._config.ssh_config, remote_module=remote_module, command_string=command_string)
         self._docker_interface = DockerInterface(self._server_proxy, worker_uid=self._config.uid)
         self._command_handler = WorkerCommandHandler(
-            admin_group=self._config.admin_group, docker_interface=self._docker_interface)
+            admin_group=self._config.admin_group, docker_interface=self._docker_interface, socket_path=socket_path)
 
     def run(self) -> None:
         """

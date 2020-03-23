@@ -3,6 +3,7 @@ from typing import Dict
 
 from ja.common.message.base import Serializable
 from ja.common.work_machine import ResourceAllocation
+from ja.common.proxy.ssh import SSHConfig
 
 
 class WorkMachineResources(Serializable):
@@ -95,21 +96,6 @@ class WorkMachineResources(Serializable):
         return WorkMachineResources(total_resources)
 
 
-class WorkMachineConnectionDetails(Serializable):
-    """
-    A collection of the data needed to communicate with a work machine.
-    """
-
-    def to_dict(self) -> Dict[str, object]:
-        pass
-
-    @classmethod
-    def from_dict(cls, property_dict: Dict[str, object]) -> "Serializable":
-        pass
-
-    # TODO: this class is incomplete
-
-
 class WorkMachineState(enum.Enum):
     ONLINE = 0
     RETIRED = 10
@@ -126,7 +112,7 @@ class WorkMachine(Serializable):
                  uid: str,
                  state: WorkMachineState = WorkMachineState.OFFLINE,
                  resources: WorkMachineResources = None,
-                 connection: WorkMachineConnectionDetails = None):
+                 ssh_config: "SSHConfig" = None):
         """!
         Construct a new work machine object.
         If the work machine is not online, then only statistics about it are
@@ -135,16 +121,16 @@ class WorkMachine(Serializable):
         @param uid The unique ID of the machine.
         @param state Whether the work machine is online, retired, or offline.
         @param resources The available resources on the work machine.
-        @param connection The connection information about the work machine.
+        @param ssh_config The ssh config for connecting to the work machine
         """
         self._uid = uid
         self._state = state
         self._resources = resources
-        self._connection_details = connection
+        self._ssh_config = ssh_config
 
     def __eq__(self, o: object) -> bool:
         if isinstance(o, WorkMachine):
-            return self.uid == o.uid and self.connection_details == o.connection_details \
+            return self.uid == o.uid and self.ssh_config == o.ssh_config \
                 and self.resources == o.resources and self.state == o.state
         return False
 
@@ -194,27 +180,22 @@ class WorkMachine(Serializable):
         self._resources = value
 
     @property
-    def connection_details(self) -> WorkMachineConnectionDetails:
+    def ssh_config(self) -> "SSHConfig":
         """!
-        @return The connection details of the work machine, if it is online,
-          otherwise None.
+        @return The SSH config for connecting to this work machine
         """
-        if self._state == WorkMachineState.ONLINE or self._state == WorkMachineState.RETIRED:
-            return self._connection_details
-        return None
+        return self._ssh_config
 
-    @connection_details.setter
-    def connection_details(self, value: WorkMachineConnectionDetails) -> None:
-        """
-        @param value The new connection details of the work machine.
-        """
-        self._connection_details = value
+    @ssh_config.setter
+    def ssh_config(self, value: "SSHConfig") -> None:
+        self._ssh_config = value
 
     def to_dict(self) -> Dict[str, object]:
         n_dict: Dict[str, object] = dict()
         n_dict["uid"] = self.uid
-        n_dict["state"] = self.state
+        n_dict["state"] = self.state.value
         n_dict["resources"] = self._resources.to_dict()
+        n_dict["ssh_config"] = self.ssh_config
         return n_dict
 
     @classmethod
@@ -226,5 +207,6 @@ class WorkMachine(Serializable):
                 cls._get_dict_from_dict(property_dict, key="resources", mandatory=False))
         else:
             resources = None
+        ssh_config = SSHConfig.from_dict(cls._get_dict_from_dict(property_dict, key="ssh_config", mandatory=False))
         cls._assert_all_properties_used(property_dict)
-        return WorkMachine(uid, state, resources)
+        return WorkMachine(uid, state, resources, ssh_config)

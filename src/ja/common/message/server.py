@@ -2,10 +2,11 @@
 This module provides the interfaces for Messages sent to the central server.
 """
 from abc import ABC, abstractmethod
-from typing import cast, Dict
+from typing import cast, Dict, TYPE_CHECKING
 
 from ja.common.message.base import Command, Response
-from ja.server.database.database import ServerDatabase
+if TYPE_CHECKING:
+    from ja.server.database.database import ServerDatabase
 
 
 class ServerCommand(Command, ABC):
@@ -16,7 +17,7 @@ class ServerCommand(Command, ABC):
     """
 
     @abstractmethod
-    def execute(self, database: ServerDatabase) -> Response:
+    def execute(self, database: "ServerDatabase") -> Response:
         """!
         Executes a ServerCommand object on the server and generates a
         ServerResponse object to be sent back in return.

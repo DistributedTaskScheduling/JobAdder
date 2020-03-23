@@ -21,16 +21,17 @@ from ja.user.message.cancel import CancelCommand
 
 
 class ServerCommandHandler(CommandHandler):
-    SOCKET_PATH = "/run/jobadder-server.socket"
     """
     ServerCommandHandler receives ServerMessages and performs the corresponding
     actions on the server.
     """
-    def __init__(self, database: ServerDatabase, admin_group: str):
+    def __init__(self, database: ServerDatabase, socket_path: str, admin_group: str):
         """!
         @param database The server database.
+        @param socket_path: the path to the unix named socket to listen on.
+        @param admin_group: the Unix group to grant administrative privileges to.
         """
-        super().__init__(self.SOCKET_PATH, admin_group)
+        super().__init__(socket_path, admin_group)
         self._database = database
 
     _user_commands = {
@@ -82,8 +83,8 @@ class ServerCommandHandler(CommandHandler):
                 return Response(self._INSUFFICIENT_PERM_TEMPLATE % (user, type_name), False).to_dict()
         return self._execute_command(server_command)
 
-    def _process_command_dict(self, command_dict: Dict[str, object],
-                              type_name: str, username: str) -> Dict[str, object]:
+    def _process_command_dict(
+            self, command_dict: Dict[str, object], type_name: str, username: str) -> Dict[str, object]:
         response = self._process_exit_message(type_name, username)
         if response:
             return response

@@ -21,8 +21,10 @@ class WorkerCommandHandler(CommandHandler):
     The command handler creates a socket.
     It starts listening on it for incoming commands.
     """
-    def __init__(self, admin_group: str, docker_interface: DockerInterface):
-        super().__init__(socket_path="/run/jobadder-worker.socket", admin_group=admin_group)
+    def __init__(self,
+                 admin_group: str, docker_interface: DockerInterface,
+                 socket_path: str = "/run/jobadder-worker.socket"):
+        super().__init__(socket_path=socket_path, admin_group=admin_group)
         self._docker_interface = docker_interface
 
     def _process_command_dict(self, command_dict: Dict[str, object], type_name: str, username: str) -> Dict[
