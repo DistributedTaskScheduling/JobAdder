@@ -5,8 +5,8 @@ from time import sleep
 import yaml
 from getpass import getuser
 
-from ja.common.message.server import ServerCommand, ServerResponse
-from ja.common.message.worker import WorkerCommand, WorkerResponse
+from ja.common.message.base import Response, Command
+from ja.common.message.server import ServerCommand
 from ja.common.proxy.ssh import ISSHConnection
 from ja.common.proxy.remote import Remote
 from test.proxy.threaded_command_handler import ThreadedCommandHandler
@@ -20,23 +20,14 @@ class SSHConnectionDummy(ISSHConnection):
     def __init__(self, socket_path: str):
         self._socket_path = socket_path
 
-    def send_server_command(self, command: ServerCommand) -> ServerResponse:
+    def send_command(self, command: Command) -> Response:
         command_dict = dict(command=command.to_dict(), type_name=command.__class__.__name__)
         input_stream = StringIO(initial_value=yaml.dump(command_dict))
         output_stream = StringIO()
         Remote(socket_path=self._socket_path, input_stream=input_stream, output_stream=output_stream)
         output_stream.seek(0)
         response_dict = yaml.load(output_stream.read(), yaml.SafeLoader)
-        return ServerResponse.from_dict(response_dict)
-
-    def send_worker_command(self, command: WorkerCommand) -> WorkerResponse:
-        command_dict = dict(command=command.to_dict(), type_name=command.__class__.__name__)
-        input_stream = StringIO(initial_value=yaml.dump(command_dict))
-        output_stream = StringIO()
-        Remote(socket_path=self._socket_path, input_stream=input_stream, output_stream=output_stream)
-        output_stream.seek(0)
-        response_dict = yaml.load(output_stream.read(), yaml.SafeLoader)
-        return WorkerResponse.from_dict(response_dict)
+        return Response.from_dict(response_dict)
 
     def close(self) -> None:
         pass
@@ -46,8 +37,8 @@ class ServerCommandDummy(ServerCommand):
     def __init__(self, payload: str):
         self._payload = payload
 
-    def execute(self, database: ServerDatabase) -> "ServerResponse":
-        return ServerResponse(result_string=self._payload * 2, is_success=True)
+    def execute(self, database: ServerDatabase) -> "Response":
+        return Response(result_string=self._payload * 2, is_success=True)
 
     def to_dict(self) -> Dict[str, object]:
         return {"payload": self._payload}
@@ -79,7 +70,7 @@ class SSHConnectionDummyTest(TestCase):
         sleep(0.01)  # Wait until the command handler has created the socket.
         self._ssh_connection_dummy = SSHConnectionDummy(socket_path=socket_path)
 
-    def test_send_server_command(self) -> None:
-        response = self._ssh_connection_dummy.send_server_command(self._server_command)
+    def test_send_command(self) -> None:
+        response = self._ssh_connection_dummy.send_command(self._server_command)
         self.assertTrue(response.is_success)
         self.assertEqual(response.result_string, self._payload * 2)

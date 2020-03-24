@@ -2,7 +2,7 @@
 This module provides interfaces for Messages
 """
 from abc import ABC
-from typing import Dict, cast, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from ja.common.message.base import Command, Response
 if TYPE_CHECKING:
@@ -18,23 +18,7 @@ class WorkerCommand(Command, ABC):
     def execute(self, docker_interface: "DockerInterface") -> Response:
         """!
         Executes a WorkerCommand object on the worker and generates a
-        WorkerResponse object to be sent back in return.
+        Response object to be sent back in return.
         @param docker_interface: the docker interface to use for the execution.
-        @return: The WorkerResponse to be sent back.
+        @return: The Response to be sent back.
         """
-
-
-class WorkerResponse(Response):
-    """
-    Corresponding Response class for WorkerCommand.
-    """
-
-    # TODO remove WorkerResponse class if no extra functionality is implemented
-
-    @classmethod
-    def from_dict(cls, property_dict: Dict[str, object]) -> "WorkerResponse":
-        return cast(WorkerResponse, super().from_dict(property_dict))
-
-    @classmethod
-    def from_string(cls, yaml_string: str) -> "WorkerResponse":
-        return cast(WorkerResponse, super().from_string(yaml_string))

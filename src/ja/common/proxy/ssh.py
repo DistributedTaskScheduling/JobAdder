@@ -3,8 +3,7 @@ from abc import ABC, abstractmethod
 from paramiko import SSHClient, AutoAddPolicy  # type: ignore
 import yaml
 
-from ja.common.message.server import ServerCommand, ServerResponse
-from ja.common.message.worker import WorkerCommand, WorkerResponse
+from ja.common.message.base import Response, Command
 from ja.common.config import Config
 
 
@@ -17,21 +16,12 @@ class ISSHConnection(ABC):
     """
 
     @abstractmethod
-    def send_server_command(self, command: ServerCommand) -> ServerResponse:
+    def send_command(self, command: Command) -> Response:
         """!
-        Sends a ServerCommand to the Remote on the host. Automatically attaches the username specified in ssh_config to
-        the ServerCommand.
-        @param command: The ServerCommand to sent to the Remote.
-        @return: The ServerResponse received from the Remote.
-        """
-
-    @abstractmethod
-    def send_worker_command(self, command: WorkerCommand) -> WorkerResponse:
-        """!
-        Sends a WorkerCommand to the Remote on the host. Automatically attaches the username specified in ssh_config to
-        the WorkerCommand.
-        @param command: The WorkerCommand to sent to the Remote.
-        @return: The WorkerResponse received from the Remote.
+        Sends a Command to the Remote on the host. Automatically attaches the username specified in ssh_config to
+        the Command.
+        @param command: The Command to sent to the Remote.
+        @return: The Response received from the Remote.
         """
 
     @abstractmethod
@@ -63,22 +53,12 @@ class SSHConnection(ISSHConnection):
         self._remote_module = remote_module
         self._command_string = command_string
 
-    def send_server_command(self, command: ServerCommand) -> ServerResponse:
+    def send_command(self, command: Command) -> Response:
         command_dict = dict(command=command.to_dict(), type_name=command.__class__.__name__)
         stdin, stdout, stderr = self._client.exec_command(self._command_string % self._remote_module)
         stdin.write(yaml.dump(command_dict))
         stdin.close()
-        response = ServerResponse.from_string(stdout.read())
-        stdout.close()
-        stderr.close()
-        return response
-
-    def send_worker_command(self, command: WorkerCommand) -> WorkerResponse:
-        command_dict = dict(command=command.to_dict(), type_name=command.__class__.__name__)
-        stdin, stdout, stderr = self._client.exec_command(self._command_string % self._remote_module)
-        stdin.write(yaml.dump(command_dict))
-        stdin.close()
-        response = WorkerResponse.from_string(stdout.read())
+        response = Response.from_string(stdout.read())
         stdout.close()
         stderr.close()
         return response

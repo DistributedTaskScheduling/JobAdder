@@ -35,7 +35,7 @@ class ResumeJobCommand(WorkerCommand):
         """!
         Start the job on the worker machine using the provided @worker_client
         @param docker_interface: the docker interface to use for the execution.
-        @return: a WorkerResponse with the appropriate response
+        @return: a Response with the appropriate response
         """
         try:
             docker_interface.resume_job(uid=self.uid)

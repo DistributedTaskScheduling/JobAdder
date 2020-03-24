@@ -49,15 +49,15 @@ class UserServerProxy(IUserServerProxy):
     def add_job(self, add_config: AddCommandConfig) -> Response:
         # TODO: Create remote_module
         connection = SSHConnection(add_config.ssh_config, None)
-        return connection.send_server_command(AddCommand(add_config))
+        return connection.send_command(AddCommand(add_config))
 
     def cancel_job(self, cancel_command: CancelCommand) -> Response:
         connection = SSHConnection(cancel_command.config.ssh_config, None)
-        return connection.send_server_command(cancel_command)
+        return connection.send_command(cancel_command)
 
     def query(self, query_command: QueryCommand) -> Response:
         connection = SSHConnection(query_command.config.ssh_config, None)
-        return connection.send_server_command(query_command)
+        return connection.send_command(query_command)
 
     def _get_ssh_connection(self, ssh_config: SSHConfig) -> ISSHConnection:
         pass

@@ -3,17 +3,18 @@ This command will get the cpu_load and other information about the state of the 
 """
 from typing import Dict
 
-from ja.common.message.worker import WorkerCommand, WorkerResponse
+from ja.common.message.base import Response
+from ja.common.message.worker import WorkerCommand
 from ja.worker.docker import DockerInterface
 
 
 class GetWorkloadCommand(WorkerCommand):
 
-    def execute(self, docker_interface: DockerInterface) -> WorkerResponse:
+    def execute(self, docker_interface: DockerInterface) -> Response:
         """!
         Get the information about the work machine using the provided @worker_client
         @param docker_interface: the docker interface to use for the execution.
-        @return: a WorkerResponse with the appropriate response
+        @return: a Response with the appropriate response
         """
 
     def to_dict(self) -> Dict[str, object]:

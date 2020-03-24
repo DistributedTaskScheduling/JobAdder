@@ -1,5 +1,5 @@
 from ja.common.message.base import Response
-from ja.common.message.server import ServerCommand, ServerResponse
+from ja.common.message.server import ServerCommand
 from ja.server.database.database import ServerDatabase
 from ja.server.proxy.command_handler import ServerCommandHandler
 from ja.worker.message.base import WorkerServerCommand
@@ -17,7 +17,7 @@ class MockCommand(WorkerServerCommand):
     def to_dict(self) -> Dict[str, object]:
         return {}
 
-    def execute(self, db: ServerDatabase) -> ServerResponse:
+    def execute(self, db: ServerDatabase) -> Response:
         pass
 
     @property
