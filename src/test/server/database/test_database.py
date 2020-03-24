@@ -232,3 +232,9 @@ class DatabaseTest(TestCase):
         self.mockDatabase.set_scheduler_callback(self.callback_count)
         self.mockDatabase.update_job(self.job)
         self.assertEqual(self.count, 1)
+
+    def test_label(self) -> None:
+        self.assertEqual(self.mockDatabase.find_job_by_label("thig"), [])
+        self.mockDatabase.update_job(self.job)
+        self.assertEqual(self.mockDatabase.find_job_by_label("thig"), [self.job])
+        self.assertEqual(self.mockDatabase.find_job_by_label("thing"), [])

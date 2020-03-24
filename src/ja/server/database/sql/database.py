@@ -121,6 +121,7 @@ class SQLDatabase(ServerDatabase):
                 "_docker_context": relationship(DockerContext, uselist=False),
                 "_docker_constraints": relationship(DockerConstraints, uselist=False),
                 "uid": synonym("_uid", descriptor=Job.uid),
+                "label": synonym("_label", descriptor=Job.label),
                 "status": synonym("_status", descriptor=Job.status),
                 "owner_id": synonym("_owner_id", descriptor=Job.owner_id),
                 "scheduling_constraints": synonym("_scheduling_constraints",
@@ -182,7 +183,7 @@ class SQLDatabase(ServerDatabase):
         if label is None:
             return None
         session = self.scoped()
-        jobs: List[Job] = session.query(Job).filter(Job.label == label)
+        jobs: List[Job] = session.query(Job).filter(Job.label == label).all()
         return jobs
 
     def update_job(self, job: Job) -> None:
