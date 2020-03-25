@@ -73,8 +73,11 @@ class DockerInterfaceTest(TestCase):
         self._docker_interface.add_job(self._job_1)
 
     def test_cancel_job(self) -> None:
+        self.assertFalse(self._docker_interface.has_running_jobs())
         self._docker_interface.add_job(self._job_2)
+        self.assertTrue(self._docker_interface.has_running_jobs())
         self._docker_interface.cancel_job(self._job_2.uid)
+        self.assertFalse(self._docker_interface.has_running_jobs())
 
     def test_pause_resume_job(self) -> None:
         self._docker_interface.add_job(self._job_2)
