@@ -9,6 +9,9 @@ from ja.common.message.worker_commands.resume_job import ResumeJobCommand
 from ja.common.message.worker_commands.start_job import StartJobCommand
 from ja.common.job import Job
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class IWorkerProxy(ContinuousProxy, ABC):
     """
@@ -70,22 +73,34 @@ class WorkerProxyBase(IWorkerProxy, ABC):
 
     def dispatch_job(self, job: Job) -> Response:
         command = StartJobCommand(job)
+        logger.info("dispatching job: %s" % job.uid)
+        logger.debug("%s" % str(command))
         response = self._ssh_connection.send_command(command)
+        logger.debug("response from the worker: %s" % str(response))
         return response
 
     def cancel_job(self, uid: str) -> Response:
         command = CancelJobCommand(uid)
+        logger.info("canceling job: %s" % uid)
+        logger.debug("%s" % str(command))
         response = self._ssh_connection.send_command(command)
+        logger.debug("response from the worker: %s" % str(response))
         return response
 
     def pause_job(self, uid: str) -> Response:
         command = PauseJobCommand(uid)
+        logger.info("pausing job: %s" % uid)
+        logger.debug("%s" % str(command))
         response = self._ssh_connection.send_command(command)
+        logger.debug("response from the worker: %s" % str(response))
         return response
 
     def resume_job(self, uid: str) -> Response:
         command = ResumeJobCommand(uid)
+        logger.info("resume job: %s" % uid)
+        logger.debug("%s" % str(command))
         response = self._ssh_connection.send_command(command)
+        logger.debug("response from the worker: %s" % str(response))
         return response
 
 
