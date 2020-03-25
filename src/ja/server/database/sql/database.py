@@ -71,7 +71,8 @@ class SQLDatabase(ServerDatabase):
             mapper(WorkMachine, work_machine, properties={
                 "_resources": relationship(WorkMachineResources, uselist=False),
                 "_ssh_config": relationship(SSHConfig, uselist=False),
-                "uid": synonym("_uid", descriptor=WorkMachine.uid)
+                "uid": synonym("_uid", descriptor=WorkMachine.uid),
+                "state": synonym("_state", descriptor=WorkMachine.state)
             })
 
             mount_point = Table("mount_point", metadata,
@@ -265,7 +266,8 @@ class SQLDatabase(ServerDatabase):
 
     def get_work_machines(self) -> Optional[List[WorkMachine]]:
         session = self.scoped()
-        work_machines: Optional[List[WorkMachine]] = session.query(WorkMachine).options(joinedload("*")).all()
+        work_machines: Optional[List[WorkMachine]] = session.query(WorkMachine).filter(
+            WorkMachine.state != WorkMachineState.OFFLINE).options(joinedload("*")).all()
         return work_machines
 
     def get_current_schedule(self) -> Optional[ServerDatabase.JobDistribution]:

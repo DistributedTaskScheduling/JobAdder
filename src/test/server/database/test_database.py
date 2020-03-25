@@ -119,7 +119,7 @@ class DatabaseTest(TestCase):
     def test_update_work_machine(self) -> None:
         self.mockDatabase.update_work_machine(self.work_machine)
         self.assertEqual(self.mockDatabase.get_work_machines()[0], self.work_machine)
-        work_machine2 = WorkMachine("machi1", WorkMachineState.OFFLINE,
+        work_machine2 = WorkMachine("machi1", WorkMachineState.ONLINE,
                                     WorkMachineResources(ResourceAllocation(12, 32, 12)))
         self.mockDatabase.update_work_machine(work_machine2)
         self.assertEqual(self.mockDatabase.get_work_machines()[0], work_machine2)
@@ -221,6 +221,13 @@ class DatabaseTest(TestCase):
         self.job.status = JobStatus.QUEUED
         self.mockDatabase.update_job(self.job)
         call.assert_called_once_with(self.job)
+
+    def test_get_work_machine(self) -> None:
+        self.mockDatabase.update_work_machine(self.work_machine)
+        work_machine = WorkMachine("coronaRIP", WorkMachineState.OFFLINE,
+                                   WorkMachineResources(ResourceAllocation(2, 2, 2)))
+        self.mockDatabase.update_work_machine(work_machine)
+        self.assertEqual(self.mockDatabase.get_work_machines(), [self.work_machine])
 
     count: int = 0
 
