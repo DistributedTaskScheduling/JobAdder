@@ -60,7 +60,7 @@ class ServerDatabase(ABC):
     @abstractmethod
     def get_work_machines(self) -> List[WorkMachine]:
         """!
-        @return A list of online work machines.
+        @return A list of online and retired work machines.
         """
 
     JobDistribution = List[DatabaseJobEntry]
