@@ -118,25 +118,25 @@ class ServerCommandHandlerTest(TestCase):
     def test_user_message(self) -> None:
         self._handler.response = {"status": "ACK"}
         self._handler.set_expect_user(2)
-        response = self._handler._process_command_dict({}, "UserCommand", "user2")
+        response = self._handler._check_exit_or_process_command({}, "UserCommand", "user2")
         self._handler.assert_called(1)
         self.assertDictEqual(response, self._handler.response)
 
     def test_user_message_admin(self) -> None:
         self._handler.response = {"status": "ACK"}
         self._handler.set_expect_user(0)
-        response = self._handler._process_command_dict({}, "UserCommand", "root")
+        response = self._handler._check_exit_or_process_command({}, "UserCommand", "root")
         self._handler.assert_called(1)
         self.assertDictEqual(response, self._handler.response)
 
     def test_worker_message(self) -> None:
         self._handler.response = {"status": "ACK"}
-        response = self._handler._process_command_dict({"user": "root"}, "WorkerCommand", "user1")
+        response = self._handler._check_exit_or_process_command({"user": "root"}, "WorkerCommand", "user1")
         self._handler.assert_called(1)
         self.assertDictEqual(response, self._handler.response)
 
     def test_worker_message_no_permission(self) -> None:
-        response = self._handler._process_command_dict({"user": "user1"}, "WorkerCommand", "user2")
+        response = self._handler._check_exit_or_process_command({"user": "user1"}, "WorkerCommand", "user2")
         parsed_response = Response.from_dict(response)
         self._handler.assert_called(0)
         self.assertFalse(parsed_response.is_success, False)
@@ -144,18 +144,18 @@ class ServerCommandHandlerTest(TestCase):
                           self._handler._INSUFFICIENT_PERM_TEMPLATE % ("user2", "WorkerCommand"))
 
     def test_invalid_message(self) -> None:
-        response = self._handler._process_command_dict({"user": "user2"}, "Bad", "user2")
+        response = self._handler._check_exit_or_process_command({"user": "user2"}, "Bad", "user2")
         parsed_response = Response.from_dict(response)
         self._handler.assert_called(0)
         self.assertFalse(parsed_response.is_success, False)
         self.assertEquals(parsed_response.result_string, self._handler._UNKNOWN_COMMAND_TEMPLATE % "Bad")
 
     def test_kill_ok(self) -> None:
-        response = self._handler._process_command_dict({"user": "root"}, "KillCommand", "root")
+        response = self._handler._check_exit_or_process_command({"user": "root"}, "KillCommand", "root")
         self.assertTrue(Response.from_dict(response).is_success)
         self.assertFalse(self._handler._running)
 
     def test_kill_fails_nonadmin(self) -> None:
-        response = self._handler._process_command_dict({"user": "user2"}, "KillCommand", "user2")
+        response = self._handler._check_exit_or_process_command({"user": "user2"}, "KillCommand", "user2")
         self.assertFalse(Response.from_dict(response).is_success)
         self.assertTrue(self._handler._running)
