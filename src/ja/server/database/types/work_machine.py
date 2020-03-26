@@ -195,7 +195,7 @@ class WorkMachine(Serializable):
         n_dict["uid"] = self.uid
         n_dict["state"] = self.state.value
         n_dict["resources"] = self._resources.to_dict()
-        n_dict["ssh_config"] = self.ssh_config
+        n_dict["ssh_config"] = self.ssh_config.to_dict()
         return n_dict
 
     @classmethod
