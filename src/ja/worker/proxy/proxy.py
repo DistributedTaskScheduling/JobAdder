@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-
 from ja.common.proxy.ssh import ISSHConnection, SSHConnection
 from ja.common.proxy.proxy import ContinuousProxy
 from ja.common.message.base import Response
@@ -9,6 +8,10 @@ from ja.worker.message.register import RegisterWorkerCommand
 from ja.worker.message.crashed import JobCrashedCommand
 from ja.worker.message.done import JobDoneCommand
 from ja.worker.message.retire import RetireWorkerCommand
+import socket
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 class IWorkerServerProxy(ContinuousProxy, ABC):
@@ -66,6 +69,7 @@ class WorkerServerProxy(IWorkerServerProxy):
     def __init__(
             self, ssh_config: SSHConfig, remote_module: str = "ja.server.proxy.remote",
             command_string: str = "python3 -m %s"):
+        self._ssh_config = ssh_config
         self._remote_module = remote_module
         self._command_string = command_string
         super().__init__(ssh_config)
@@ -74,8 +78,21 @@ class WorkerServerProxy(IWorkerServerProxy):
         return SSHConnection(
             ssh_config=ssh_config, remote_module=self._remote_module, command_string=self._command_string)
 
+    def _guess_ssh_config(self, server_config: SSHConfig) -> SSHConfig:
+        # XXX: We assume that the worker and the server are using the same users, credentials, etc.
+        # We also assume that the server and workers are in the same subnet, or both have public IPs
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect((server_config.hostname, 22))
+        our_hostname = s.getsockname()[0]
+        s.close()
+
+        logger.info("Server should contact us at " + our_hostname)
+        return SSHConfig(hostname=our_hostname, username=server_config.username, password=server_config.password,
+                         key_filename=server_config.key_filename, passphrase=server_config.passphrase)
+
     def register_self(self, uid: str, work_machine_resources: WorkMachineResources) -> Response:
-        wm: WorkMachine = WorkMachine(uid, WorkMachineState.ONLINE, work_machine_resources)
+        wm: WorkMachine = WorkMachine(uid, WorkMachineState.ONLINE, work_machine_resources,
+                                      ssh_config=self._guess_ssh_config(self._ssh_config))
         register_command: RegisterWorkerCommand = RegisterWorkerCommand(wm)
         response = self._ssh_connection.send_command(register_command)
         return response
