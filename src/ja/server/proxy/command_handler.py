@@ -15,12 +15,13 @@ from ja.worker.message.crashed import JobCrashedCommand
 from ja.worker.message.retire import RetireWorkerCommand
 
 from ja.common.message.server import ServerCommand
+from ja.user.message.base import UserServerCommand
 from ja.user.message.add import AddCommand
 from ja.user.message.query import QueryCommand
 from ja.user.message.cancel import CancelCommand
 
+import pwd
 import logging
-
 logger = logging.getLogger(__name__)
 
 
@@ -43,9 +44,6 @@ class ServerCommandHandler(CommandHandler):
         "QueryCommand": QueryCommand,
         "CancelCommand": CancelCommand,
     }
-
-    # User commands which can be run by everybody
-    _unsecured_user_commands = ["QueryCommand"]
 
     _worker_commands = {
         "RegisterWorkerCommand": RegisterWorkerCommand,
@@ -85,12 +83,10 @@ class ServerCommandHandler(CommandHandler):
         if type_name not in self._user_commands:
             return None
 
-        command = cast(Type[WorkerServerCommand], self._user_commands[type_name]).from_dict(command_dict)
-        server_command: ServerCommand = cast(WorkerServerCommand, command)
-        if type_name not in self._unsecured_user_commands:
-            if user != server_command.username and not self._user_is_admin(user):
-                return Response(self._INSUFFICIENT_PERM_TEMPLATE % (user, type_name), False).to_dict()
-        return self._execute_command(server_command)
+        command = cast(Type[UserServerCommand], self._user_commands[type_name]).from_dict(command_dict)
+        user_command: UserServerCommand = cast(UserServerCommand, command)
+        user_command.effective_user = 0 if self._user_is_admin(user) else pwd.getpwnam(user).pw_uid
+        return self._execute_command(user_command)
 
     def _process_command_dict(
             self, command_dict: Dict[str, object], type_name: str, username: str) -> Dict[str, object]:

@@ -1,5 +1,5 @@
 from ja.common.message.base import Response
-from ja.common.message.server import ServerCommand
+from ja.user.message.base import UserServerCommand
 from ja.user.config.base import UserConfig
 from ja.common.job import JobPriority, JobStatus
 from datetime import datetime
@@ -8,7 +8,7 @@ from ja.server.database.types.job_entry import DatabaseJobEntry
 from ja.server.database.database import ServerDatabase
 
 
-class QueryCommand(ServerCommand):
+class QueryCommand(UserServerCommand):
     """
     Command for querying the server.
     """

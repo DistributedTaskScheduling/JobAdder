@@ -1,7 +1,10 @@
 from test.serializable.base import AbstractSerializableTest
 from ja.common.proxy.ssh import SSHConfig
+from ja.server.database.sql.mock_database import MockDatabase
 from ja.user.message.cancel import CancelCommand
 from ja.user.config.base import UserConfig, Verbosity
+from ja.common.job import JobStatus
+from test.server.scheduler.common import get_job
 
 
 class CancelCommandTest(AbstractSerializableTest):
@@ -45,3 +48,16 @@ class CancelCommandTest(AbstractSerializableTest):
                 }
             }
         }
+        self._db = MockDatabase()
+
+    def test_cancel_insufficient_permissions(self) -> None:
+        job = get_job(user=1, status=JobStatus.QUEUED).job
+        job.uid = "1"
+        self._db.update_job(job)
+
+        cmd = CancelCommand(None, None, job.uid)
+        cmd.effective_user = 2
+        response = cmd.execute(self._db)
+
+        self.assertFalse(response.is_success)
+        self.assertEquals(self._db.find_job_by_id("1").job.status, JobStatus.QUEUED)

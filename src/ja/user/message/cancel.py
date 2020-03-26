@@ -1,13 +1,14 @@
 from typing import Dict
-from ja.common.message.server import ServerCommand
+from ja.user.message.base import UserServerCommand
 from ja.common.message.base import Response
+from ja.common.job import Job
 from ja.server.database.database import ServerDatabase
 from ja.user.config.base import UserConfig
 from ja.common.job import JobStatus
 from ja.server.database.types.job_entry import DatabaseJobEntry
 
 
-class CancelCommand(ServerCommand):
+class CancelCommand(UserServerCommand):
     """
     Command for canceling a job.
     """
@@ -68,6 +69,15 @@ class CancelCommand(ServerCommand):
         cls._assert_all_properties_used(property_dict)
         return CancelCommand(label=_label, uid=_uid, config=_config)
 
+    def _cancel_job(self, database: ServerDatabase, job: Job, ignore_wrong_permissions: bool) -> bool:
+        has_permissions = (job.owner_id == self.effective_user or self.effective_user == 0)
+        if not has_permissions:
+            return ignore_wrong_permissions
+
+        job.status = JobStatus.CANCELLED
+        database.update_job(job)
+        return True
+
     def execute(self, database: ServerDatabase) -> Response:
         """!
         Executes this command on the database.
@@ -84,10 +94,12 @@ class CancelCommand(ServerCommand):
                     return Response(result_string="Cannot cancel job with uid: %s as it has crashed or is already done"
                                     % self.uid,
                                     is_success=False)
-                job.status = JobStatus.CANCELLED
-                database.update_job(job)
-                return Response(result_string="Successfully cancelled job with uid: %s" % self.uid,
-                                is_success=True)
+
+                if self._cancel_job(database, job, False):
+                    return Response(result_string="Successfully cancelled job with uid: %s" % self.uid, is_success=True)
+                else:
+                    return Response("Insufficient permissions to cancel job with uid: %s" % self.uid, False)
+
         # Cancel by label
         jobs = database.find_job_by_label(self.label)
         if jobs == []:
@@ -97,8 +109,7 @@ class CancelCommand(ServerCommand):
         for job in jobs:
             if job.status in [JobStatus.CRASHED, JobStatus.CANCELLED, JobStatus.DONE]:
                 continue
-            job.status = JobStatus.CANCELLED
-            database.update_job(job)
+            self._cancel_job(database, job, True)
             cancelled = True
         if not cancelled:
             return Response(result_string="No running/paused/queued job with label %s exists!" % self.label,
