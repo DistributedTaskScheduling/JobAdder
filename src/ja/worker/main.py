@@ -11,6 +11,7 @@ from ja.worker.docker import DockerInterface
 from ja.worker.proxy.command_handler import WorkerCommandHandler
 
 import time
+import sys
 import logging
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,7 @@ class JobWorker:
         if not register_response.is_success:
             logger.error("Failed to register with the server at %s: %s" %
                          (self._config.ssh_config.hostname, register_response.result_string))
-            return
+            sys.exit(1)
 
         # If uid is unset for this worker, save the uid assigned by the server for consistency.
         if self._config.uid is None:
