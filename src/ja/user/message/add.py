@@ -15,6 +15,7 @@ class AddCommand(UserServerCommand):
         """!
         @param config: Config to create the add command from.
         """
+        super().__init__()
         self._config = config
 
     @property
@@ -43,7 +44,8 @@ class AddCommand(UserServerCommand):
         if db_job_id is not None:
             return Response(result_string="Job with id %s already exists" % job.uid,
                             is_success=False)
-        job.status = JobStatus.QUEUED
+        if job.status == JobStatus.NEW:
+            job.status = JobStatus.QUEUED
         database.update_job(job)
         return Response(result_string="Successfully added job with id: %s" % job.uid,
                         is_success=True, uid=job.uid)
