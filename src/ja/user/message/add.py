@@ -33,6 +33,9 @@ class AddCommand(UserServerCommand):
 
     def execute(self, database: ServerDatabase) -> Response:
         job: Job = self.config.job
+        if job.owner_id == -1:
+            job.owner_id = self.effective_user
+
         if self.effective_user != 0 and self.effective_user != job.owner_id:
             return Response(result_string="Cannot submit jobs for other users.", is_success=False)
 
