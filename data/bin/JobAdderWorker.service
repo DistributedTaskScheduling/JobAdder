@@ -1,0 +1,12 @@
+[Unit]
+Description=JobAdder Worker Daemon
+Requires=docker.service
+After=docker.service
+AssertPathExists=
+
+[Service]
+ExecStart=/usr/bin/ja-worker
+ExecStop=/usr/bin/bash -c "/usr/bin/ja-worker -k && tail --pid=$MAINPID -f /dev/null"
+
+[Install]
+WantedBy=multi-user.target
