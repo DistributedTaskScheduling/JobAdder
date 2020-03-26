@@ -6,8 +6,7 @@ AssertPathExists=
 
 [Service]
 ExecStart=/usr/bin/ja-server
-# Wait 2s for the server to stop.
-ExecStop=/usr/bin/bash -c '/usr/bin/ja-server -k && sleep 2'
+ExecStop=/usr/bin/bash -c "/usr/bin/ja-server -k && tail --pid=$MAINPID -f /dev/null"
 
 [Install]
 WantedBy=multi-user.target

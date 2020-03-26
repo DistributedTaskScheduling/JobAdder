@@ -33,14 +33,20 @@ cd $SCRIPTPATH
 
 # Install Systemd unit files
 SERVER_SRV_FILE=/etc/systemd/system/JobAdderServer.service
+WORKER_SRV_FILE=/etc/systemd/system/JobAdderWorker.service
 
-cp ./data/bin/JobAdderServer.service $SERVER_SRV_FILE
-chmod 644 $SERVER_SRV_FILE
+install ./data/bin/JobAdderServer.service $SERVER_SRV_FILE -m 644
+install ./data/bin/JobAdderWorker.service $WORKER_SRV_FILE -m 644
 
 # Install config file
-CONFIG_FILE=/etc/jobadder/server.conf
+SERVER_CONFIG_FILE=/etc/jobadder/server.conf
+WORKER_CONFIG_FILE=/etc/jobadder/worker.conf
 
-if [ ! -f $CONFIG_FILE ]; then
+if [ ! -f $SERVER_CONFIG_FILE ]; then
     mkdir -p /etc/jobadder/
-    install ./data/config-files/server.conf $CONFIG_FILE -m 644
+    install ./data/config-files/server.conf $SERVER_CONFIG_FILE -m 644
+fi
+
+if [ ! -f $WORKER_CONFIG_FILE ]; then
+    install ./data/config-files/worker.conf $WORKER_CONFIG_FILE -m 644
 fi
