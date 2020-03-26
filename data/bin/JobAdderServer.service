@@ -5,6 +5,7 @@ After=postgresql.service
 AssertPathExists=
 
 [Service]
+User=jobadder
 ExecStart=/usr/bin/ja-server
 ExecStop=/usr/bin/bash -c "/usr/bin/ja-server -k && tail --pid=$MAINPID -f /dev/null"
 
