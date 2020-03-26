@@ -9,8 +9,9 @@ class ServerCLI(SimpleDaemonCLIInterface):
     def socket_name(self) -> str:
         return "/tmp/jobadder-server.socket"
 
-    def run_main(self) -> None:
-        JobCenter().run()
+    def run_main(self, config_file: str) -> None:
+        jc = JobCenter(config_file=config_file) if config_file else JobCenter()
+        jc.run()
 
 
 if __name__ == "__main__":

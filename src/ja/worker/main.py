@@ -32,6 +32,7 @@ class JobWorker:
         @param remote_module: the module to execute on the server.
         @param command_string: the command template to execute on the server.
         """
+        logger.info("Using worker config file %s." % config_path)
         self._config_path = config_path
         with open(self._config_path, "r") as f:
             self._config = cast(WorkerConfig, WorkerConfig.from_string(f.read()))
