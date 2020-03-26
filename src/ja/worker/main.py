@@ -20,6 +20,7 @@ class JobWorker:
     """
     The main class on the Worker Client
     """
+
     def __init__(
             self, config_path: str = "/etc/jobadder/worker.conf",
             socket_path: str = "/tmp/jobadder-worker.socket",

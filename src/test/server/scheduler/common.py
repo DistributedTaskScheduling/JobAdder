@@ -4,6 +4,7 @@ from copy import deepcopy
 from ja.common.job import Job, JobPriority, JobSchedulingConstraints, JobStatus
 from ja.common.docker_context import DockerConstraints, DockerContext, MountPoint
 from ja.common.work_machine import ResourceAllocation
+from ja.common.proxy.ssh import SSHConfig
 from ja.server.database.database import ServerDatabase
 from ja.server.database.types.job_entry import DatabaseJobEntry, JobRuntimeStatistics
 from ja.server.database.types.work_machine import WorkMachine, WorkMachineResources, WorkMachineState
@@ -51,6 +52,10 @@ def get_machine(cpu: int, ram: int, swap: int = None) -> WorkMachine:
     machine = WorkMachine("Test", WorkMachineState.ONLINE,
                           WorkMachineResources(ResourceAllocation(cpu, ram, swap if swap else ram)))
     machine.uid = str(_global_machine_counter)
+    machine.ssh_config = SSHConfig(
+        hostname="www.com", username="tux",
+        password="1235", key_filename="~/my_key.rsa",
+        passphrase="asdfgjk")
     _global_machine_counter += 1
     return machine
 

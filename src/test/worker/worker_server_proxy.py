@@ -22,7 +22,11 @@ class WorkerServerProxyDummy(IWorkerServerProxy):
         self._wmcs[uid] = WorkMachine(
             uid=uid,
             state=WorkMachineState.ONLINE,
-            resources=work_machine_resources
+            resources=work_machine_resources,
+            ssh_config=SSHConfig(
+                hostname="www.com", username="tux",
+                password="12345", key_filename="~/my_key.rsa",
+                passphrase="asdfghjk")
         )
         return Response("work machine added!", True)
 
@@ -80,7 +84,11 @@ class AbstractWorkerServerProxyTest(TestCase):
         self._job_2.status = JobStatus.RUNNING
         self._work_machine_1 = WorkMachine(
             uid="workmachine-1",
-            state=WorkMachineState.ONLINE
+            state=WorkMachineState.ONLINE,
+            ssh_config=SSHConfig(
+                hostname="www.com", username="tux",
+                password="12345", key_filename="~/my_key.rsa",
+                passphrase="asdfghjk")
         )
         self._work_machine_resources = WorkMachineResources(ResourceAllocation(1, 2, 3))
         self._worker_Server_proxy: IWorkerServerProxy = None

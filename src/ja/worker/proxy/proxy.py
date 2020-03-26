@@ -31,7 +31,8 @@ class IWorkerServerProxy(ContinuousProxy, ABC):
         The server will establish an SSHConnection to the worker client and
         begin sending WorkerCommands.
         @param uid: id of the work machine.
-        @param work_machine_Resources: The available resources on the work machine.
+        @param work_machine_resources: The available resources on the work machine.
+        @param ssh_config: the ssh_config of the worker.
         @return: The Response from the Server.
         """
 
