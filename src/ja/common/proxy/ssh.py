@@ -6,6 +6,9 @@ import yaml
 from ja.common.message.base import Response, Command
 from ja.common.config import Config
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class ISSHConnection(ABC):
     """
@@ -55,10 +58,18 @@ class SSHConnection(ISSHConnection):
 
     def send_command(self, command: Command) -> Response:
         command_dict = dict(command=command.to_dict(), type_name=command.__class__.__name__)
-        stdin, stdout, stderr = self._client.exec_command(self._command_string % self._remote_module)
+        remote_cmd = self._command_string % self._remote_module
+        stdin, stdout, stderr = self._client.exec_command(remote_cmd)
         stdin.write(yaml.dump(command_dict))
         stdin.close()
-        response = Response.from_string(stdout.read())
+        response: Response = None
+        try:
+            response = Response.from_string(stdout.read())
+        except AssertionError:
+            logger.error("Failed to communicate with remote: " + stderr.read().decode())
+            logger.debug("Failure when executing " + remote_cmd)
+            response = Response("Failed communication with remote", False)
+
         stdout.close()
         stderr.close()
         return response
