@@ -49,7 +49,7 @@ class JobCenter:
             machine.state = WorkMachineState.OFFLINE
             self._database.update_work_machine(machine)
 
-    def __init__(self, socket_path: str = "/run/jobadder-server.socket", database_name: str = "jobadder") -> None:
+    def __init__(self, socket_path: str = "/tmp/jobadder-server.socket", database_name: str = "jobadder") -> None:
         """!
         Initialize the JobAdder server daemon.
         This includes:
