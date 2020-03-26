@@ -47,12 +47,6 @@ class TestWorkerProxyFactory(WorkerProxyFactoryBase):
 
 
 class TestJobCenter(JobCenter):
-
-    @staticmethod
-    def _read_config() -> ServerConfig:
-        with open(SERVER_CONF_PATH) as f:
-            return ServerConfig.from_string(f.read())
-
     def _get_proxy_factory(self) -> WorkerProxyFactoryBase:
         return TestWorkerProxyFactory(self._database)
 
@@ -71,7 +65,8 @@ class IntegrationTest(TestCase):
         Path(TESTING_DIRECTORY).mkdir(parents=True, exist_ok=True)
         with open(SERVER_CONF_PATH, "w") as f:
             f.write(str(self.server_config))
-        self._server = TestJobCenter(socket_path=SERVER_SOCKET_PATH, database_name=DATABASE_NAME)
+        self._server = TestJobCenter(config_file=SERVER_CONF_PATH,
+                                     socket_path=SERVER_SOCKET_PATH, database_name=DATABASE_NAME)
         Thread(target=self._server.run, name="server-main", daemon=True).start()
 
         with open(SSH_CONF_PATH, "w") as f:
