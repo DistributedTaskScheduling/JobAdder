@@ -60,14 +60,6 @@ class ServerCommandHandler(CommandHandler):
         logger.debug("Response: %s" % str(r_dict))
         return r_dict.to_dict()
 
-    def _process_exit_message(self, type_name: str, user: str) -> Dict[str, object]:
-        if type_name != "KillCommand":
-            return None
-        if not self._user_is_admin(user):
-            return Response("Insufficient permissions to shut down the server.", False).to_dict()
-        self._running = False
-        return Response("Shutting down server ...", True).to_dict()
-
     def _process_worker_message(self, command_dict: Dict[str, object], type_name: str, user: str) -> Dict[str, object]:
         if type_name not in self._worker_commands:
             return None
@@ -90,10 +82,6 @@ class ServerCommandHandler(CommandHandler):
 
     def _process_command_dict(
             self, command_dict: Dict[str, object], type_name: str, username: str) -> Dict[str, object]:
-        response = self._process_exit_message(type_name, username)
-        if response:
-            return response
-
         response = self._process_worker_message(command_dict, type_name, username)
         if response:
             return response

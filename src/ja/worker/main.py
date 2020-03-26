@@ -10,6 +10,10 @@ from ja.worker.proxy.proxy import WorkerServerProxy
 from ja.worker.docker import DockerInterface
 from ja.worker.proxy.command_handler import WorkerCommandHandler
 
+import time
+import logging
+logger = logging.getLogger(__name__)
+
 
 class JobWorker:
     """
@@ -44,11 +48,22 @@ class JobWorker:
         """
         register_response = self._server_proxy.register_self(
             uid=self._config.uid, work_machine_resources=WorkMachineResources(self._config.resources))
-        # TODO add response message to worker log
-        if register_response.is_success:
-            # If uid is unset for this worker, save the uid assigned by the server for consistency.
-            if self._config.uid is None:
-                self._config.uid = register_response.uid
-                with open(self._config_path, "r") as f:
-                    f.write(str(self._config))
-            self._command_handler.main_loop()
+
+        if not register_response.is_success:
+            logger.error("Failed to register with the server at %s: %s" %
+                         (self._config.ssh_config.hostname, register_response.result_string))
+            return
+
+        # If uid is unset for this worker, save the uid assigned by the server for consistency.
+        if self._config.uid is None:
+            self._config.uid = register_response.uid
+            with open(self._config_path, "r") as f:
+                f.write(str(self._config))
+
+        logger.info("Registered with server at %s, uid: %s" % (self._config.ssh_config.hostname, self._config.uid))
+        self._command_handler.main_loop()
+
+        self._server_proxy.unregister_self(self._config.uid)
+        # Wait for commands to finish, but check periodically whether all of them have finished
+        while self._docker_interface.has_running_jobs():
+            time.sleep(1)

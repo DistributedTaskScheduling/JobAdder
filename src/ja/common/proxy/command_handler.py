@@ -1,6 +1,7 @@
 import os
 import socket
 from abc import ABC, abstractmethod
+from ja.common.message.base import Response
 import yaml
 from typing import Dict
 import grp
@@ -39,6 +40,16 @@ class CommandHandler(ABC):
             self, command_dict: Dict[str, object], type_name: str, username: str) -> Dict[str, object]:
         pass
 
+    def _check_exit_or_process_command(
+            self, command_dict: Dict[str, object], type_name: str, username: str) -> Dict[str, object]:
+        if type_name == "KillCommand":
+            if self._user_is_admin(username):
+                self._running = False
+                return Response("Shutting down ...", True).to_dict()
+            else:
+                return Response("Insufficient permissions to shut down JobAdder daemon.", False).to_dict()
+        return self._process_command_dict(command_dict, type_name, username)
+
     def _user_is_admin(self, user: str) -> bool:
         groups = [g.gr_name for g in grp.getgrall() if user in g.gr_mem]
         return self._admin_group in groups or user == self._admin_group
@@ -71,7 +82,7 @@ class CommandHandler(ABC):
                 input_string = command_bytes.decode()
 
                 input_dict = yaml.load(input_string, yaml.SafeLoader)
-                response_dict = self._process_command_dict(
+                response_dict = self._check_exit_or_process_command(
                     command_dict=input_dict["command"],
                     type_name=input_dict["type_name"],
                     username=input_dict["username"]

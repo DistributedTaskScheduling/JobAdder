@@ -65,3 +65,6 @@ class DockerInterface:
     def resume_job(self, uid: str) -> None:
         container = self._containers_by_job_uid[uid]
         container.unpause()
+
+    def has_running_jobs(self) -> bool:
+        return len(self._jobs_by_container_id) > 0
