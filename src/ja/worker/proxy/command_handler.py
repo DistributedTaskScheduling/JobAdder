@@ -23,7 +23,7 @@ class WorkerCommandHandler(CommandHandler):
     """
     def __init__(self,
                  admin_group: str, docker_interface: DockerInterface,
-                 socket_path: str = "/run/jobadder-worker.socket"):
+                 socket_path: str = "/tmp/jobadder-worker.socket"):
         super().__init__(socket_path=socket_path, admin_group=admin_group)
         self._docker_interface = docker_interface
 

@@ -21,7 +21,7 @@ class JobWorker:
     """
     def __init__(
             self, config_path: str = "/etc/jobadder/worker.conf",
-            socket_path: str = "/run/jobadder-worker.socket",
+            socket_path: str = "/tmp/jobadder-worker.socket",
             remote_module: str = "ja.server.proxy.remote",
             command_string: str = "python3 -m %s") -> None:
         """!
