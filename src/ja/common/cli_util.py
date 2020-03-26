@@ -9,12 +9,13 @@ import yaml
 class SimpleDaemonCLIInterface:
     def __init__(self) -> None:
         parser = ArgumentParser()
-        parser.add_argument("-k", "--kill", help="Shut down the job adder server.", action="store_true")
+        parser.add_argument("-k", "--kill", help="Shut down the job adder daemon.", action="store_true")
+        parser.add_argument("-c", "--config", help="Configuration file to use.", type=str)
         args = parser.parse_args()
         if args.kill:
             self._kill_daemon()
         else:
-            self.run_main()
+            self.run_main(args.config)
 
     def _kill_daemon(self) -> None:
         # We construct a fake message and send it to the daemon.
@@ -37,7 +38,9 @@ class SimpleDaemonCLIInterface:
         pass
 
     @abstractmethod
-    def run_main(self) -> None:
+    def run_main(self, config_file: str) -> None:
         """
         Run the main class of the component.
+
+        @param config_file The config file specified on the command line, or None.
         """

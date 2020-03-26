@@ -7,10 +7,16 @@ from ja.worker.main import JobWorker
 class WorkerCLI(SimpleDaemonCLIInterface):
     @property
     def socket_name(self) -> str:
-        return "/run/jobadder-worker.socket"
+        return "/tmp/jobadder-worker.socket"
 
-    def run_main(self) -> None:
-        JobWorker(remote_module="/run/jobadder-server.socket", command_string="ja-remote %s").run()
+    def run_main(self, config_file: str) -> None:
+        jw: JobWorker = None
+        if config_file:
+            jw = JobWorker(config_path=config_file, remote_module="/tmp/jobadder-server.socket",
+                           command_string="ja-remote %s")
+        else:
+            jw = JobWorker(remote_module="/tmp/jobadder-server.socket", command_string="ja-remote %s")
+        jw.run()
 
 
 if __name__ == "__main__":

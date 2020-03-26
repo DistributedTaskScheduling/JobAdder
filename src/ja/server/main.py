@@ -33,9 +33,9 @@ class JobCenter:
                                           dp.DefaultPreemptiveDistributionPolicy(cost_function))
 
     @staticmethod
-    def _read_config() -> ServerConfig:
-        with open("/etc/jobadder/server.conf") as f:
-            logger.info("reading /etc/jobadder/server.conf config file")
+    def _read_config(config_file: str) -> ServerConfig:
+        with open(config_file) as f:
+            logger.info("reading %s config file" % config_file)
             return ServerConfig.from_string(f.read())
 
     def _cleanup(self) -> None:
@@ -49,7 +49,8 @@ class JobCenter:
             machine.state = WorkMachineState.OFFLINE
             self._database.update_work_machine(machine)
 
-    def __init__(self, socket_path: str = "/run/jobadder-server.socket", database_name: str = "jobadder") -> None:
+    def __init__(self, config_file: str = "/etc/jobadder/server.conf",
+                 socket_path: str = "/tmp/jobadder-server.socket", database_name: str = "jobadder") -> None:
         """!
         Initialize the JobAdder server daemon.
         This includes:
@@ -57,11 +58,12 @@ class JobCenter:
         2. Connecting to the configured database.
         3. Initializing the scheduler and the dispatcher.
         4. Starting the web server and the email notifier.
+        @param config_file: the configuration file to use.
         @param socket_path: the path to the unix named socket for the command handler to listen on.
         @param database_name: the name of the database to use.
         """
 
-        config = self._read_config()
+        config = self._read_config(config_file)
         self._database = SQLDatabase(host=config.database_config.host,
                                      user=config.database_config.username,
                                      password=config.database_config.password,

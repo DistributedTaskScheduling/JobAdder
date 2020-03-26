@@ -11,6 +11,7 @@ from ja.worker.docker import DockerInterface
 from ja.worker.proxy.command_handler import WorkerCommandHandler
 
 import time
+import sys
 import logging
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ class JobWorker:
     """
     def __init__(
             self, config_path: str = "/etc/jobadder/worker.conf",
-            socket_path: str = "/run/jobadder-worker.socket",
+            socket_path: str = "/tmp/jobadder-worker.socket",
             remote_module: str = "ja.server.proxy.remote",
             command_string: str = "python3 -m %s") -> None:
         """!
@@ -32,6 +33,7 @@ class JobWorker:
         @param remote_module: the module to execute on the server.
         @param command_string: the command template to execute on the server.
         """
+        logger.info("Using worker config file %s." % config_path)
         self._config_path = config_path
         with open(self._config_path, "r") as f:
             self._config = cast(WorkerConfig, WorkerConfig.from_string(f.read()))
@@ -52,7 +54,7 @@ class JobWorker:
         if not register_response.is_success:
             logger.error("Failed to register with the server at %s: %s" %
                          (self._config.ssh_config.hostname, register_response.result_string))
-            return
+            sys.exit(1)
 
         # If uid is unset for this worker, save the uid assigned by the server for consistency.
         if self._config.uid is None:

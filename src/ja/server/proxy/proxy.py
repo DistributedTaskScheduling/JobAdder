@@ -110,5 +110,5 @@ class WorkerProxy(WorkerProxyBase):
     """
     def _get_ssh_connection(self, ssh_config: SSHConfig) -> ISSHConnection:
         return SSHConnection(ssh_config=ssh_config,
-                             remote_module="/run/jobadder-worker.socket",
+                             remote_module="/tmp/jobadder-worker.socket",
                              command_string="ja-remote %s")
