@@ -17,6 +17,7 @@ class CancelCommand(UserServerCommand):
         """!
         @param config: Config to create the cancel command from.
         """
+        super().__init__()
         if label is None and uid is None:
             raise ValueError("One of both uid and label must be set")
         if label is not None and uid is not None:

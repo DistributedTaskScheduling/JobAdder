@@ -18,6 +18,7 @@ class QueryCommand(UserServerCommand):
                  priority: List[JobPriority] = None, status: List[JobStatus] = None, is_preemptible: bool = None,
                  special_resources: List[List[str]] = None, cpu_threads: Tuple[int, int] = None,
                  memory: Tuple[int, int] = None, before: datetime = None, after: datetime = None):
+        super().__init__()
         if cpu_threads is not None and (cpu_threads[0] > cpu_threads[1] or cpu_threads[0] < 1):
             raise ValueError("Invalid range for cpu_threads.")
         if memory is not None and (memory[0] > memory[1] or memory[0] < 1):
@@ -267,10 +268,10 @@ class QueryCommand(UserServerCommand):
         if self.label is not None:
             jobs = [entry for entry in jobs if entry.job.label in self.label]
         if self.owner is not None:
-            jobs = [entry for entry in jobs if entry.job.owner_id in self.owner]
+            jobs = [entry for entry in jobs if str(entry.job.owner_id) in self.owner]
         if self.priority is not None:
             jobs = [entry for entry in jobs if entry.job.scheduling_constraints.priority in self.priority]
-        if self.label is not None:
+        if self.status is not None:
             jobs = [entry for entry in jobs if entry.job.status in self.status]
         if self.is_preemptible is not None:
             jobs = [entry for entry in jobs if entry.job.scheduling_constraints.is_preemptible == self.is_preemptible]

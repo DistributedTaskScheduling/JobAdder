@@ -3,7 +3,7 @@ from ja.common.message.server import ServerCommand
 
 class UserServerCommand(ServerCommand):
     def __init__(self) -> None:
-        self._effective_user: int = -1
+        self._effective_user: int = 0
 
     @property
     def effective_user(self) -> int:
