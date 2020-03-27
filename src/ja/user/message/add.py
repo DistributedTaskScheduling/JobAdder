@@ -45,6 +45,6 @@ class AddCommand(UserServerCommand):
                             is_success=False)
         if job.status == JobStatus.NEW:
             job.status = JobStatus.QUEUED
-        database.update_job(job)
+        job.uid = database.update_job(job)
         return Response(result_string="Successfully added job with id: %s" % job.uid,
                         is_success=True, uid=job.uid)
