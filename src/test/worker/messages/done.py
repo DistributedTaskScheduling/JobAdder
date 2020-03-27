@@ -35,5 +35,6 @@ class DoneMessageTest(AbstractSerializableTest):
 
     def test_job_done(self) -> None:
         command = JobDoneCommand("mrazqte")
-        command.execute(self.mock_db)
+        response = command.execute(self.mock_db)
+        self.assertTrue(response.is_success)
         self.assertEqual(self.mock_db.find_job_by_id("mrazqte").job.status, JobStatus.DONE)
