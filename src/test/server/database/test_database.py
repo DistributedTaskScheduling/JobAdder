@@ -243,6 +243,15 @@ class DatabaseTest(TestCase):
         self.mockDatabase.update_work_machine(work_machine)
         self.assertEqual(self.mockDatabase.get_work_machines(), [self.work_machine])
 
+    # this test the _cleanup function in the server main class
+    def test_offline_machines(self) -> None:
+        self.mockDatabase.update_work_machine(self.work_machine)
+        for machine in self.mockDatabase.get_work_machines():
+            machine.resources.deallocate(machine.resources.total_resources - machine.resources.free_resources)
+            machine.state = WorkMachineState.OFFLINE
+            self.mockDatabase.update_work_machine(machine)
+        self.assertEqual(self.mockDatabase.get_all_work_machines()[0].state, WorkMachineState.OFFLINE)
+
     count: int = 0
 
     def callback_count(self, database: ServerDatabase) -> None:

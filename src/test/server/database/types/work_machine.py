@@ -38,7 +38,7 @@ class WorkMachineTest(TestCase):
     def test_resources_getter(self) -> None:
         wmr: WorkMachineResources = WorkMachineResources(ResourceAllocation(1, 2, 3))
         wm: WorkMachine = WorkMachine("cray", WorkMachineState.OFFLINE, wmr)
-        self.assertIsNone(wm.resources)
+        self.assertEqual(wm.resources, wmr)
 
     def test_resources_getter1(self) -> None:
         wmr: WorkMachineResources = WorkMachineResources(ResourceAllocation(1, 2, 3))

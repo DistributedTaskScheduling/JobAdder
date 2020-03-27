@@ -165,12 +165,9 @@ class WorkMachine(Serializable):
     @property
     def resources(self) -> WorkMachineResources:
         """!
-        @return The resources of the work machine, if it is online,
-          otherwise None.
+        @return The resources of the work machine.
         """
-        if self._state == WorkMachineState.ONLINE or self._state == WorkMachineState.RETIRED:
-            return self._resources
-        return None
+        return self._resources
 
     @resources.setter
     def resources(self, value: WorkMachineResources) -> None:

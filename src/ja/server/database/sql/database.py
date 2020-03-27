@@ -56,7 +56,7 @@ class SQLDatabase(ServerDatabase):
                                                  uselist=False),
                 "_free_resources": relationship(ResourceAllocation,
                                                 foreign_keys=work_machine_resources.c.free_resources_id,
-                                                uselist=False),
+                                                uselist=False)
             })
 
             ssh_config = Table("ssh_config", metadata,
@@ -269,6 +269,11 @@ class SQLDatabase(ServerDatabase):
             work_machine.resources = machine.resources
         session.commit()
         self._call_scheduler()
+
+    def get_all_work_machines(self) -> Optional[List[WorkMachine]]:
+        session = self.scoped()
+        work_machines: Optional[List[WorkMachine]] = session.query(WorkMachine).options(joinedload("*")).all()
+        return work_machines
 
     def get_work_machines(self) -> Optional[List[WorkMachine]]:
         session = self.scoped()
