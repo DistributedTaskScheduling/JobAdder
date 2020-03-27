@@ -28,8 +28,7 @@ class JobCrashedCommand(WorkerServerCommand):
         job_entry = database.find_job_by_id(self._job_uid)
         if job_entry is None:
             raise ValueError("There is no job with %s id on the server" % self._job_uid)
-        job_entry.job.status = JobStatus.CRASHED
-        database.update_job(job_entry.job)
+        self._free_resources_for_job(database, job_entry, JobStatus.CRASHED)
         return Response("Job with uid: {} crashed!".format(self._job_uid), True)
 
     def __eq__(self, o: object) -> bool:
