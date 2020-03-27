@@ -9,7 +9,7 @@ from ja.server.database.types.work_machine import WorkMachine
 from ja.worker.main import JobWorker
 from ja.common.proxy.ssh import SSHConfig, ISSHConnection, SSHConnection
 from ja.common.work_machine import ResourceAllocation
-from ja.user.cli import UserClientCLIHandler
+from ja.user.main import JobAdder
 from ja.server.main import JobCenter
 from ja.server.config import ServerConfig, LoginConfig
 from ja.worker.config import WorkerConfig
@@ -20,7 +20,7 @@ from ja_integration.remote import SERVER_SOCKET_PATH, WORKER_SOCKET_PATH, TESTIN
 
 DATABASE_NAME = "jobadder-test"
 SERVER_CONF_PATH = TESTING_DIRECTORY + "server.conf"
-WORKER_CONF_PATH = TESTING_DIRECTORY + "worker-%s.conf"
+WORKER_CONF_PATH = TESTING_DIRECTORY + "worker_%s.conf"
 SSH_CONF_PATH = TESTING_DIRECTORY + "ssh.conf"
 SERVER_REMOTE_MODULE = "ja_integration.remote.server"
 WORKER_REMOTE_MODULE = "ja_integration.remote.%s"
@@ -28,6 +28,15 @@ if getuser() == "travis":
     COMMAND_STRING = "~/virtualenv/python3.7/bin/python3 -m %s"
 else:
     COMMAND_STRING = "python3 -m %s"
+
+DOCKERFILE_PATH_TEMPLATE = TESTING_DIRECTORY + "Dockerfile-%s"
+DOCKERFILE_SOURCE_TEMPLATE = """
+FROM ubuntu:18.04
+
+RUN apt-get update && apt-get install -y python3 && apt-get clean
+
+CMD sleep %s
+"""
 
 
 class TestWorkerProxy(WorkerProxyBase):
@@ -43,7 +52,7 @@ class TestWorkerProxy(WorkerProxyBase):
 class TestWorkerProxyFactory(WorkerProxyFactoryBase):
 
     def _create_proxy(self, work_machine: WorkMachine) -> IWorkerProxy:
-        return TestWorkerProxy(uid=work_machine.uid, ssh_config=None)  # FIXME need to get worker ssh config
+        return TestWorkerProxy(uid=work_machine.uid, ssh_config=SSHConfig(hostname="127.0.0.1"))
 
 
 class TestJobCenter(JobCenter):
@@ -55,7 +64,7 @@ class TestJobWorker(JobWorker):
     def __init__(self, index: int):
         self._index = index
         super().__init__(
-            config_path=WORKER_CONF_PATH % self._index, socket_path=WORKER_SOCKET_PATH,
+            config_path=WORKER_CONF_PATH % self._index, socket_path=WORKER_SOCKET_PATH % self._index,
             remote_module=SERVER_REMOTE_MODULE, command_string=COMMAND_STRING)
 
 
@@ -69,12 +78,18 @@ class IntegrationTest(TestCase):
                                      socket_path=SERVER_SOCKET_PATH, database_name=DATABASE_NAME)
         Thread(target=self._server.run, name="server-main", daemon=True).start()
 
+        # Create Dockerfiles for jobs that run 1-60 seconds
+        for i in range(1, 61):
+            with open(DOCKERFILE_PATH_TEMPLATE % i, "w") as f:
+                f.write(DOCKERFILE_SOURCE_TEMPLATE % i)
+
         with open(SSH_CONF_PATH, "w") as f:
             f.write(str(self.ssh_config))
 
-        self._clients: List[UserClientCLIHandler] = []
+        self._clients: List[JobAdder] = []
         for i in range(self.num_clients):
-            client = UserClientCLIHandler(config_path=SSH_CONF_PATH)
+            client = JobAdder(
+                config_path=SSH_CONF_PATH, remote_module=SERVER_REMOTE_MODULE, command_string=COMMAND_STRING)
             self._clients.append(client)
 
         self._workers: List[JobWorker] = []
@@ -82,7 +97,7 @@ class IntegrationTest(TestCase):
             with open(WORKER_CONF_PATH % i, "w") as f:
                 f.write(str(self.get_worker_config(i)))
             worker = TestJobWorker(index=i)
-            Thread(target=worker.run, name="worker%s" % i, daemon=True).start()
+            Thread(target=worker.run, name="worker_%s" % i, daemon=True).start()
             self._workers.append(worker)
         sleep(1)
 
@@ -106,7 +121,7 @@ class IntegrationTest(TestCase):
 
     def get_worker_config(self, index: int) -> WorkerConfig:
         return WorkerConfig(
-            uid="worker%s" % index, ssh_config=self.ssh_config,
+            uid="worker_%s" % index, ssh_config=self.ssh_config,
             resource_allocation=self.get_resource_allocation(index), admin_group="jobadder"
         )
 
@@ -121,13 +136,29 @@ class IntegrationTest(TestCase):
     def num_workers(self) -> int:
         return 1
 
+    def get_arg_list_add(
+            self, num_seconds: int = 1, threads: int = 1, memory: int = 1024, label: str = None) -> List[str]:
+        arg_list = [
+            "--hostname", "127.0.0.1",
+            "add",
+            "--source", DOCKERFILE_PATH_TEMPLATE % num_seconds,
+            "--memory", str(memory),
+            "--threads", str(threads),
+        ]
+        if label is not None:
+            arg_list += ["--label", label]
+        return arg_list
+
     def test_sanity_checks(self) -> None:
         work_machines = self._server._database.get_work_machines()
         self.assertEqual(len(work_machines), self.num_workers)
         for i in range(self.num_workers):
             worker_i_exists = False
             for work_machine in work_machines:
-                if work_machine.uid == "worker%s" % i:
+                if work_machine.uid == "worker_%s" % i:
                     worker_i_exists = True
                     break
             self.assertTrue(worker_i_exists, "Worker %s does not exist." % i)
+
+    def test_no_user_cli_args(self) -> None:
+        self._clients[0].run(cli_args=[], suppress_help=True)  # Assure that the program doesn't just crash

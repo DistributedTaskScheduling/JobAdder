@@ -119,6 +119,9 @@ class Job(Serializable):
         self._uid: Optional[str] = None
         self._status = status
 
+    def __deepcopy__(self, memodict: Dict[str, object] = {}) -> "Serializable":
+        return type(self).from_dict(self.to_dict())
+
     def __eq__(self, other: object) -> bool:
         if isinstance(other, Job):
             return self.uid == other.uid \

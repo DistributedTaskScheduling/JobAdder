@@ -17,19 +17,20 @@ class JobAdder:
         self._remote_module = remote_module
         self._command_string = command_string
 
-    def run(self, cli_args: List[str] = None) -> None:
+    def run(self, cli_args: List[str] = None, suppress_help: bool = False) -> None:
         if cli_args is None:
             command = self._cli_handler.get_command_from_cli()
         else:
-            command = self._cli_handler.get_server_command(cli_args)
-        server_proxy = UserServerProxy(
-            ssh_config=command.config.ssh_config, remote_module=self._remote_module,
-            command_string=self._command_string)
-        if isinstance(command, AddCommand):
-            server_proxy.add_job(command)
-        elif isinstance(command, CancelCommand):
-            server_proxy.cancel_job(command)
-        elif isinstance(command, QueryCommand):
-            server_proxy.query(command)
-        else:
-            raise NotImplementedError("Command type not supported by proxy: %s" % type(command))
+            command = self._cli_handler.get_server_command(cli_args, suppress_help=suppress_help)
+        if command is not None:
+            server_proxy = UserServerProxy(
+                ssh_config=command.config.ssh_config, remote_module=self._remote_module,
+                command_string=self._command_string)
+            if isinstance(command, AddCommand):
+                server_proxy.add_job(command)
+            elif isinstance(command, CancelCommand):
+                server_proxy.cancel_job(command)
+            elif isinstance(command, QueryCommand):
+                server_proxy.query(command)
+            else:
+                raise NotImplementedError("Command type not supported by proxy: %s" % type(command))
