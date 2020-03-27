@@ -59,7 +59,13 @@ class SQLDatabase(ServerDatabase):
                                                 uselist=False),
             })
 
-            ssh_config = Table("work_machine_connection", metadata, Column("id", Integer, primary_key=True))
+            ssh_config = Table("ssh_config", metadata,
+                               Column("id", Integer, primary_key=True),
+                               Column("_hostname", String),
+                               Column("_username", String),
+                               Column("_password", String),
+                               Column("_key_filename", String),
+                               Column("_passphrase", String))
             mapper(SSHConfig, ssh_config)
 
             work_machine = Table("work_machine", metadata,
@@ -67,7 +73,7 @@ class SQLDatabase(ServerDatabase):
                                  Column("_uid", String, unique=True),
                                  Column("_state", Enum(WorkMachineState)),
                                  Column("resources_id", Integer, ForeignKey("work_machine_resources.id")),
-                                 Column("connection_id", Integer, ForeignKey("work_machine_connection.id")))
+                                 Column("ssh_config_id", Integer, ForeignKey("ssh_config.id")))
             mapper(WorkMachine, work_machine, properties={
                 "_resources": relationship(WorkMachineResources, uselist=False),
                 "_ssh_config": relationship(SSHConfig, uselist=False),

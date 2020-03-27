@@ -1,4 +1,5 @@
 from ja.common.work_machine import ResourceAllocation
+from ja.common.proxy.ssh import SSHConfig
 from ja.server.database.types.work_machine import WorkMachineResources, WorkMachine, WorkMachineState
 from unittest import TestCase
 from test.serializable.base import AbstractSerializableTest
@@ -47,9 +48,13 @@ class WorkMachineTest(TestCase):
 
 class WorkMachineSerializableTest(AbstractSerializableTest):
     def setUp(self) -> None:
-        self._optional_properties = ["resources"]
+        self._optional_properties = ["resources", "ssh_config"]
         self._object = WorkMachine("machina1", WorkMachineState.ONLINE,
-                                   WorkMachineResources(ResourceAllocation(1, 2, 3)))
+                                   WorkMachineResources(ResourceAllocation(1, 2, 3)),
+                                   SSHConfig(
+                                       hostname="www", username="tux",
+                                       password="1235", key_filename="my_key",
+                                       passphrase="asd"))
         self._object_dict = {
             "uid": "machina1",
             "state": 0,
@@ -59,6 +64,13 @@ class WorkMachineSerializableTest(AbstractSerializableTest):
                     "memory": 2,
                     "swap": 3
                 }
+            },
+            "ssh_config": {
+                "hostname": "www",
+                "username": "tux",
+                "password": "1235",
+                "key_filename": "my_key",
+                "passphrase": "asd"
             }
         }
         self._other_object_dict = {

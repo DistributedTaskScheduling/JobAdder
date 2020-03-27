@@ -127,7 +127,6 @@ class IntegrationTest(TestCase):
         for i in range(self.num_workers):
             worker_i_exists = False
             for work_machine in work_machines:
-                print(work_machine.uid)
                 if work_machine.uid == "worker%s" % i:
                     worker_i_exists = True
                     break

@@ -6,6 +6,7 @@ from ja.server.database.sql.mock_database import MockDatabase
 from ja.common.job import Job, JobSchedulingConstraints, JobPriority, JobStatus
 from ja.common.docker_context import DockerContext, MountPoint, DockerConstraints
 from ja.server.database.types.work_machine import WorkMachine, WorkMachineState, WorkMachineResources
+from ja.common.proxy.ssh import SSHConfig
 import time
 
 from ja.server.database.database import ServerDatabase
@@ -49,11 +50,22 @@ class DatabaseTest(TestCase):
         )
         self.job2.uid = "asv"
         self.work_machine = WorkMachine("machi1", WorkMachineState.ONLINE,
-                                        WorkMachineResources(ResourceAllocation(12, 32, 12)))
+                                        WorkMachineResources(ResourceAllocation(12, 32, 12)),
+                                        SSHConfig(
+                                            hostname="om", username="ux", password="45", key_filename=None,
+                                            passphrase="a"))
         self.work_machine2 = WorkMachine("machi2", WorkMachineState.ONLINE,
-                                         WorkMachineResources(ResourceAllocation(2, 2, 2)))
+                                         WorkMachineResources(ResourceAllocation(2, 2, 2)),
+                                         SSHConfig(
+                                             hostname="www.com", username="tux",
+                                             password=None, key_filename="~/my_key.rsa",
+                                             passphrase="asdfghjk"))
         self.work_machine3 = WorkMachine("machi1", WorkMachineState.ONLINE,
-                                         WorkMachineResources(ResourceAllocation(2, 2, 2)))
+                                         WorkMachineResources(ResourceAllocation(2, 2, 2)),
+                                         SSHConfig(
+                                             hostname="daf", username=None, password="12345",
+                                             key_filename="~/my_key.rsa",
+                                             passphrase="asdfghjk"))
 
     def test_insert_job(self) -> None:
         self.mockDatabase.update_job(self.job)
@@ -120,7 +132,7 @@ class DatabaseTest(TestCase):
         self.mockDatabase.update_work_machine(self.work_machine)
         self.assertEqual(self.mockDatabase.get_work_machines()[0], self.work_machine)
         work_machine2 = WorkMachine("machi1", WorkMachineState.ONLINE,
-                                    WorkMachineResources(ResourceAllocation(12, 32, 12)))
+                                    WorkMachineResources(ResourceAllocation(12, 32, 12)), self.work_machine.ssh_config)
         self.mockDatabase.update_work_machine(work_machine2)
         self.assertEqual(self.mockDatabase.get_work_machines()[0], work_machine2)
 
@@ -224,8 +236,10 @@ class DatabaseTest(TestCase):
 
     def test_get_work_machine(self) -> None:
         self.mockDatabase.update_work_machine(self.work_machine)
+        ssh_config = SSHConfig(
+            hostname="www.com", username="tux", password=None, key_filename="~/my_key.rsa", passphrase=None)
         work_machine = WorkMachine("coronaRIP", WorkMachineState.OFFLINE,
-                                   WorkMachineResources(ResourceAllocation(2, 2, 2)))
+                                   WorkMachineResources(ResourceAllocation(2, 2, 2)), ssh_config)
         self.mockDatabase.update_work_machine(work_machine)
         self.assertEqual(self.mockDatabase.get_work_machines(), [self.work_machine])
 
