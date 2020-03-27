@@ -35,6 +35,8 @@ class RetireWorkerCommand(WorkerServerCommand):
             raise ValueError("There is no work machine with %s id on the server" % self._work_machine_uid)
         work_machine: WorkMachine = next(x for x in work_machines if x.uid == self._work_machine_uid)
         work_machine.state = WorkMachineState.RETIRED
+        if work_machine.resources.total_resources == work_machine.resources.free_resources:
+            work_machine.state = WorkMachineState.OFFLINE
         database.update_work_machine(work_machine)
         return Response("Successfully retired Work machine with uid: {}".format(self._work_machine_uid), True)
 
