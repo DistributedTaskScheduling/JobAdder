@@ -18,7 +18,7 @@ class QueryCommand(UserServerCommand):
                  priority: List[JobPriority] = None, status: List[JobStatus] = None, is_preemptible: bool = None,
                  special_resources: List[List[str]] = None, cpu_threads: Tuple[int, int] = None,
                  memory: Tuple[int, int] = None, before: datetime = None, after: datetime = None):
-        super().__init__()
+        super().__init__(config=config)
         if cpu_threads is not None and (cpu_threads[0] > cpu_threads[1] or cpu_threads[0] < 1):
             raise ValueError("Invalid range for cpu_threads.")
         if memory is not None and (memory[0] > memory[1] or memory[0] < 1):
@@ -26,7 +26,6 @@ class QueryCommand(UserServerCommand):
         if after is not None and before is not None:
             if after > before:
                 raise ValueError("'after' argument must be a date that comes before the 'before' argument!")
-        self._config = config
         self._uid = uid
         self._label = label
         self._owner = owner
@@ -117,10 +116,6 @@ class QueryCommand(UserServerCommand):
         @return: The earliest point in time a job of interest was scheduled.
         """
         return self._after
-
-    @property
-    def config(self) -> UserConfig:
-        return self._config
 
     def __eq__(self, o: object) -> bool:
         if isinstance(o, QueryCommand):

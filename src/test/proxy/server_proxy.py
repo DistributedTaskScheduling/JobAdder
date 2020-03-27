@@ -2,7 +2,7 @@ from ja.user.proxy import IUserServerProxy
 from ja.common.proxy.ssh import SSHConfig, ISSHConnection
 from ja.common.message.base import Response
 from ja.common.job import Job, JobStatus, JobPriority
-from ja.user.config.add import AddCommandConfig
+from ja.user.message.add import AddCommand
 from ja.user.message.query import QueryCommand
 from ja.user.message.cancel import CancelCommand
 from typing import List, Tuple
@@ -23,8 +23,8 @@ class ServerProxyDummy(IUserServerProxy):
         """
         return self._jobs
 
-    def add_job(self, add_config: AddCommandConfig) -> Response:
-        job: Job = add_config.job
+    def add_job(self, add_command: AddCommand) -> Response:
+        job: Job = add_command.config.job
         if job in self._jobs:
             return Response(result_string="Job with id %s already exists" % job.uid,
                             is_success=False)

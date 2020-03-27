@@ -47,7 +47,7 @@ class CLITest(TestCase):
         # Adding jobs.
         for i, command in enumerate(CLITest.commands):
             parsed_command: AddCommand = cast(AddCommand, self._cli.get_server_command(command))
-            self._proxy.add_job(parsed_command.config)
+            self._proxy.add_job(parsed_command)
             parsed_command_db: AddCommand = cast(AddCommand, self._cli.get_server_command(command))
             if i == 1:
                 parsed_command.config.job.status = JobStatus.RUNNING

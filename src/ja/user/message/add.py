@@ -15,15 +15,14 @@ class AddCommand(UserServerCommand):
         """!
         @param config: Config to create the add command from.
         """
-        super().__init__()
-        self._config = config
+        super().__init__(config=config)
 
     @property
     def config(self) -> AddCommandConfig:
         """!
         @return the AddCommandConfig for this Command.
         """
-        return self._config
+        return self._config  # type: ignore
 
     def to_dict(self) -> Dict[str, object]:
         return self._config.to_dict()

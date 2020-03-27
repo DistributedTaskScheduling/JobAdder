@@ -32,6 +32,9 @@ class MockCommand(WorkerServerCommand):
 
 
 class UserMockCommand(UserServerCommand):
+    def __init__(self) -> None:
+        super().__init__(config=None)
+
     def to_dict(self) -> Dict[str, object]:
         return {}
 

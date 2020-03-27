@@ -1,4 +1,4 @@
-from ja.common.message.server import ServerCommand
+from ja.user.message.base import UserServerCommand
 from ja.common.job import Job, JobSchedulingConstraints, JobPriority, JobStatus
 from ja.common.docker_context import DockerConstraints, DockerContext, MountPoint
 from ja.user.config.add import AddCommandConfig
@@ -52,9 +52,9 @@ class UserClientCLIHandler:
         """
         self._config_path = config_path
 
-    def get_command_from_cli(self) -> ServerCommand:
+    def get_command_from_cli(self) -> UserServerCommand:
         """!
-        @return ServerCommand from Command line arguments
+        @return UserServerCommand from Command line arguments
         """
         return self.get_server_command(sys.argv[1:])
 
@@ -67,11 +67,11 @@ class UserClientCLIHandler:
                 return default
         return arg
 
-    def get_server_command(self, cli_args: List[str]) -> ServerCommand:
+    def get_server_command(self, cli_args: List[str]) -> UserServerCommand:
         """!
-        Transforms string arguments into a UserConfig object. Creates and returns a ServerCommand object from the
+        Transforms string arguments into a UserConfig object. Creates and returns a UserServerCommand object from the
         command line arguments combined with the general config loaded in the constructor.
-        @return: The ServerCommand created from the combined input.
+        @return: The UserServerCommand created from the combined input.
         """
 
         with open(self._config_path, "r") as stream:

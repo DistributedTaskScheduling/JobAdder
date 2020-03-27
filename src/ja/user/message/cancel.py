@@ -17,12 +17,11 @@ class CancelCommand(UserServerCommand):
         """!
         @param config: Config to create the cancel command from.
         """
-        super().__init__()
+        super().__init__(config=config)
         if label is None and uid is None:
             raise ValueError("One of both uid and label must be set")
         if label is not None and uid is not None:
             raise ValueError("Only one of both uid and label should be set")
-        self._config = config
         self._label = label
         self._uid = uid
 
@@ -31,13 +30,6 @@ class CancelCommand(UserServerCommand):
             return self._config == o._config and self._label == o._label and self._uid == o._uid
         else:
             return False
-
-    @property
-    def config(self) -> UserConfig:
-        """!
-        @return: The UserConfig of this command.
-        """
-        return self._config
 
     @property
     def label(self) -> str:

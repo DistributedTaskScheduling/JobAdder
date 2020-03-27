@@ -1,0 +1,8 @@
+#!/usr/bin/env python3
+
+from ja.user.main import JobAdder
+
+
+if __name__ == "__main__":
+    ja = JobAdder()
+    ja.run()
