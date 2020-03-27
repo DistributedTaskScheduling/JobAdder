@@ -1,7 +1,9 @@
 from copy import deepcopy
 from typing import List, Optional, Callable
 from datetime import datetime
+import time
 from sqlalchemy import create_engine
+from pwd import getpwuid
 
 from ja.common.work_machine import ResourceAllocation
 from ja.common.docker_context import DockerContext, DockerConstraints, MountPoint
@@ -202,11 +204,13 @@ class SQLDatabase(ServerDatabase):
         jobs: List[Job] = session.query(Job).filter(Job.label == label).all()
         return jobs
 
-    def update_job(self, job: Job) -> None:
+    def update_job(self, job: Job) -> str:
         session = self.scoped()
         old_job_entry: Optional[DatabaseJobEntry] = self.find_job_by_id(job.uid)
         old_job = old_job_entry.job if old_job_entry else None
         if old_job is None:
+            if job.uid is None:
+                job.uid = getpwuid(job.owner_id).pw_name + str(int(time.time() * 1000))
             job_entry = DatabaseJobEntry(job=deepcopy(job),
                                          stats=JobRuntimeStatistics(datetime.now(), None,
                                                                     0, 0),
@@ -234,6 +238,7 @@ class SQLDatabase(ServerDatabase):
             logger.debug("old job: \n%s \n new job: \n%s" % (str(old_job), str(job)))
         session.commit()
         self._call_scheduler()
+        return job.uid
 
     def get_jobs_on_machine(self, machine: WorkMachine) -> Optional[List[Job]]:
         session = self.scoped()

@@ -30,12 +30,13 @@ class ServerDatabase(ABC):
         """
 
     @abstractmethod
-    def update_job(self, job: Job) -> None:
+    def update_job(self, job: Job) -> str:
         """!
         Update the job in the database.
         If no job with the id of @job has been stored up to now, a new entry will be created in the database.
 
         @param job The job to update stored data for.
+        @return the uid of the updated job.
         """
 
     @abstractmethod
