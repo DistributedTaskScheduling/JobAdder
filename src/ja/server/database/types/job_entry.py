@@ -1,7 +1,8 @@
 from datetime import datetime
+from copy import deepcopy
 from ja.common.job import Job
 from ja.server.database.types.work_machine import WorkMachine
-from typing import Optional
+from typing import Dict, Optional
 
 
 class JobRuntimeStatistics:
@@ -108,6 +109,14 @@ class DatabaseJobEntry:
         if isinstance(o, DatabaseJobEntry):
             return self.job == o.job and self.assigned_machine == o.assigned_machine and self.statistics == o.statistics
         return False
+
+    def __deepcopy__(self, memodict: Dict[str, object] = {}) -> "DatabaseJobEntry":
+        out_statistics = JobRuntimeStatistics(self.statistics.time_added, self.statistics.time_started,
+                                              self.statistics.running_time, self.statistics.paused_time)
+        out_machine = None
+        if self.assigned_machine:
+            out_machine = WorkMachine.from_dict(self.assigned_machine.to_dict())
+        return DatabaseJobEntry(job=deepcopy(self.job), stats=out_statistics, machine=out_machine)
 
     @property
     def job(self) -> Job:

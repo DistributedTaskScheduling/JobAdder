@@ -179,7 +179,7 @@ class SQLDatabase(ServerDatabase):
     def __del__(self) -> None:
         self.scoped.remove()  # type: ignore
 
-    def find_job_by_id(self, job_id: str) -> Optional[DatabaseJobEntry]:
+    def _find_job_by_id(self, job_id: str) -> Optional[DatabaseJobEntry]:
         session = self.scoped()
         job: Optional[Job] = session.query(Job).filter(Job.uid == job_id).options(joinedload("*")).first()
         jobs_entry: Optional[DatabaseJobEntry] = session.query(DatabaseJobEntry). \
@@ -194,9 +194,13 @@ class SQLDatabase(ServerDatabase):
             session.commit()
             logger.info("job entry with job id: %s found." % job_id)
             logger.debug(str(jobs_entry.job))
+
         else:
             logger.info("job with id: %s not found" % job_id)
         return jobs_entry
+
+    def find_job_by_id(self, job_id: str) -> Optional[DatabaseJobEntry]:
+        return deepcopy(self._find_job_by_id(job_id))
 
     def find_job_by_label(self, label: str) -> List[Job]:
         if label is None:
@@ -212,7 +216,7 @@ class SQLDatabase(ServerDatabase):
 
     def update_job(self, job: Job) -> str:
         session = self.scoped()
-        old_job_entry: Optional[DatabaseJobEntry] = self.find_job_by_id(job.uid)
+        old_job_entry: Optional[DatabaseJobEntry] = self._find_job_by_id(job.uid)
         old_job = old_job_entry.job if old_job_entry else None
         if old_job is None:
             if job.uid is None:
@@ -258,7 +262,7 @@ class SQLDatabase(ServerDatabase):
 
     def assign_job_machine(self, job: Job, machine: WorkMachine) -> None:
         session = self.scoped()
-        job_entry = self.find_job_by_id(job.uid)
+        job_entry = self._find_job_by_id(job.uid)
         if machine is None:
             found_machine = None
         else:
@@ -302,7 +306,7 @@ class SQLDatabase(ServerDatabase):
         jobs: Optional[List[DatabaseJobEntry]] = session.query(DatabaseJobEntry).join(Job) \
             .filter((Job.status == JobStatus.RUNNING) | (Job.status == JobStatus.NEW) | (
                 Job.status == JobStatus.PAUSED) | (Job.status == JobStatus.QUEUED)).all()
-        return jobs
+        return deepcopy(jobs)
 
     def query_jobs(self, since: Optional[datetime], user_id: Optional[int], work_machine: Optional[WorkMachine]) \
             -> List[DatabaseJobEntry]:
@@ -317,7 +321,7 @@ class SQLDatabase(ServerDatabase):
             logger.info("no jobs found")
         if since is None:
             return jobs
-        return [job for job in jobs if job.statistics.time_added >= since]
+        return deepcopy([job for job in jobs if job.statistics.time_added >= since])
 
     def _call_scheduler(self) -> None:
         if not self.in_scheduler_callback and not self.in_atomic_update:
