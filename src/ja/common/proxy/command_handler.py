@@ -43,7 +43,7 @@ class CommandHandler(ABC):
                 raise
         self._named_socket = socket.socket(family=socket.AF_UNIX, type=socket.SOCK_STREAM)
         self._named_socket.bind(self._socket_path)
-        self._named_socket.listen(1)
+        self._named_socket.listen(10)
 
     _INSUFFICIENT_PERM_TEMPLATE = "User %s has insufficient permissions for the requested action %s."
     _UNKNOWN_COMMAND_TEMPLATE = "Unknown command: %s."

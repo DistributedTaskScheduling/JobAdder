@@ -9,6 +9,7 @@ from ja.worker.config import WorkerConfig
 from ja.worker.proxy.proxy import WorkerServerProxy
 from ja.worker.docker import DockerInterface
 from ja.worker.proxy.command_handler import WorkerCommandHandler
+from threading import Thread
 
 import time
 import sys
@@ -45,10 +46,8 @@ class JobWorker:
         self._command_handler = WorkerCommandHandler(
             admin_group=self._config.admin_group, docker_interface=self._docker_interface, socket_path=socket_path)
 
-    def run(self) -> None:
-        """
-        Registers this worker on the central server and starts the  main loop of the command handler.
-        """
+    def _register_thread(self) -> None:
+        logger.info("Connecting to server at %s." % self._config.ssh_config.hostname)
         register_response = self._server_proxy.register_self(
             uid=self._config.uid, work_machine_resources=WorkMachineResources(self._config.resources))
 
@@ -64,6 +63,18 @@ class JobWorker:
                 f.write(str(self._config))
 
         logger.info("Registered with server at %s, uid: %s" % (self._config.ssh_config.hostname, self._config.uid))
+
+    def run(self) -> None:
+        """
+        Registers this worker on the central server and starts the  main loop of the command handler.
+        """
+        # Register ourselves in a separate thread and then directly start processing incoming events.
+        # This is because registering might trigger dispatching of jobs even before the registering
+        # response is received.
+        self._thread = Thread(target=self._register_thread)
+        self._thread.daemon = True
+        self._thread.start()
+
         self._command_handler.main_loop()
 
         self._server_proxy.unregister_self(self._config.uid)
