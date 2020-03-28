@@ -10,7 +10,6 @@ class ServerDatabase(ABC):
     """!
     ServerDatabase is the interface which a database used by JobAdder needs to implement.
     """
-
     @abstractmethod
     def find_job_by_id(self, job_id: str) -> DatabaseJobEntry:
         """!
@@ -107,4 +106,19 @@ class ServerDatabase(ABC):
         Set a function which will be called whenever a job in the database is updated and its status changes.
 
         @param callback The callback to execute when an update happens.
+        """
+
+    @abstractmethod
+    def start_atomic_update(self) -> None:
+        """!
+        Start atomic updates to the database.
+        This means that the scheduler will not be invoked while doing any particular updates, but at the end of the
+        update sequence which must be marked by a call to end_atomic_update().
+        """
+
+    @abstractmethod
+    def end_atomic_update(self) -> None:
+        """!
+        Marks the end of a series of atomic updates to the database.
+        At this point, the scheduler will be called, even if no actual updates have been made.
         """

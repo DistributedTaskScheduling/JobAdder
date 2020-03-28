@@ -268,3 +268,16 @@ class DatabaseTest(TestCase):
         self.mockDatabase.update_job(self.job)
         self.assertEqual(self.mockDatabase.find_job_by_label("thig"), [self.job])
         self.assertEqual(self.mockDatabase.find_job_by_label("thing"), [])
+
+    def test_atomic(self) -> None:
+        call: Mock = Mock()
+        self.mockDatabase.set_scheduler_callback(call)
+
+        self.mockDatabase.start_atomic_update()
+        self.mockDatabase.update_job(self.job)
+        call.assert_not_called()
+        self.mockDatabase.update_work_machine(self.work_machine)
+        call.assert_not_called()
+        self.mockDatabase.end_atomic_update()
+        call.assert_called_once_with(self.mockDatabase)
+        self.assertFalse(self.mockDatabase.in_atomic_update)

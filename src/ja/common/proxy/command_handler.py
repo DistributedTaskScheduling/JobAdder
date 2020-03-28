@@ -35,6 +35,16 @@ class CommandHandler(ABC):
         self._running = True
         self._admin_group = admin_group
 
+        # Make sure the socket does not already exist
+        try:
+            os.unlink(self._socket_path)
+        except OSError:
+            if os.path.exists(self._socket_path):
+                raise
+        self._named_socket = socket.socket(family=socket.AF_UNIX, type=socket.SOCK_STREAM)
+        self._named_socket.bind(self._socket_path)
+        self._named_socket.listen(10)
+
     _INSUFFICIENT_PERM_TEMPLATE = "User %s has insufficient permissions for the requested action %s."
     _UNKNOWN_COMMAND_TEMPLATE = "Unknown command: %s."
 
@@ -61,18 +71,8 @@ class CommandHandler(ABC):
         """!
         Run the main loop of a JobAdder daemon (server or worker).
         """
-        # Make sure the socket does not already exist
-        try:
-            os.unlink(self._socket_path)
-        except OSError:
-            if os.path.exists(self._socket_path):
-                raise
-        named_socket = socket.socket(family=socket.AF_UNIX, type=socket.SOCK_STREAM)
-        named_socket.bind(self._socket_path)
-        named_socket.listen(1)
-
         while self._running:
-            connection, client_address = named_socket.accept()
+            connection, client_address = self._named_socket.accept()
             try:
                 command_bytes = bytes(0)  # First 8 bytes encode command length
                 command_length = None
