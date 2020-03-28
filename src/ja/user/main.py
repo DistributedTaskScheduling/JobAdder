@@ -27,10 +27,10 @@ class JobAdder:
                 ssh_config=command.config.ssh_config, remote_module=self._remote_module,
                 command_string=self._command_string)
             if isinstance(command, AddCommand):
-                server_proxy.add_job(command)
+                print(server_proxy.add_job(command).result_string)
             elif isinstance(command, CancelCommand):
-                server_proxy.cancel_job(command)
+                print(server_proxy.cancel_job(command).result_string)
             elif isinstance(command, QueryCommand):
-                server_proxy.query(command)
+                print(server_proxy.query(command).result_string)
             else:
                 raise NotImplementedError("Command type not supported by proxy: %s" % type(command))
