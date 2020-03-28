@@ -16,8 +16,9 @@ class WorkerServerCommand(ServerCommand, ABC):
         resources = get_allocation_for_job(job_entry.job)
         job_entry.job.status = status
 
-        db.update_job(job_entry.job)
+        db.start_atomic_update()
         machine = job_entry.assigned_machine
+        db.update_job(job_entry.job)
         db.assign_job_machine(job_entry.job, None)
 
         if machine is not None:
@@ -28,3 +29,4 @@ class WorkerServerCommand(ServerCommand, ABC):
                     machine.state = WorkMachineState.OFFLINE
 
             db.update_work_machine(machine)
+        db.end_atomic_update()
