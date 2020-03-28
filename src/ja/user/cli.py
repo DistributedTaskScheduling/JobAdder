@@ -14,6 +14,7 @@ from datetime import datetime
 import argparse
 from argparse import ArgumentParser, Namespace
 from typing import Dict, List, Tuple, Any
+from getpass import getuser
 
 
 class UserClientCLIHandler:
@@ -67,20 +68,23 @@ class UserClientCLIHandler:
                 return default
         return arg
 
-    def get_server_command(self, cli_args: List[str]) -> UserServerCommand:
+    def get_server_command(self, cli_args: List[str], suppress_help: bool = False) -> UserServerCommand:
         """!
         Transforms string arguments into a UserConfig object. Creates and returns a UserServerCommand object from the
         command line arguments combined with the general config loaded in the constructor.
         @return: The UserServerCommand created from the combined input.
         """
 
-        with open(self._config_path, "r") as stream:
-            data_loaded = yaml.safe_load(stream)
+        try:
+            with open(self._config_path, "r") as stream:
+                data_loaded = yaml.safe_load(stream)
+        except FileNotFoundError:
+            data_loaded = {}
 
         # Creating a UserConfig instance from the user config file.
         verbosity: int = 1 if "verbosity" not in data_loaded else data_loaded["verbosity"]
         hostname: str = None if "hostname" not in data_loaded else data_loaded["hostname"]
-        username: str = None if "username" not in data_loaded else data_loaded["username"]
+        username: str = getuser() if "username" not in data_loaded else data_loaded["username"]
         password: str = None if "password" not in data_loaded else data_loaded["password"]
         key_path: str = None if "key_path" not in data_loaded else data_loaded["key_path"]
         passphrase: str = None if "passphrase" not in data_loaded else data_loaded["passphrase"]
@@ -92,8 +96,7 @@ class UserClientCLIHandler:
         parser.add_argument("--hostname", "--host", type=str,
                             required=hostname is None, default=hostname,
                             help="The name of the server to connect to.")
-        parser.add_argument("--username", "--user", type=str,
-                            required=username is None, default=username,
+        parser.add_argument("--username", "--user", type=str, default=username,
                             help="The name of the user to use for login.")
         parser.add_argument("--password", "--pass", type=str, default=password, help="The password to use for login.")
         parser.add_argument("--key-path", "--kp", type=str, default=key_path, help="The key pair to use for login.")
@@ -102,7 +105,7 @@ class UserClientCLIHandler:
 
         subparsers = parser.add_subparsers(dest="command")
         # parser for add command.
-        parser_add = subparsers.add_parser("add")
+        parser_add = subparsers.add_parser("add", help="Add a job to run on one of the workers.")
         parser_add.add_argument("--config", "-c", help="Config file path for adding a job.")
         parser_add.add_argument("--label", "-l", help="Label for the job.")
         parser_add.add_argument("--source", "-s", "--path", help="Path of the source file containing the job.")
@@ -112,13 +115,13 @@ class UserClientCLIHandler:
         parser_add.add_argument("--non-preemptible", "--np", action="store_true", help="Non preemptible job.")
         parser_add.add_argument("--blocking", "--bl", action="store_true", help=argparse.SUPPRESS)
         parser_add.add_argument("--mount", nargs=2, action="append")
-        parser_add.add_argument("--email", "-e", required=email is None, default=email)
+        parser_add.add_argument("--email", "-e", default=email)
         parser_add.add_argument("--special-resources", "--sr", nargs="+",
                                 help="Add the required special resources for a job.")
         parser_add.add_argument("--owner", default=-1, type=int, help=argparse.SUPPRESS)
 
         # parser for query command
-        parser_query = subparsers.add_parser("query")
+        parser_query = subparsers.add_parser("query", help="Get information on jobs from the server.")
         parser_query.add_argument("--uid", "-u", nargs="+", help="Job uid(s) to filter query results by.")
         parser_query.add_argument("--label", "-l", nargs="+", help="Job label(s) to filter query results by.")
         parser_query.add_argument("--owner", "-o", nargs="+", help="Job owners to filter query results by.")
@@ -154,8 +157,8 @@ class UserClientCLIHandler:
                                   help="Jobs scheduled after this point in time (YYYY-MM-DD[ HH:MM:SS]).")
 
         # parser for cancel command
-        parser_cancel = subparsers.add_parser("cancel", help="A job can be cancelled by either specifying \
-                                                              its uid or its label, both are not possible.")
+        parser_cancel = subparsers.add_parser(
+            "cancel", help="Cancel a job you added. Must specify either job label or uid")
         parser_cancel.add_argument("--label", "-l", help="Label of the job that will be cancelled.")
         parser_cancel.add_argument("--uid", "-u", help="Uid of the job that will be cancelled.")
 
@@ -244,4 +247,6 @@ class UserClientCLIHandler:
 
         elif args.command == "cancel":
             return CancelCommand(user_config, label=args.label, uid=args.uid)
+        if not suppress_help:
+            parser.print_help()
         return None

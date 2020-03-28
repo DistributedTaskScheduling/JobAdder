@@ -204,6 +204,11 @@ class SQLDatabase(ServerDatabase):
         jobs: List[Job] = session.query(Job).filter(Job.label == label).all()
         return jobs
 
+    def find_work_machine_by_uid(self, uid: str) -> WorkMachine:
+        session = self.scoped()
+        work_machine: WorkMachine = session.query(WorkMachine).filter(WorkMachine.uid == uid).first()
+        return work_machine
+
     def update_job(self, job: Job) -> str:
         session = self.scoped()
         old_job_entry: Optional[DatabaseJobEntry] = self.find_job_by_id(job.uid)
@@ -253,9 +258,14 @@ class SQLDatabase(ServerDatabase):
     def assign_job_machine(self, job: Job, machine: WorkMachine) -> None:
         session = self.scoped()
         job_entry = self.find_job_by_id(job.uid)
-        job_entry.assigned_machine = machine
+        if machine is None:
+            found_machine = None
+        else:
+            found_machine = self.find_work_machine_by_uid(machine.uid)
+        job_entry.assigned_machine = found_machine
         session.commit()
-        logger.info("assign job: %s, to machine %s" % (job.uid, (machine.uid if machine is not None else None)))
+        logger.info("assign job: %s, to machine %s" % (
+            job.uid, (found_machine.uid if found_machine is not None else None)))
         self._call_scheduler()
 
     def update_work_machine(self, machine: WorkMachine) -> None:

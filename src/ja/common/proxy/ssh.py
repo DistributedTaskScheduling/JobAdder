@@ -66,7 +66,7 @@ class SSHConnection(ISSHConnection):
         try:
             response = Response.from_string(stdout.read())
         except AssertionError:
-            logger.error("Failed to communicate with remote: " + stderr.read().decode())
+            logger.error("Failed to communicate with remote:\n" + stderr.read().decode())
             logger.debug("Failure when executing " + remote_cmd)
             response = Response("Failed communication with remote", False)
 

@@ -64,8 +64,8 @@ class WorkerProxyBase(IWorkerProxy, ABC):
         @param uid: The UID of the worker represented by this proxy.
         @param ssh_config: Config for paramiko.
         """
-        super().__init__(ssh_config=ssh_config)
         self._uid = uid
+        super().__init__(ssh_config=ssh_config)
 
     @property
     def uid(self) -> str:
