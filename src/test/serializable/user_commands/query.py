@@ -21,7 +21,7 @@ class QueryCommandTest(AbstractSerializableTest):
             ssh_config=SSHConfig(
                 hostname="ies", username="pettto", password="1234567890", key_filename="~/.ssh/id_rsa"),
             verbosity=Verbosity.DETAILED)
-        self._object = QueryCommand(config=config, uid=["asdf", "sdf"], label=["fqwe", "dalfs"], owner=["safd", "sad"],
+        self._object = QueryCommand(config=config, uid=None, label=["fqwe", "dalfs"], owner=["safd", "sad"],
                                     priority=[JobPriority.HIGH],
                                     status=[JobStatus.CRASHED],
                                     is_preemptible=True, special_resources=[["abc", "bcd"], ["ops", "123"]],
@@ -30,7 +30,7 @@ class QueryCommandTest(AbstractSerializableTest):
         v_list: List[str] = list(QueryCommand.__dir__(self._object))
         self._optional_properties = [a[1:] for a in v_list]
         self._object_dict = {
-            "uid": ["asdf", "sdf"],
+            "uid": None,
             "label": ["fqwe", "dalfs"],
             "owner": ["safd", "sad"],
             "priority": [2],

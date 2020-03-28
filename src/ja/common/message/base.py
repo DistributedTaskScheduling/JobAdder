@@ -59,6 +59,8 @@ class Serializable(ABC):
     @classmethod
     def _get_str_list_from_dict(cls, property_dict: Dict[str, object], key: str, mandatory: bool = True) -> List[str]:
         prop = cls._get_from_dict(property_dict=property_dict, key=key, mandatory=mandatory)
+        if prop is None:
+            return prop
         if mandatory and not isinstance(prop, list):
             cls._raise_error_wrong_type(key=key, expected_type="List[str]", actual_type=prop.__class__.__name__)
         return_list = cast(List[object], prop)
