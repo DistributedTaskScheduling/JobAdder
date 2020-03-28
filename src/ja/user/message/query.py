@@ -158,25 +158,20 @@ class QueryCommand(UserServerCommand):
     def from_dict(cls, property_dict: Dict[str, object]) -> "QueryCommand":
         config = UserConfig.from_dict(
             cls._get_dict_from_dict(property_dict=property_dict, key="config", mandatory=True))
-        uid = None
-        if "uid" in property_dict:
-            uid = cls._get_str_list_from_dict(property_dict=property_dict, key="uid", mandatory=False)
-        label = None
-        if "label" in property_dict:
-            label = cls._get_str_list_from_dict(property_dict=property_dict, key="label", mandatory=False)
-        owner = None
-        if "owner" in property_dict:
-            owner = cls._get_str_list_from_dict(property_dict=property_dict, key="owner", mandatory=False)
+        uid = cls._get_str_list_from_dict(property_dict=property_dict, key="uid", mandatory=False)
+        label = cls._get_str_list_from_dict(property_dict=property_dict, key="label", mandatory=False)
+        owner = cls._get_str_list_from_dict(property_dict=property_dict, key="owner", mandatory=False)
 
-        job_priority_list: List[JobPriority] = []
-        if "priority" in property_dict:
-            prop: object = cls._get_from_dict(property_dict=property_dict, key="priority")
+        prop: object = cls._get_from_dict(property_dict=property_dict, key="priority", mandatory=False)
+        job_priority_list: List[JobPriority] = None
+        if prop is not None:
             if not isinstance(prop, list):
                 cls._raise_error_wrong_type(
                     key="priority", expected_type="List[JobPriority]",
                     actual_type=prop.__class__.__name__
                 )
             object_list = cast(List[object], prop)
+            job_priority_list = []
             for obj in object_list:
                 if not isinstance(obj, int):
                     cls._raise_error_wrong_type(
@@ -185,15 +180,16 @@ class QueryCommand(UserServerCommand):
                     )
                 job_priority_list.append(JobPriority(obj))
 
-        job_status_list: List[JobStatus] = []
-        if "status" in property_dict:
-            prop = cls._get_from_dict(property_dict=property_dict, key="status")
+        job_status_list: List[JobStatus] = None
+        prop = cls._get_from_dict(property_dict=property_dict, key="status", mandatory=False)
+        if prop is not None:
             if not isinstance(prop, list):
                 cls._raise_error_wrong_type(
                     key="status", expected_type="List[JobStatus]",
                     actual_type=prop.__class__.__name__
                 )
             object_list = cast(List[object], prop)
+            job_status_list = []
             for obj in object_list:
                 if not isinstance(obj, int):
                     cls._raise_error_wrong_type(
@@ -204,15 +200,16 @@ class QueryCommand(UserServerCommand):
 
         is_preemptible = cls._get_bool_from_dict(property_dict=property_dict, key="is_preemptible", mandatory=False)
 
-        special_resources_list: List[List[str]] = []
-        if "special_resources" in property_dict:
-            prop = cls._get_from_dict(property_dict=property_dict, key="special_resources")
+        special_resources_list: List[List[str]] = None
+        prop = cls._get_from_dict(property_dict=property_dict, key="special_resources", mandatory=False)
+        if prop is not None:
             if not isinstance(prop, list):
                 cls._raise_error_wrong_type(
                     key="special_resources", expected_type="List[List[str]",
                     actual_type=prop.__class__.__name__
                 )
             object_list = cast(List[object], prop)
+            special_resources_list = []
             for obj in object_list:
                 if not isinstance(obj, list):
                     cls._raise_error_wrong_type(
@@ -222,8 +219,8 @@ class QueryCommand(UserServerCommand):
                 special_resources_list.append(cast(List[str], obj))
 
         cpu_threads = None
-        if "cpu_threads" in property_dict:
-            prop = cls._get_from_dict(property_dict=property_dict, key="cpu_threads", mandatory=False)
+        prop = cls._get_from_dict(property_dict=property_dict, key="cpu_threads", mandatory=False)
+        if prop is not None:
             if not isinstance(prop, tuple):
                 cls._raise_error_wrong_type(
                     key="cpu_threads", expected_type="Tuple[int, int]",
@@ -232,8 +229,8 @@ class QueryCommand(UserServerCommand):
             cpu_threads = cast(Tuple[int, int], prop)
 
         memory = None
-        if "memory" in property_dict:
-            prop = cls._get_from_dict(property_dict=property_dict, key="memory")
+        prop = cls._get_from_dict(property_dict=property_dict, key="memory", mandatory=False)
+        if prop is not None:
             if not isinstance(prop, tuple):
                 cls._raise_error_wrong_type(
                     key="memory", expected_type="Tuple[int, int]",
