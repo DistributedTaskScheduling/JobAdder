@@ -38,6 +38,7 @@ class SQLDatabase(ServerDatabase):
         self.scheduler_callback: Callable[["ServerDatabase"], None] = lambda *args: None
         self.status_callback: Callable[["Job"], None] = lambda *args: None
         self.in_scheduler_callback: bool = False
+        self.in_atomic_update: bool = False
         if SQLDatabase._metadata is None:
             metadata = MetaData()
             SQLDatabase._metadata = metadata
@@ -319,7 +320,7 @@ class SQLDatabase(ServerDatabase):
         return [job for job in jobs if job.statistics.time_added >= since]
 
     def _call_scheduler(self) -> None:
-        if not self.in_scheduler_callback:
+        if not self.in_scheduler_callback and not self.in_atomic_update:
             self.in_scheduler_callback = True
             logger.info("calling scheduler callback")
             self.scheduler_callback(self)
@@ -330,3 +331,10 @@ class SQLDatabase(ServerDatabase):
 
     def set_job_status_callback(self, callback: ServerDatabase.JobStatusCallback) -> None:
         self.status_callback = callback
+
+    def start_atomic_update(self) -> None:
+        self.in_atomic_update = True
+
+    def end_atomic_update(self) -> None:
+        self.in_atomic_update = False
+        self._call_scheduler()
