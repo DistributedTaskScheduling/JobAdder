@@ -192,7 +192,7 @@ class DefaultPreemptiveDistributionPolicy(DefaultJobDistributionPolicyBase):
             return None
 
         sorted_jobs = sorted(existing_jobs, key=lambda je: (self._cost_func.calculate_cost(je)), reverse=True)
-        sorted_jobs = list(filter(lambda je: (not je.job.scheduling_constraints.is_preemptible), sorted_jobs))
+        sorted_jobs = list(filter(lambda je: (je.job.scheduling_constraints.is_preemptible), sorted_jobs))
         job_allocation = self._get_job_allocation(job.job)
         allocation = deepcopy(machine.resources.free_resources)
 
