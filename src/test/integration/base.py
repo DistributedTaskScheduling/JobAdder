@@ -1,9 +1,11 @@
 from unittest import TestCase
-from typing import List
+from typing import List, Dict
 from pathlib import Path
 from threading import Thread
 from getpass import getuser
 from time import sleep
+from copy import deepcopy
+from sys import stderr
 
 from ja.server.database.types.work_machine import WorkMachine
 from ja.worker.main import JobWorker
@@ -16,6 +18,7 @@ from ja.worker.config import WorkerConfig
 from ja.server.proxy.proxy import WorkerProxyBase, IWorkerProxy
 from ja.server.dispatcher.proxy_factory import WorkerProxyFactoryBase
 from ja_integration.remote import SERVER_SOCKET_PATH, WORKER_SOCKET_PATH, TESTING_DIRECTORY
+from ja.common.job import JobPriority, JobStatus
 
 
 DATABASE_NAME = "jobadder-test"
@@ -106,6 +109,31 @@ class IntegrationTest(TestCase):
         for table in reversed(database._metadata.sorted_tables):
             database.engine.execute(table.delete())
 
+    def _assert_current_schedule_as_expected(
+            self, expected_labels: List[str], expected_statuses: List[JobStatus] = None):
+        if expected_statuses is None:
+            expected_statuses = [None] * len(expected_labels)
+        active_job_entries = self._server._database.get_current_schedule()
+        found_labels: List[str] = []
+        found_statuses: Dict[str, JobStatus] = {}
+        for job_entry in active_job_entries:
+            found_labels.append(job_entry.job.label)
+            found_statuses[job_entry.job.label] = job_entry.job.status
+        found_labels_copy = deepcopy(found_labels)
+
+        try:
+            self.assertEqual(len(found_labels), len(expected_labels))
+            for expected_label, expected_status in zip(expected_labels, expected_statuses):
+                found_labels_copy.remove(expected_label)
+                if expected_status is not None:
+                    self.assertEqual(expected_status, found_statuses[expected_label])
+        except Exception as e:
+            print("Expected labels: %s" % expected_labels, file=stderr)
+            print("Found labels:    %s" % found_labels, file=stderr)
+            print("Expected statuses: %s" % expected_statuses, file=stderr)
+            print("Found statuses:    %s" % found_statuses, file=stderr)
+            raise e
+
     @property
     def ssh_config(self) -> SSHConfig:
         return SSHConfig(hostname="127.0.0.1", username=getuser())
@@ -137,13 +165,15 @@ class IntegrationTest(TestCase):
         return 1
 
     def get_arg_list_add(
-            self, num_seconds: int = 1, threads: int = 1, memory: int = 1024, label: str = None) -> List[str]:
+            self, num_seconds: int = 1, threads: int = 1, memory: int = 1024,
+            priority: JobPriority = JobPriority.MEDIUM, label: str = None) -> List[str]:
         arg_list = [
             "--hostname", "127.0.0.1",
             "add",
             "--source", DOCKERFILE_PATH_TEMPLATE % num_seconds,
             "--memory", str(memory),
             "--threads", str(threads),
+            "--priority", str(priority.value)
         ]
         if label is not None:
             arg_list += ["--label", label]

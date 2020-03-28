@@ -32,7 +32,7 @@ class Dispatcher:
             job = job_entry.job
             work_machine = job_entry.assigned_machine
             previous_status = self._previous_statuses.get(job.uid, None)
-            if previous_status is None or job.status != previous_status:
+            if (previous_status is None or job.status != previous_status) and work_machine is not None:
                 proxy = self._proxy_factory.get_proxy(work_machine)
                 if job.status == JobStatus.RUNNING:
                     if previous_status is None or previous_status == JobStatus.QUEUED:
