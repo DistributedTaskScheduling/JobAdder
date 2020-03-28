@@ -26,11 +26,14 @@ class SQLDatabase(ServerDatabase):
     """
     _metadata: MetaData = None
 
-    def __init__(self, host: str = None, user: str = None, password: str = None, database_name: str = "jobadder"):
+    def __init__(
+            self, host: str = None, port: int = 5432, user: str = None, password: str = None,
+            database_name: str = "jobadder"):
         """!
         Create the SQLDatabase object and connect to the given database.
 
         @param host The host of the database to connect to.
+        @param port The port on which to connect to the database.
         @param user The username to use for the connection.
         @param password The password to use for the connection.
         @param database_name The name of the database to use.
@@ -169,7 +172,10 @@ class SQLDatabase(ServerDatabase):
             })
         if user is not None and password is not None and host is not None:
             # example: "postgresql://pesho:pesho@127.0.0.1:5432/jobadd"
-            _conn: str = "postgresql://" + user + ":" + password + "@" + host + "/" + database_name
+            if port is None:
+                _conn = "postgresql://%s:%s@%s/%s" % (user, password, host, database_name)
+            else:
+                _conn = "postgresql://%s:%s@%s:%s/%s" % (user, password, host, port, database_name)
             self.engine = create_engine(_conn)
             self.scoped = scoped_session(sessionmaker(self.engine))
             SQLDatabase._metadata.create_all(self.engine)

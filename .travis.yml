@@ -2,7 +2,8 @@ language: python
 python: 3.7
 install: "pip3 install flake8 mypy==0.761 PyYAML psycopg2 SQLAlchemy testing.postgresql sqlalchemy-stubs paramiko freezegun docker"
 script:
-  - sudo groupadd jobadder
+  - sudo useradd --system jobadder
+  - sudo usermod -a -G docker jobadder
   - sudo usermod -a -G jobadder travis
   - ssh-keygen -f ~/.ssh/id_rsa -P "" -t rsa -m PEM
   - cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys

@@ -45,9 +45,9 @@ WORKER_CONFIG_FILE=/etc/jobadder/worker.conf
 
 if [ ! -f $SERVER_CONFIG_FILE ]; then
     mkdir -p /etc/jobadder/
-    install ./data/config-files/server.conf $SERVER_CONFIG_FILE -m 644
+    install ./data/config-files/server.conf $SERVER_CONFIG_FILE -m 600
 fi
 
 if [ ! -f $WORKER_CONFIG_FILE ]; then
-    install ./data/config-files/worker.conf $WORKER_CONFIG_FILE -m 644
+    install ./data/config-files/worker.conf $WORKER_CONFIG_FILE -m 600
 fi
