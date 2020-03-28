@@ -5,6 +5,9 @@ from ja.common.message.base import Response
 import yaml
 from typing import Dict
 import grp
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class CommandHandler(ABC):
@@ -87,6 +90,8 @@ class CommandHandler(ABC):
                     type_name=input_dict["type_name"],
                     username=input_dict["username"]
                 )
+                logger.info("handling %s command" % input_dict["type_name"])
+                logger.debug(input_dict["command"])
                 response_string = yaml.dump(response_dict)
                 connection.sendall(response_string.encode())
             finally:
