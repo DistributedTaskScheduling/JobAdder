@@ -194,7 +194,7 @@ class SQLDatabase(ServerDatabase):
             logger.info("job entry with job id: %s found." % job_id)
             logger.debug(str(jobs_entry.job))
         else:
-            logger.error("job with id: %s not found" % job_id)
+            logger.info("job with id: %s not found" % job_id)
         return jobs_entry
 
     def find_job_by_label(self, label: str) -> List[Job]:
