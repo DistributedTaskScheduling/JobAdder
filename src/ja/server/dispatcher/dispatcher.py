@@ -3,6 +3,8 @@ from ja.server.database.database import ServerDatabase
 from ja.server.dispatcher.proxy_factory import WorkerProxyFactoryBase
 from typing import Dict
 
+import logging
+logger = logging.getLogger(__name__)
 
 JobDistribution = ServerDatabase.JobDistribution
 
@@ -27,10 +29,17 @@ class Dispatcher:
 
         @param job_distribution the new job distribution.
         """
+        logger.debug("Dispatching jobs")
         new_statuses: Dict[str, JobStatus] = dict()
         for job_entry in job_distribution:
             job = job_entry.job
+
+            if job.status == JobStatus.QUEUED:
+                logger.debug("Job %s queued." % job.uid)
+                continue
+
             work_machine = job_entry.assigned_machine
+            logger.debug("Job %s with status %s on %s." % (job.uid, job.status.name, work_machine.uid))
             previous_status = self._previous_statuses.get(job.uid, None)
             if previous_status is None or job.status != previous_status:
                 proxy = self._proxy_factory.get_proxy(work_machine)
@@ -44,8 +53,6 @@ class Dispatcher:
                     proxy.cancel_job(job.uid)  # Do not add job back to self._previous_statuses
                 elif job.status == JobStatus.PAUSED:
                     proxy.pause_job(job.uid)
-                    new_statuses[job.uid] = job.status
-                elif job.status == JobStatus.QUEUED:
                     new_statuses[job.uid] = job.status
                 else:
                     raise ValueError("Received unexpected state %s for job with UID %s." % (job.status.name, job.uid))
