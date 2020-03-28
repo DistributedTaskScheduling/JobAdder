@@ -94,12 +94,15 @@ class IntegrationTest(TestCase):
 
         self._workers: List[JobWorker] = []
         for i in range(self.num_workers):
-            with open(WORKER_CONF_PATH % i, "w") as f:
-                f.write(str(self.get_worker_config(i)))
-            worker = TestJobWorker(index=i)
-            Thread(target=worker.run, name="worker_%s" % i, daemon=True).start()
-            self._workers.append(worker)
+            self._add_worker(i)
         sleep(1)
+
+    def _add_worker(self, worker_id: int) -> None:
+        with open(WORKER_CONF_PATH % worker_id, "w") as f:
+            f.write(str(self.get_worker_config(worker_id)))
+        worker = TestJobWorker(index=worker_id)
+        Thread(target=worker.run, name="worker_%s" % worker_id, daemon=True).start()
+        self._workers.append(worker)
 
     def tearDown(self) -> None:
         database = self._server._database
@@ -137,28 +140,16 @@ class IntegrationTest(TestCase):
         return 1
 
     def get_arg_list_add(
-            self, num_seconds: int = 1, threads: int = 1, memory: int = 1024, label: str = None) -> List[str]:
+            self, num_seconds: int = 1, threads: int = 1, memory: int = 1024,
+            label: str = None, priority: str = "1") -> List[str]:
         arg_list = [
             "--hostname", "127.0.0.1",
             "add",
             "--source", DOCKERFILE_PATH_TEMPLATE % num_seconds,
             "--memory", str(memory),
             "--threads", str(threads),
+            "--priority", priority,
         ]
         if label is not None:
             arg_list += ["--label", label]
         return arg_list
-
-    def test_sanity_checks(self) -> None:
-        work_machines = self._server._database.get_work_machines()
-        self.assertEqual(len(work_machines), self.num_workers)
-        for i in range(self.num_workers):
-            worker_i_exists = False
-            for work_machine in work_machines:
-                if work_machine.uid == "worker_%s" % i:
-                    worker_i_exists = True
-                    break
-            self.assertTrue(worker_i_exists, "Worker %s does not exist." % i)
-
-    def test_no_user_cli_args(self) -> None:
-        self._clients[0].run(cli_args=[], suppress_help=True)  # Assure that the program doesn't just crash

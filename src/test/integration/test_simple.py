@@ -27,3 +27,17 @@ class SimpleIntegrationTest(IntegrationTest):
 
         containers_by_job_uid = self._workers[0]._docker_interface._containers_by_job_uid
         self.assertEqual(len(containers_by_job_uid), 0)
+
+    def test_sanity_checks(self) -> None:
+        work_machines = self._server._database.get_work_machines()
+        self.assertEqual(len(work_machines), self.num_workers)
+        for i in range(self.num_workers):
+            worker_i_exists = False
+            for work_machine in work_machines:
+                if work_machine.uid == "worker_%s" % i:
+                    worker_i_exists = True
+                    break
+            self.assertTrue(worker_i_exists, "Worker %s does not exist." % i)
+
+    def test_no_user_cli_args(self) -> None:
+        self._clients[0].run(cli_args=[], suppress_help=True)  # Assure that the program doesn't just crash
