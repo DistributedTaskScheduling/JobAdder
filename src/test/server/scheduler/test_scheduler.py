@@ -1,10 +1,11 @@
+from copy import deepcopy
 from ja.common.job import JobStatus
 from ja.common.work_machine import ResourceAllocation
 from ja.server.database.database import ServerDatabase
 from ja.server.database.sql.mock_database import MockDatabase
 from ja.server.database.types.work_machine import WorkMachine, WorkMachineState
 from ja.server.dispatcher.dispatcher import Dispatcher
-from ja.server.scheduler.algorithm import SchedulingAlgorithm
+from ja.server.scheduler.algorithm import SchedulingAlgorithm, get_allocation_for_job
 from ja.server.scheduler.scheduler import Scheduler
 
 from test.server.scheduler.common import get_job, get_machine, get_scheduled_job
@@ -106,3 +107,31 @@ class SchedulerTest(TestCase):
         self.assertEqual(db_machine1.resources.free_resources, ResourceAllocation(7, 4, 8))
         self.assertEqual(db_machine2.resources.free_resources, ResourceAllocation(2, 1, 5))
         self.assertEqual(dispatcher.count_called, 1)
+
+    def test_cancel(self) -> None:
+        db = MockDatabase()
+        machine = get_machine(8, 8, 8)
+        job = get_job(status=JobStatus.CANCELLED, machine=machine, cpu=4, ram=4, special_resources=["A"])
+        queued_job = get_job(status=JobStatus.QUEUED, cpu=5, ram=5, special_resources=["A", "A"])
+        machine.resources.allocate(get_allocation_for_job(job.job))
+        freed_machine = deepcopy(machine)
+        freed_machine.resources.deallocate(
+            freed_machine.resources.total_resources - freed_machine.resources.free_resources)
+
+        db.update_work_machine(machine)
+        db.update_job(job.job)
+        db.update_job(queued_job.job)
+        db.assign_job_machine(job.job, machine)
+
+        expect = [get_scheduled_job(queued_job, machine=machine, next_status=JobStatus.RUNNING)]
+
+        machine = db.get_all_work_machines()[0]
+        algo = MockAlgorithm(self, [queued_job], [freed_machine], {"A": 2}, expect)
+        dispatcher = MockDispatcher(self, expect + [job])
+        scheduler = Scheduler(algo, dispatcher, {"A": 2})
+        scheduler.reschedule(db)
+        self.assertEqual(dispatcher.count_called, 1)
+        self.assertDictEqual(scheduler.special_resources, {"A": 0})
+
+        machine = db.get_all_work_machines()[0]
+        self.assertEqual(machine.resources.free_resources, ResourceAllocation(3, 3, 8))
