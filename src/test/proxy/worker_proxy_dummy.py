@@ -26,6 +26,9 @@ class WorkerProxyDummy(IWorkerProxy):
     def _get_ssh_connection(self, ssh_config: SSHConfig) -> ISSHConnection:
         pass
 
+    def check_connection(self) -> None:
+        pass
+
     def _find_job(self, uid: str) -> Job:
         for job in self._jobs:
             if job.uid == uid:

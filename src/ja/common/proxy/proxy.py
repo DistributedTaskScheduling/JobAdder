@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from ja.common.proxy.ssh import SSHConfig, ISSHConnection
+from ja.common.proxy.ssh import SSHConfig, ISSHConnection, SSHConnection
 
 
 class Proxy(ABC):
@@ -11,7 +11,7 @@ class Proxy(ABC):
     """
     @abstractmethod
     def _get_ssh_connection(self, ssh_config: SSHConfig) -> ISSHConnection:
-        pass
+        return SSHConnection(ssh_config=ssh_config, remote_module=None)
 
 
 class SingleMessageProxy(Proxy, ABC):

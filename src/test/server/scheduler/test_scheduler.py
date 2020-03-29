@@ -52,7 +52,33 @@ class MockDispatcher(Dispatcher):
         assert_distributions_equal(self._test_case, job_distribution, self._expect)
 
 
+class MockDispatcherOffline(Dispatcher):
+    def set_distribution(self, job_distribution: ServerDatabase.JobDistribution) -> List[WorkMachine]:
+        return [entry.assigned_machine for entry in job_distribution]
+
+
 class SchedulerTest(TestCase):
+    def test_offline_machine(self) -> None:
+        db = MockDatabase()
+
+        machine = get_machine(8, 8, 8)
+        db.update_work_machine(machine)
+        job = get_job(machine=machine)
+        db.update_job(job.job)
+        job.job.status = JobStatus.RUNNING
+        db.update_job(job.job)
+        db.assign_job_machine(job.job, job.assigned_machine)
+        current_schedule = [job]
+
+        algo = MockAlgorithm(self, current_schedule, [machine], {}, [job])
+        dispatcher = MockDispatcherOffline(None)
+        scheduler = Scheduler(algo, dispatcher, {})
+        scheduler.reschedule(db)
+        job_entries = db.query_jobs(None, -1, None)
+        self.assertEqual(len(job_entries), 1)
+        self.assertEqual(job_entries[0].assigned_machine.state, WorkMachineState.OFFLINE)
+        self.assertEqual(job_entries[0].job.status, JobStatus.CRASHED)
+
     def test_scheduler_updates(self) -> None:
         db = MockDatabase()
 

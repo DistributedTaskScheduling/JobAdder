@@ -9,6 +9,8 @@ from ja.worker.message.crashed import JobCrashedCommand
 from ja.worker.message.done import JobDoneCommand
 from ja.worker.message.retire import RetireWorkerCommand
 import socket
+from paramiko.ssh_exception import SSHException  # type: ignore
+
 
 import logging
 logger = logging.getLogger(__name__)
@@ -95,20 +97,35 @@ class WorkerServerProxy(IWorkerServerProxy):
         wm: WorkMachine = WorkMachine(uid, WorkMachineState.ONLINE, work_machine_resources,
                                       ssh_config=self._guess_ssh_config(self._ssh_config))
         register_command: RegisterWorkerCommand = RegisterWorkerCommand(wm)
-        response = self._ssh_connection.send_command(register_command)
+        try:
+            response = self._ssh_connection.send_command(register_command)
+        except SSHException:
+            self._timeout(uid)
         return response
 
     def unregister_self(self, uid: str) -> Response:
         retire_command = RetireWorkerCommand(uid)
-        response = self._ssh_connection.send_command(retire_command)
+        try:
+            response = self._ssh_connection.send_command(retire_command)
+        except SSHException:
+            self._timeout(uid)
         return response
 
     def notify_job_finished(self, uid: str) -> Response:
         done_command = JobDoneCommand(uid)
-        response = self._ssh_connection.send_command(done_command)
+        try:
+            response = self._ssh_connection.send_command(done_command)
+        except SSHException:
+            self._timeout(uid)
         return response
 
     def notify_job_crashed(self, uid: str) -> Response:
         crashed_command = JobCrashedCommand(uid)
-        response = self._ssh_connection.send_command(crashed_command)
+        try:
+            response = self._ssh_connection.send_command(crashed_command)
+        except SSHException:
+            self._timeout(uid)
         return response
+
+    def _timeout(self, uid: str) -> None:
+        logger.error("Failed to connect work machine with uid %s to the central server." % uid)
