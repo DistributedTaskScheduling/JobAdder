@@ -35,7 +35,7 @@ class SQLDatabase(ServerDatabase):
         @param password The password to use for the connection.
         @param database_name The name of the database to use.
         """
-        self.scheduler_callback: Callable[["ServerDatabase"], None] = lambda *args: None
+        self.scheduler_callback: Callable[["ServerDatabase"], None] = None
         self.status_callback: Callable[["Job"], None] = lambda *args: None
         self.in_scheduler_callback: bool = False
         self.in_atomic_update: bool = False
@@ -324,7 +324,7 @@ class SQLDatabase(ServerDatabase):
         return deepcopy([job for job in jobs if job.statistics.time_added >= since])
 
     def _call_scheduler(self) -> None:
-        if not self.in_scheduler_callback and not self.in_atomic_update:
+        if not self.in_scheduler_callback and not self.in_atomic_update and self.scheduler_callback:
             self.in_scheduler_callback = True
             logger.info("calling scheduler callback")
             self.scheduler_callback(self)

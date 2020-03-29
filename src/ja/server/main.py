@@ -43,6 +43,7 @@ class JobCenter:
             if job.job.status in [JobStatus.RUNNING, JobStatus.PAUSED]:
                 job.job.status = JobStatus.CRASHED
                 self._database.update_job(job.job)
+                self._database.assign_job_machine(job.job, None)
 
         for machine in self._database.get_work_machines():
             machine.resources.deallocate(machine.resources.total_resources - machine.resources.free_resources)
@@ -94,4 +95,6 @@ class JobCenter:
         """
         logger.info("starting main loop")
         self._handler.main_loop()
+        # Cleanup, but don't invoke scheduler anymore.
+        self._database.set_scheduler_callback(None)
         self._cleanup()
