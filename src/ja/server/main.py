@@ -66,6 +66,7 @@ class JobCenter:
 
         config = self._read_config(config_file)
         self._database = SQLDatabase(host=config.database_config.host,
+                                     port=config.database_config.port,
                                      user=config.database_config.username,
                                      password=config.database_config.password,
                                      database_name=database_name)
