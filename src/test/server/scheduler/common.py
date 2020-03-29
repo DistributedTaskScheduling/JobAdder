@@ -29,7 +29,7 @@ def get_job(prio: JobPriority = JobPriority.MEDIUM,
             special_resources: List[str] = []) -> DatabaseJobEntry:
     global _global_job_counter
     job = Job(owner_id=user, email="hey@you",
-              scheduling_constraints=JobSchedulingConstraints(prio, False, special_resources),
+              scheduling_constraints=JobSchedulingConstraints(prio, True, special_resources),
               docker_context=DockerContext("file", [MountPoint("adfsds", "jfaldsfj")]),
               docker_constraints=DockerConstraints(cpu, ram), status=status)
 
