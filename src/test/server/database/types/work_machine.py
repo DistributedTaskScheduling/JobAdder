@@ -50,7 +50,7 @@ class WorkMachineSerializableTest(AbstractSerializableTest):
     def setUp(self) -> None:
         self._optional_properties = ["resources", "ssh_config"]
         self._object = WorkMachine("machina1", WorkMachineState.ONLINE,
-                                   WorkMachineResources(ResourceAllocation(1, 2, 3)),
+                                   WorkMachineResources(ResourceAllocation(1, 2, 3), ResourceAllocation(0, 0, 0)),
                                    SSHConfig(
                                        hostname="www", username="tux",
                                        password="1235", key_filename="my_key",
@@ -63,6 +63,11 @@ class WorkMachineSerializableTest(AbstractSerializableTest):
                     "cpu_threads": 1,
                     "memory": 2,
                     "swap": 3
+                },
+                "free_resources": {
+                    "cpu_threads": 0,
+                    "memory": 0,
+                    "swap": 0
                 }
             },
             "ssh_config": {

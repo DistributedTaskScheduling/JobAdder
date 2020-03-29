@@ -14,17 +14,21 @@ class WorkMachineResources(Serializable):
     how much of its resources are currently used.
     """
 
-    def __init__(self, total_resources: ResourceAllocation):
+    def __init__(self, total_resources: ResourceAllocation, free_resources: ResourceAllocation = None):
         """!
         Initialize the RunningWorkMachineResources object. In the beginning,
         all resources are marked as free.
         @param total_resources The total amount of available resources.
+        @param free_resources The amount of free resources, if None, then all resources are free.
         """
         if total_resources.is_negative():
             raise ValueError("None of the resources can be negative!")
 
         self._total_resources = ResourceAllocation.from_dict(total_resources.to_dict())
-        self._free_resources = ResourceAllocation.from_dict(total_resources.to_dict())
+        if not free_resources:
+            self._free_resources = ResourceAllocation.from_dict(total_resources.to_dict())
+        else:
+            self._free_resources = ResourceAllocation.from_dict(free_resources.to_dict())
 
     @property
     def total_resources(self) -> ResourceAllocation:
@@ -87,13 +91,19 @@ class WorkMachineResources(Serializable):
     def to_dict(self) -> Dict[str, object]:
         n_dict: Dict[str, object] = dict()
         n_dict["total_resources"] = self.total_resources.to_dict()
+        n_dict["free_resources"] = self.free_resources.to_dict()
         return n_dict
 
     @classmethod
     def from_dict(cls, property_dict: Dict[str, object]) -> "WorkMachineResources":
         total_resources = ResourceAllocation.from_dict(
             cls._get_dict_from_dict(property_dict=property_dict, key="total_resources", mandatory=True))
-        return WorkMachineResources(total_resources)
+
+        free_resources: ResourceAllocation = None
+        if "free_resources" in property_dict:
+            free_resources = ResourceAllocation.from_dict(
+                cls._get_dict_from_dict(property_dict=property_dict, key="free_resources", mandatory=True))
+        return WorkMachineResources(total_resources, free_resources)
 
 
 class WorkMachineState(enum.Enum):
@@ -133,6 +143,9 @@ class WorkMachine(Serializable):
             return self.uid == o.uid and self.ssh_config == o.ssh_config \
                 and self.resources == o.resources and self.state == o.state
         return False
+
+    def __deepcopy__(self, memodict: Dict[str, object] = {}) -> "WorkMachine":
+        return self.from_dict(self.to_dict())
 
     @property
     def uid(self) -> str:
@@ -191,8 +204,10 @@ class WorkMachine(Serializable):
         n_dict: Dict[str, object] = dict()
         n_dict["uid"] = self.uid
         n_dict["state"] = self.state.value
-        n_dict["resources"] = self._resources.to_dict()
-        n_dict["ssh_config"] = self.ssh_config.to_dict()
+        if self._resources:
+            n_dict["resources"] = self._resources.to_dict()
+        if self._ssh_config:
+            n_dict["ssh_config"] = self.ssh_config.to_dict()
         return n_dict
 
     @classmethod
@@ -204,6 +219,10 @@ class WorkMachine(Serializable):
                 cls._get_dict_from_dict(property_dict, key="resources", mandatory=False))
         else:
             resources = None
-        ssh_config = SSHConfig.from_dict(cls._get_dict_from_dict(property_dict, key="ssh_config", mandatory=False))
+
+        if "ssh_config" in property_dict:
+            ssh_config = SSHConfig.from_dict(cls._get_dict_from_dict(property_dict, key="ssh_config", mandatory=False))
+        else:
+            ssh_config = None
         cls._assert_all_properties_used(property_dict)
         return WorkMachine(uid, state, resources, ssh_config)

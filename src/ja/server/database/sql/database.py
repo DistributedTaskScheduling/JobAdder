@@ -213,7 +213,7 @@ class SQLDatabase(ServerDatabase):
             return None
         session = self.scoped()
         jobs: List[Job] = session.query(Job).filter(Job.label == label).all()
-        return jobs
+        return deepcopy(jobs)
 
     def find_work_machine_by_uid(self, uid: str) -> WorkMachine:
         session = self.scoped()
@@ -299,13 +299,13 @@ class SQLDatabase(ServerDatabase):
     def get_all_work_machines(self) -> Optional[List[WorkMachine]]:
         session = self.scoped()
         work_machines: Optional[List[WorkMachine]] = session.query(WorkMachine).options(joinedload("*")).all()
-        return work_machines
+        return deepcopy(work_machines)
 
     def get_work_machines(self) -> Optional[List[WorkMachine]]:
         session = self.scoped()
         work_machines: Optional[List[WorkMachine]] = session.query(WorkMachine).filter(
             WorkMachine.state != WorkMachineState.OFFLINE).options(joinedload("*")).all()
-        return work_machines
+        return deepcopy(work_machines)
 
     def get_current_schedule(self) -> Optional[ServerDatabase.JobDistribution]:
         session = self.scoped()
@@ -327,7 +327,7 @@ class SQLDatabase(ServerDatabase):
         if len(jobs) == 0:
             logger.info("no jobs found")
         if since is None:
-            return jobs
+            return deepcopy(jobs)
         return deepcopy([job for job in jobs if job.statistics.time_added >= since])
 
     def _call_scheduler(self) -> None:
