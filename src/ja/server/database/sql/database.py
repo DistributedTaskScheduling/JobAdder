@@ -166,7 +166,7 @@ class SQLDatabase(ServerDatabase):
                 "_machine": relationship(WorkMachine, uselist=False),
                 "job": synonym("_job", descriptor=DatabaseJobEntry.job),
                 "statistics": synonym("_statistics", descriptor=DatabaseJobEntry.statistics),
-                "machine": synonym("_machine", descriptor=DatabaseJobEntry.assigned_machine)
+                "assigned_machine": synonym("_machine", descriptor=DatabaseJobEntry.assigned_machine)
             })
         if user is not None and password is not None and host is not None:
             # example: "postgresql://pesho:pesho@127.0.0.1:5432/jobadd"
@@ -305,7 +305,8 @@ class SQLDatabase(ServerDatabase):
         session = self.scoped()
         jobs: Optional[List[DatabaseJobEntry]] = session.query(DatabaseJobEntry).join(Job) \
             .filter((Job.status == JobStatus.RUNNING) | (Job.status == JobStatus.NEW) | (
-                Job.status == JobStatus.PAUSED) | (Job.status == JobStatus.QUEUED)).all()
+                Job.status == JobStatus.PAUSED) | (Job.status == JobStatus.QUEUED) | (
+                    DatabaseJobEntry.assigned_machine.has())).all()  # type: ignore
         return deepcopy(jobs)
 
     def query_jobs(self, since: Optional[datetime], user_id: Optional[int], work_machine: Optional[WorkMachine]) \

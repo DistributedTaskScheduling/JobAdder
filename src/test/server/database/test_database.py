@@ -149,6 +149,7 @@ class DatabaseTest(TestCase):
         self.assertEqual(self.mockDatabase.get_jobs_on_machine(self.work_machine), [self.job])
 
     def test_schedule(self) -> None:
+        self.mockDatabase.update_work_machine(self.work_machine)
         self.job2.status = JobStatus.QUEUED
         self.job2.status = JobStatus.CANCELLED
         self.job2.uid = "job2"
@@ -159,6 +160,9 @@ class DatabaseTest(TestCase):
         self.mockDatabase.update_job(self.job2)
         schedule = self.mockDatabase.get_current_schedule()
         self.assertEqual(schedule, [self.mockDatabase.find_job_by_id(self.job.uid)])
+        self.mockDatabase.assign_job_machine(self.job2, self.work_machine)
+        schedule = self.mockDatabase.get_current_schedule()
+        self.assertEqual(len(schedule), 2)
 
     def test_query_jobs(self) -> None:
         self.mockDatabase.update_job(self.job)
