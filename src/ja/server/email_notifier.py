@@ -7,6 +7,9 @@ from typing import Dict
 
 import ssl
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class EmailServerBase(ABC):
     """
@@ -43,10 +46,9 @@ class BasicEmailServer(EmailServerBase):
             self._email_client.ehlo()
             self._email_client.login(smtp_user, smtp_password)
         except (SMTPConnectError, ConnectionRefusedError) as e:
-            print("Failed connecting to SMTP server at %s:%d. No email notifications will be sent" %
-                  (smtp_server_address, smtp_server_port))
-            print("Reason for the failure:")
-            print(e)
+            logger.error("Failed connecting to SMTP server at %s:%d. No email notifications will be sent" %
+                         (smtp_server_address, smtp_server_port))
+            logger.error("Reason for the failure:\n%s" % str(e))
 
     def __del__(self) -> None:
         if self._email_client:
@@ -93,6 +95,7 @@ class EmailNotifier:
         if job.status not in self._send_email_for or not job.email:
             return
 
+        logger.info("Sending email for job %s(%s) to %s" % (job.uid, job.label, job.status))
         msg = self._EMAIL_TEMPLATE % (job.uid, self._send_email_for[job.status])
         subject = "JobAdder " + job.uid
         self._email_server.send_email(subject, msg, job.email)
