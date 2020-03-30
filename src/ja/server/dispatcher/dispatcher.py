@@ -1,5 +1,6 @@
 from ja.common.job import JobStatus
 from ja.server.database.database import ServerDatabase
+from ja.server.database.types.job_entry import DatabaseJobEntry
 from ja.server.dispatcher.proxy_factory import WorkerProxyFactoryBase
 from typing import Dict
 
@@ -22,6 +23,18 @@ class Dispatcher:
         self._proxy_factory = proxy_factory
         self._previous_statuses: Dict[str, JobStatus] = dict()
 
+    _job_status_order = [JobStatus.QUEUED, JobStatus.CANCELLED, JobStatus.PAUSED, JobStatus.RUNNING]
+
+    @staticmethod
+    def _sort_key_function(job: DatabaseJobEntry) -> int:
+        """
+        Returns keys so that first we cancel jobs, then we pause jobs, and finally start new jobs.
+        """
+        if job.job.status not in Dispatcher._job_status_order:
+            raise ValueError("Received unexpected state %s for job with UID %s." % (job.job.status.name, job.job.uid))
+
+        return Dispatcher._job_status_order.index(job.job.status)
+
     def set_distribution(self, job_distribution: JobDistribution) -> None:
         """!
         Distributes the newly added jobs to the work machines.
@@ -31,7 +44,7 @@ class Dispatcher:
         """
         logger.debug("Dispatching jobs")
         new_statuses: Dict[str, JobStatus] = dict()
-        for job_entry in job_distribution:
+        for job_entry in sorted(job_distribution, key=self._sort_key_function):
             job = job_entry.job
 
             if job.status == JobStatus.QUEUED:
@@ -54,8 +67,6 @@ class Dispatcher:
                 elif job.status == JobStatus.PAUSED:
                     proxy.pause_job(job.uid)
                     new_statuses[job.uid] = job.status
-                else:
-                    raise ValueError("Received unexpected state %s for job with UID %s." % (job.status.name, job.uid))
             else:
                 new_statuses[job.uid] = job.status
 
