@@ -63,8 +63,9 @@ class SchedulerTest(TestCase):
         db = MockDatabase()
 
         machine = get_machine(8, 8, 8)
+        machine.resources.allocate(ResourceAllocation(8, 8, 0))
         db.update_work_machine(machine)
-        job = get_job(machine=machine)
+        job = get_job(machine=machine, cpu=8, ram=8)
         db.update_job(job.job)
         job.job.status = JobStatus.RUNNING
         db.update_job(job.job)
@@ -77,8 +78,10 @@ class SchedulerTest(TestCase):
         scheduler.reschedule(db)
         job_entries = db.query_jobs(None, -1, None)
         self.assertEqual(len(job_entries), 1)
-        self.assertEqual(job_entries[0].assigned_machine.state, WorkMachineState.OFFLINE)
+        self.assertEqual(job_entries[0].assigned_machine, None)
         self.assertEqual(job_entries[0].job.status, JobStatus.CRASHED)
+        wms = db.get_all_work_machines()
+        self.assertEqual(wms[0].state, WorkMachineState.OFFLINE)
 
     def test_scheduler_updates(self) -> None:
         db = MockDatabase()
