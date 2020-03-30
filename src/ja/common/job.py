@@ -212,7 +212,7 @@ class Job(Serializable):
         NEW -> QUEUED
         QUEUED -> CANCELLED | RUNNING
         RUNNING -> PAUSED | DONE | CANCELLED | CRASHED
-        PAUSED -> CANCELLED | RUNNING
+        PAUSED -> CANCELLED | RUNNING | DONE | CRASHED
 
         If the transition requested is not allowed, or if the job has not
         been assigned an UID, a RuntimeError will be raised.
@@ -226,7 +226,7 @@ class Job(Serializable):
         elif self._status == JobStatus.RUNNING:
             transition_legal = new_status in [JobStatus.PAUSED, JobStatus.DONE, JobStatus.CANCELLED, JobStatus.CRASHED]
         elif self._status == JobStatus.PAUSED:
-            transition_legal = new_status in [JobStatus.CANCELLED, JobStatus.RUNNING]
+            transition_legal = new_status in [JobStatus.CANCELLED, JobStatus.RUNNING, JobStatus.DONE, JobStatus.CRASHED]
         else:
             transition_legal = False
         if transition_legal:
