@@ -102,4 +102,4 @@ class StatisticsWebServerTest(TestCase):
         sock.close()
 
         # Clean up
-        server.__del__()
+        server.stop()
