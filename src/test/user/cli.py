@@ -23,6 +23,7 @@ class CLITest(TestCase):
                                  "add -c test/user/add.yaml --owner 0".split()]
 
     def setUp(self) -> None:
+        self._db = MockDatabase()
         self._jobs: List[Job] = [Job(1, "anon@biz.org", JobSchedulingConstraints(JobPriority.HIGH, False, []),
                                      DockerContext("print(2 + 3)\n", [MountPoint("f", "l"), MountPoint("a", "r")]),
                                      DockerConstraints(8, 8), "lab", status=JobStatus.QUEUED),
@@ -39,7 +40,6 @@ class CLITest(TestCase):
                                      ["lic", "lic1"]), DockerContext("print(2 + 3)\n", []),
                                      DockerConstraints(5, 8), status=JobStatus.QUEUED)]
 
-        self._db = MockDatabase()
         self._proxy = ServerProxyDummy(ssh_config=None)
         self._cli = UserClientCLIHandler("test/user/p.yaml")
         for i, job in enumerate(self._jobs):
@@ -49,12 +49,12 @@ class CLITest(TestCase):
             parsed_command: AddCommand = cast(AddCommand, self._cli.get_server_command(command))
             self._proxy.add_job(parsed_command)
             parsed_command_db: AddCommand = cast(AddCommand, self._cli.get_server_command(command))
-            if i == 1:
-                parsed_command.config.job.status = JobStatus.RUNNING
-                parsed_command_db.config.job.status = JobStatus.QUEUED
-                parsed_command_db.config.job.status = JobStatus.RUNNING
             parsed_command_db.config.job.uid = str(i)
             parsed_command_db.execute(self._db)
+            if i == 1:
+                parsed_command.config.job.status = JobStatus.RUNNING
+                parsed_command_db.config.job.status = JobStatus.RUNNING
+                self._db.update_job(parsed_command.config.job)
 
     def test_jobs_added(self) -> None:
         self.assertCountEqual(self._proxy.jobs, self._jobs)

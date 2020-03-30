@@ -85,13 +85,13 @@ class CommandHandler(ABC):
                 input_string = command_bytes.decode()
 
                 input_dict = yaml.load(input_string, yaml.SafeLoader)
+                logger.info("handling %s command" % input_dict["type_name"])
+                logger.debug(input_dict["command"])
                 response_dict = self._check_exit_or_process_command(
                     command_dict=input_dict["command"],
                     type_name=input_dict["type_name"],
                     username=input_dict["username"]
                 )
-                logger.info("handling %s command" % input_dict["type_name"])
-                logger.debug(input_dict["command"])
                 response_string = yaml.dump(response_dict)
                 connection.sendall(response_string.encode())
             finally:

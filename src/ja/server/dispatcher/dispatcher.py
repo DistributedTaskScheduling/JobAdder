@@ -56,4 +56,7 @@ class Dispatcher:
                     new_statuses[job.uid] = job.status
                 else:
                     raise ValueError("Received unexpected state %s for job with UID %s." % (job.status.name, job.uid))
+            else:
+                new_statuses[job.uid] = job.status
+
         self._previous_statuses = new_statuses

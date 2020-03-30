@@ -97,8 +97,11 @@ class TestDispatcher(TestCase):
 
     def test_dispatch_a_idempotent(self) -> None:
         self._dispatcher.set_distribution(self._distribution_a)
+        state1 = self._dispatcher._previous_statuses
         self._dispatcher.set_distribution(self._distribution_a)
+        state2 = self._dispatcher._previous_statuses
         self._assert_distribution_correct_a()
+        self.assertDictEqual(state1, state2)
 
     def test_dispatch_ab(self) -> None:
         self._dispatcher.set_distribution(self._distribution_a)
