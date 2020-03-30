@@ -6,7 +6,7 @@ import ja.server.web.requests as req
 import threading
 
 
-def WebRequestHandlerFactory(database: ServerDatabase, mock_only: bool = True) -> type:
+def WebRequestHandlerFactory(database: ServerDatabase, mock_only: bool = False) -> type:
     class WebRequestHandler(BaseHTTPRequestHandler):
         """!
         Handle a request to generate statistics.
