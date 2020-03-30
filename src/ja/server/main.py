@@ -82,6 +82,8 @@ class JobCenter:
 
         if config.web_server_port > 0:
             self._web_server = StatisticsWebServer("", config.web_server_port, self._database)
+        else:
+            self._web_server = None
 
         self._database.set_scheduler_callback(self._scheduler.reschedule)
         self._database.set_job_status_callback(self._email.handle_job_status_updated)
@@ -99,3 +101,5 @@ class JobCenter:
         # Cleanup, but don't invoke scheduler anymore.
         self._database.set_scheduler_callback(None)
         self._cleanup()
+        if self._web_server:
+            self._web_server.stop()

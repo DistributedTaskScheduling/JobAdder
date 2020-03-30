@@ -5,8 +5,11 @@ from typing import List, Any
 import ja.server.web.requests as req
 import threading
 
+import logging
+logger = logging.getLogger(__name__)
 
-def WebRequestHandlerFactory(database: ServerDatabase, mock_only: bool = True) -> type:
+
+def WebRequestHandlerFactory(database: ServerDatabase, mock_only: bool = False) -> type:
     class WebRequestHandler(BaseHTTPRequestHandler):
         """!
         Handle a request to generate statistics.
@@ -95,8 +98,8 @@ class StatisticsWebServer:
                 self._server.handle_request()
             self._server.server_close()
         except Exception as e:
-            print("Failed to start WebAPI server.")
-            print(e)
+            logger.error("Failed to start WebAPI server.")
+            logger.error(e)
 
     def __init__(self, server_name: str, server_port: int, database: ServerDatabase):
         """!
@@ -108,9 +111,13 @@ class StatisticsWebServer:
         """
         self._quit = False
         self._thread = threading.Thread(target=self._server_thread, args=(server_name, server_port, database))
+        self._thread.setDaemon(True)
         self._thread.start()
 
-    def __del__(self) -> None:
+    def stop(self) -> None:
+        """
+        Stop the web server.
+        """
         if self._thread.is_alive():
             self._quit = True
             self._thread.join()
