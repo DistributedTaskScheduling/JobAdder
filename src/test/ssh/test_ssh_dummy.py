@@ -32,6 +32,9 @@ class SSHConnectionDummy(ISSHConnection):
     def close(self) -> None:
         pass
 
+    def send_dummy_command(self) -> None:
+        pass
+
 
 class ServerCommandDummy(ServerCommand):
     def __init__(self, payload: str):
