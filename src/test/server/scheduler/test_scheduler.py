@@ -47,9 +47,10 @@ class MockDispatcher(Dispatcher):
         self._expect = expect_schedule
         self.count_called = 0
 
-    def set_distribution(self, job_distribution: ServerDatabase.JobDistribution) -> None:
+    def set_distribution(self, job_distribution: ServerDatabase.JobDistribution) -> List[WorkMachine]:
         self.count_called += 1
         assert_distributions_equal(self._test_case, job_distribution, self._expect)
+        return []
 
 
 class MockDispatcherOffline(Dispatcher):
