@@ -97,7 +97,7 @@ class Scheduler:
         lost_wms = self._dispatcher.set_distribution(new_schedule + cancelled_entries)
         for wm in lost_wms:
             crashed_jobs = [entry.job for entry in runnable_entries
-                            if job.assigned_machine and job.assigned_machine.uid == wm.uid]
+                            if entry.assigned_machine and entry.assigned_machine.uid == wm.uid]
             for crashed_job in crashed_jobs:
                 crashed_job.status = JobStatus.CRASHED
                 database.update_job(crashed_job)
