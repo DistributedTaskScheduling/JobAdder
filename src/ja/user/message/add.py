@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Dict
 from ja.user.message.base import UserServerCommand
 from ja.common.message.base import Response
@@ -43,6 +44,20 @@ class AddCommand(UserServerCommand):
         if db_job_id is not None:
             return Response(result_string="Job with id %s already exists" % job.uid,
                             is_success=False)
+
+        max_sr = database.max_special_resources
+        if max_sr is None:
+            max_sr = dict()
+        available_sr = deepcopy(max_sr)
+        for sr in job.scheduling_constraints.special_resources:
+            sr_count = available_sr.pop(sr, 0)
+            if sr_count <= 0:
+                return Response(
+                    result_string="Cannot add job because the server is lacking special resource %s (%s "
+                                  "available)." % (sr, max_sr.get(sr, 0)),
+                    is_success=False)
+            available_sr[sr] = sr_count - 1
+
         if job.status == JobStatus.NEW:
             job.status = JobStatus.QUEUED
         job.uid = database.update_job(job)

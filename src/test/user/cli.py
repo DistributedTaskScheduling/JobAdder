@@ -23,7 +23,7 @@ class CLITest(TestCase):
                                  "add -c test/user/add.yaml --owner 0".split()]
 
     def setUp(self) -> None:
-        self._db = MockDatabase()
+        self._db = MockDatabase(max_special_resources={"lic": 1, "lic1": 1})
         self._jobs: List[Job] = [Job(1, "anon@biz.org", JobSchedulingConstraints(JobPriority.HIGH, False, []),
                                      DockerContext("print(2 + 3)\n", [MountPoint("f", "l"), MountPoint("a", "r")]),
                                      DockerConstraints(8, 8), "lab", status=JobStatus.QUEUED),
