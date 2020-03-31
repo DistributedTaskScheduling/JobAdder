@@ -12,10 +12,9 @@ class WorkerCLI(SimpleDaemonCLIInterface):
     def run_main(self, config_file: str) -> None:
         jw: JobWorker = None
         if config_file:
-            jw = JobWorker(config_path=config_file, remote_module="/tmp/jobadder-server.socket",
-                           command_string="ja-remote %s")
+            jw = JobWorker(config_path=config_file)
         else:
-            jw = JobWorker(remote_module="/tmp/jobadder-server.socket", command_string="ja-remote %s")
+            jw = JobWorker()
         jw.run()
 
 

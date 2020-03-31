@@ -68,8 +68,8 @@ class WorkerServerProxy(IWorkerServerProxy):
     """
 
     def __init__(
-            self, ssh_config: SSHConfig, remote_module: str = "ja.server.proxy.remote",
-            command_string: str = "python3 -m %s"):
+            self, ssh_config: SSHConfig, remote_module: str = "/tmp/jobadder-server.socket",
+            command_string: str = "ja-remote %s"):
         self._ssh_config = ssh_config
         self._remote_module = remote_module
         self._command_string = command_string

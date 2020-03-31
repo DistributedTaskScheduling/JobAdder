@@ -13,7 +13,7 @@ class JobAdder:
     The main class for the JobAdder user client.
     """
     def __init__(self, config_path: str = "%s/.config/jobadder" % Path.home(),
-                 remote_module: str = "ja.server.proxy.remote", command_string: str = "python3 -m %s") -> None:
+                 remote_module: str = "/tmp/jobadder-server.socket", command_string: str = "ja-remote %s") -> None:
         self._cli_handler = UserClientCLIHandler(config_path=config_path)
         self._remote_module = remote_module
         self._command_string = command_string
