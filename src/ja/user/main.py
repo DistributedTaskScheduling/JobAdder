@@ -1,4 +1,5 @@
 from typing import List
+from pathlib import Path
 
 from ja.user.proxy import UserServerProxy
 from ja.user.cli import UserClientCLIHandler
@@ -11,8 +12,8 @@ class JobAdder:
     """
     The main class for the JobAdder user client.
     """
-    def __init__(self, config_path: str = "~/.config/jobadder", remote_module: str = "ja.server.proxy.remote",
-                 command_string: str = "python3 -m %s") -> None:
+    def __init__(self, config_path: str = "%s/.config/jobadder" % Path.home(),
+                 remote_module: str = "ja.server.proxy.remote", command_string: str = "python3 -m %s") -> None:
         self._cli_handler = UserClientCLIHandler(config_path=config_path)
         self._remote_module = remote_module
         self._command_string = command_string
