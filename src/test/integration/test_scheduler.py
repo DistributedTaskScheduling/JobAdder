@@ -25,7 +25,7 @@ class TestScheduler(IntegrationTest):
             self.get_arg_list_add(num_seconds=1, label="hi", priority="3", threads=4, memory=16 * 1024))
         self._server._database.set_job_status_callback(self._status_updated)
         self._add_worker(0)
-        sleep(8)
+        sleep(25)
         expect: List[Tuple[str, JobStatus]] = [
             ("hi", JobStatus.RUNNING),
             ("hi", JobStatus.DONE),
@@ -43,11 +43,11 @@ class TestScheduler(IntegrationTest):
         self._add_worker(0)
         self._add_worker(1)
         self._clients[0].run(
-            self.get_arg_list_add(num_seconds=5, label="lo", priority="0", threads=4, memory=16 * 1024))
+            self.get_arg_list_add(num_seconds=60, label="lo", priority="0", threads=4, memory=16 * 1024))
         self._clients[1].run(
-            self.get_arg_list_add(num_seconds=5, label="me", priority="1", threads=2, memory=8 * 1024))
+            self.get_arg_list_add(num_seconds=60, label="me", priority="1", threads=2, memory=8 * 1024))
         self._clients[2].run(
-            self.get_arg_list_add(num_seconds=5, label="hi", priority="3", threads=2, memory=8 * 1024))
+            self.get_arg_list_add(num_seconds=60, label="hi", priority="3", threads=2, memory=8 * 1024))
         sleep(1)
         # Jobs can't have finished so they are all in the schedule
         distribution = self._server._database.get_current_schedule()
@@ -88,17 +88,17 @@ class TestScheduler(IntegrationTest):
         self._server._database.set_job_status_callback(self._status_updated)
         # Occupy half the machine
         self._clients[0].run(
-            self.get_arg_list_add(num_seconds=6, label="lo", priority="0", threads=2, memory=8 * 1024))
+            self.get_arg_list_add(num_seconds=12, label="lo", priority="0", threads=2, memory=8 * 1024))
         # This one should reserve the machine since it is blocking
         self._clients[1].run(
-            self.get_arg_list_add(num_seconds=1, label="hi", priority="2", threads=4, memory=16 * 1024))
+            self.get_arg_list_add(num_seconds=2, label="hi", priority="2", threads=4, memory=16 * 1024))
         # Won't run anytime soon since machine is reserved
         self._clients[2].run(
-            self.get_arg_list_add(num_seconds=1, label="me", priority="1", threads=2, memory=8 * 1024))
+            self.get_arg_list_add(num_seconds=2, label="me", priority="1", threads=2, memory=8 * 1024))
         # Urgent jobs however should override blocking
         self._clients[3].run(
-            self.get_arg_list_add(num_seconds=1, label="ur", priority="3", threads=3, memory=8 * 1024))
-        sleep(10)
+            self.get_arg_list_add(num_seconds=2, label="ur", priority="3", threads=3, memory=8 * 1024))
+        sleep(20)
         expect: List[Tuple[str, JobStatus]] = [
             ("lo", JobStatus.RUNNING),
             ("lo", JobStatus.PAUSED),
