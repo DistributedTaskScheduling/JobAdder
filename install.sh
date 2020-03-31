@@ -7,12 +7,11 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-PREFIX=/usr
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 # Install JobAdder source code + binaries
 cd $SCRIPTPATH
-pip3 install ./src --prefix=$PREFIX
+pip3 install ./src
 
 install ./data/bin/jobadder /usr/bin -m 755
 install ./data/bin/ja-server /usr/bin -m 755
