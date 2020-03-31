@@ -11,7 +11,7 @@ setup(
     author='Ilia Bozhinov, Johannes Gäßler, ',  # TODO add everyone else
     author_email='ammen99@gmail.com, johannesg@5d6.de, ',  # TODO add everyone else
     url='https://github.com/DistributedTaskScheduling/JobAdder',
-    packages=find_packages(exclude="test"),
+    packages=find_packages(exclude=["test", "test.*", "ja_integration", "ja_integration.*"]),
     package_data={},
     keywords=[],
     license='GPL3',
