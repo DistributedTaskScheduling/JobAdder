@@ -15,9 +15,9 @@ class TestJobCancel(IntegrationTest):
         Run one job, queue another and cancel both.
         """
         self._clients[0].run(
-            self.get_arg_list_add(num_seconds=5, label="lo", priority="0", threads=4, memory=16 * 1024))
+            self.get_arg_list_add(num_seconds=60, label="lo", priority="0", threads=4, memory=16 * 1024))
         self._clients[1].run(
-            self.get_arg_list_add(num_seconds=1, label="me", priority="1", threads=4, memory=16 * 1024))
+            self.get_arg_list_add(num_seconds=60, label="me", priority="1", threads=4, memory=16 * 1024))
         sleep(1)  # Wait for first job to get scheduled
         self._clients[2].run(["cancel", "-l", "me"])
         jobs = self._server._database.query_jobs(None, -1, None)

@@ -19,9 +19,9 @@ class TestWebAPI(IntegrationTest):
         A test where a worker and 2 jobs are added, then basic checks are made via the WebAPI.
         """
         self._clients[0].run(
-            self.get_arg_list_add(num_seconds=5, label="lo", priority="0", threads=4, memory=16 * 1024))
+            self.get_arg_list_add(num_seconds=60, label="lo", priority="0", threads=4, memory=16 * 1024))
         self._clients[1].run(
-            self.get_arg_list_add(num_seconds=5, label="me", priority="1", threads=4, memory=16 * 1024))
+            self.get_arg_list_add(num_seconds=60, label="me", priority="1", threads=4, memory=16 * 1024))
 
         self.run_query("v1/invalid", 404)
 
