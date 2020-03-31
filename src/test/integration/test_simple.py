@@ -33,9 +33,9 @@ class SimpleIntegrationTest(IntegrationTest):
         label_a = "JobA"
         label_b = "JobB"
         label_c = "JobC"
-        client.run(self.get_arg_list_add(num_seconds=1, label=label_a, special_resources=["SRA", "SRB"]))
-        client.run(self.get_arg_list_add(num_seconds=1, label=label_b, special_resources=["SRB", "SRB"]))
-        client.run(self.get_arg_list_add(num_seconds=1, label=label_c, special_resources=["SRD"]))
+        client.run(self.get_arg_list_add(num_seconds=60, label=label_a, special_resources=["SRA", "SRB"]))
+        client.run(self.get_arg_list_add(num_seconds=60, label=label_b, special_resources=["SRB", "SRB"]))
+        client.run(self.get_arg_list_add(num_seconds=60, label=label_c, special_resources=["SRD"]))
 
         active_job_entries = self._server._database.get_current_schedule()
         labels = [aje.job.label for aje in active_job_entries]
