@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import List, Callable
+from typing import List, Callable, Dict
 from ja.common.job import Job
 from ja.server.database.types.job_entry import DatabaseJobEntry
 from ja.server.database.types.work_machine import WorkMachine
@@ -122,3 +122,8 @@ class ServerDatabase(ABC):
         Marks the end of a series of atomic updates to the database.
         At this point, the scheduler will be called, even if no actual updates have been made.
         """
+
+    @property
+    @abstractmethod
+    def max_special_resources(self) -> Dict[str, int]:
+        """Maximum available special resources on the server."""

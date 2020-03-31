@@ -119,7 +119,8 @@ class IntegrationTest(TestCase):
         email_config = LoginConfig(host="127.0.0.1", port=1337, username="", password="")
         return ServerConfig(
             admin_group="jobadder", database_config=database_config, email_config=email_config,
-            special_resources=dict(), blocking_enabled=True, preemption_enabled=True, web_server_port=0
+            special_resources=dict(SRA=1, SRB=3, SRC=1), blocking_enabled=True, preemption_enabled=True,
+            web_server_port=0
         )
 
     def get_worker_config(self, index: int) -> WorkerConfig:
@@ -141,7 +142,7 @@ class IntegrationTest(TestCase):
 
     def get_arg_list_add(
             self, num_seconds: int = 1, threads: int = 1, memory: int = 1024,
-            label: str = None, priority: str = "1") -> List[str]:
+            label: str = None, priority: str = "1", special_resources: List[str] = None) -> List[str]:
         arg_list = [
             "--hostname", "127.0.0.1",
             "add",
@@ -152,4 +153,7 @@ class IntegrationTest(TestCase):
         ]
         if label is not None:
             arg_list += ["--label", label]
+        if special_resources is not None:
+            arg_list.append("--special-resources")
+            arg_list += special_resources
         return arg_list

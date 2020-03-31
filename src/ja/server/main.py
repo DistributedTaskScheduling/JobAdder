@@ -69,7 +69,8 @@ class JobCenter:
                                      port=config.database_config.port,
                                      user=config.database_config.username,
                                      password=config.database_config.password,
-                                     database_name=database_name)
+                                     database_name=database_name,
+                                     max_special_resources=config.special_resources)
         self._cleanup()
         proxy_factory = self._get_proxy_factory()
         self._dispatcher = Dispatcher(proxy_factory)

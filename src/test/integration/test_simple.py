@@ -28,6 +28,21 @@ class SimpleIntegrationTest(IntegrationTest):
         containers_by_job_uid = self._workers[0]._docker_interface._containers_by_job_uid
         self.assertEqual(len(containers_by_job_uid), 0)
 
+    def test_special_resources(self) -> None:
+        client = self._clients[0]
+        label_a = "JobA"
+        label_b = "JobB"
+        label_c = "JobC"
+        client.run(self.get_arg_list_add(num_seconds=1, label=label_a, special_resources=["SRA", "SRB"]))
+        client.run(self.get_arg_list_add(num_seconds=1, label=label_b, special_resources=["SRB", "SRB"]))
+        client.run(self.get_arg_list_add(num_seconds=1, label=label_c, special_resources=["SRD"]))
+
+        active_job_entries = self._server._database.get_current_schedule()
+        labels = [aje.job.label for aje in active_job_entries]
+        self.assertTrue(
+            labels == [label_a, label_b] or labels == [label_b, label_a],
+            msg="Received unexpected labels: %s" % str(labels))
+
     def test_sanity_checks(self) -> None:
         work_machines = self._server._database.get_work_machines()
         self.assertEqual(len(work_machines), self.num_workers)

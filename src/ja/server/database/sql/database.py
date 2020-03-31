@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import List, Optional, Callable
+from typing import List, Optional, Callable, Dict
 from datetime import datetime
 import time
 from sqlalchemy import create_engine
@@ -28,7 +28,7 @@ class SQLDatabase(ServerDatabase):
 
     def __init__(
             self, host: str = None, port: int = 5432, user: str = None, password: str = None,
-            database_name: str = "jobadder"):
+            database_name: str = "jobadder", max_special_resources: Dict[str, int] = None):
         """!
         Create the SQLDatabase object and connect to the given database.
 
@@ -37,7 +37,9 @@ class SQLDatabase(ServerDatabase):
         @param user The username to use for the connection.
         @param password The password to use for the connection.
         @param database_name The name of the database to use.
+        @param max_special_resources Maximum available special resources on the server.
         """
+        self._max_special_resources = deepcopy(max_special_resources)
         self.scheduler_callback: Callable[["ServerDatabase"], None] = None
         self.status_callback: Callable[["Job"], None] = lambda *args: None
         self.in_scheduler_callback: bool = False
@@ -349,3 +351,7 @@ class SQLDatabase(ServerDatabase):
     def end_atomic_update(self) -> None:
         self.in_atomic_update = False
         self._call_scheduler()
+
+    @property
+    def max_special_resources(self) -> Dict[str, int]:
+        return deepcopy(self._max_special_resources)
