@@ -23,6 +23,9 @@ class SSHDummyWorkerProxy(WorkerProxyBase):
     def _get_ssh_connection(self, ssh_config: SSHConfig) -> ISSHConnection:
         return SSHConnectionDummy(socket_path="./dummy_socket_%s" % ssh_config.hostname)
 
+    def check_connection(self) -> None:
+        pass
+
 
 class WorkerCommandHandlerDummy(ThreadedCommandHandler):
 

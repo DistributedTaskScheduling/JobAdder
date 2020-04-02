@@ -94,6 +94,18 @@ class Scheduler:
             database.update_work_machine(machine)
 
         self._update_special_resources(new_schedule)
-        self._dispatcher.set_distribution(new_schedule + cancelled_entries)
+        lost_wms = self._dispatcher.set_distribution(new_schedule + cancelled_entries)
+        for wm in lost_wms:
+            crashed_jobs = [entry.job for entry in runnable_entries
+                            if entry.assigned_machine and entry.assigned_machine.uid == wm.uid]
+            for crashed_job in crashed_jobs:
+                crashed_job.status = JobStatus.CRASHED
+                database.update_job(crashed_job)
+                database.assign_job_machine(crashed_job, None)
+
+            wm.state = WorkMachineState.OFFLINE
+            wm.resources.deallocate(wm.resources.total_resources - wm.resources.free_resources)
+            database.update_work_machine(wm)
+
         for job in cancelled_entries:
             database.assign_job_machine(job.job, None)

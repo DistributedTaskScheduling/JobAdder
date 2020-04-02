@@ -34,8 +34,17 @@ class ISSHConnection(ABC):
         @return None.
         """
 
+    @abstractmethod
+    def send_dummy_command(self) -> None:
+        """!
+        Sends a dummy command to the remote on the host.
+        """
+
 
 class SSHConnection(ISSHConnection):
+    """Timeout of an SSH connection in seconds."""
+    TIMEOUT = 120
+
     def __init__(self, ssh_config: "SSHConfig", remote_module: str, command_string: str = "python3 -m %s"):
         """!
         Creates a new SSHConnection object. Arguments for establishing the
@@ -59,7 +68,7 @@ class SSHConnection(ISSHConnection):
     def send_command(self, command: Command) -> Response:
         command_dict = dict(command=command.to_dict(), type_name=command.__class__.__name__)
         remote_cmd = self._command_string % self._remote_module
-        stdin, stdout, stderr = self._client.exec_command(remote_cmd)
+        stdin, stdout, stderr = self._client.exec_command(remote_cmd, timeout=SSHConnection.TIMEOUT)
         stdin.write(yaml.dump(command_dict))
         stdin.close()
         response: Response = None
@@ -76,6 +85,9 @@ class SSHConnection(ISSHConnection):
 
     def close(self) -> None:
         self._client.close()
+
+    def send_dummy_command(self) -> None:
+        self._client.exec_command("pwd", timeout=SSHConnection.TIMEOUT)
 
 
 class SSHConfig(Config):

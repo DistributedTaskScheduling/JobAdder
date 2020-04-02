@@ -53,6 +53,12 @@ class IWorkerProxy(ContinuousProxy, ABC):
         @return: The Response from the worker client.
         """
 
+    @abstractmethod
+    def check_connection(self) -> None:
+        """!
+        Tries to connect to the work machine and throws and exception if it could not.
+        """
+
 
 class WorkerProxyBase(IWorkerProxy, ABC):
     """
@@ -102,6 +108,9 @@ class WorkerProxyBase(IWorkerProxy, ABC):
         response = self._ssh_connection.send_command(command)
         logger.debug("response from the worker: %s" % str(response))
         return response
+
+    def check_connection(self) -> None:
+        self._ssh_connection.send_dummy_command()
 
 
 class WorkerProxy(WorkerProxyBase):
