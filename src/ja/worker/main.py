@@ -25,8 +25,8 @@ class JobWorker:
     def __init__(
             self, config_path: str = "/etc/jobadder/worker.conf",
             socket_path: str = "/tmp/jobadder-worker.socket",
-            remote_module: str = "ja.server.proxy.remote",
-            command_string: str = "python3 -m %s") -> None:
+            remote_module: str = "/tmp/jobadder-server.socket",
+            command_string: str = "ja-remote %s") -> None:
         """!
         Reads a WorkerConfig object from the disk.
         Creates WorkerServerProxy, DockerInterface, WorkerCommandHandler objects.

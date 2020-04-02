@@ -58,8 +58,8 @@ class UserServerProxy(UserServerProxyBase):
     """
     Implementation for the proxy for the central server used on the user client.
     """
-    def __init__(self, ssh_config: SSHConfig, remote_module: str = "ja.server.proxy.remote",
-                 command_string: str = "python3 -m %s"):
+    def __init__(self, ssh_config: SSHConfig, remote_module: str = "/tmp/jobadder-server.socket",
+                 command_string: str = "ja-remote %s"):
         super().__init__(ssh_config=ssh_config)
         self._remote_module = remote_module
         self._command_string = command_string
