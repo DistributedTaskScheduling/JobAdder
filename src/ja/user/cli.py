@@ -92,7 +92,8 @@ class UserClientCLIHandler:
 
         parser: ArgumentParser = ArgumentParser("JobAdder: add, cancel or a query a job.")
         # shared options
-        parser.add_argument("--verbosity", "-v", type=int, choices=[0, 1, 2], default=verbosity)
+        parser.add_argument("--verbosity", "-v", type=int, choices=[0, 1, 2], default=verbosity,
+                            help="The level of detail in the reponses.")
         parser.add_argument("--hostname", "--host", type=str,
                             required=hostname is None, default=hostname,
                             help="The name of the server to connect to.")
@@ -138,8 +139,8 @@ class UserClientCLIHandler:
                                   choices="false true t f".split(),
                                   help="Get job(s) that can be preempted by other jobs.")
         parser_query.add_argument("--special-resources", "--sr", help="Filter by the special resources of a job. \
-                                                                       Special resources are separated bx a comma \
-                                                                       and lists of speacial resources are separated \
+                                                                       Special resources are separated by a comma \
+                                                                       and lists of special resources are separated \
                                                                        by a point. \
                                                                        [sr,sr1,sr2,sr3].[...].[...]...")
         parser_query.add_argument("--threads", "-t",

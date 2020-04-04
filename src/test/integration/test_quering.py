@@ -14,6 +14,7 @@ class QueryIntegrationTest(IntegrationTest):
     def _get_arg_list_query(self) -> List[str]:
         arg_list = [
             "--hostname", "127.0.0.1",
+            "-v", "2",
             "query",
             "--status", "done",
             "--label", "not_a_bitcoin_miner"

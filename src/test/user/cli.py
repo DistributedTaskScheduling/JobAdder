@@ -61,63 +61,63 @@ class CLITest(TestCase):
         self.assertCountEqual([entry.job for entry in self._db.query_jobs(None, -1, None)], self._jobs)
 
     def test_query_threads(self) -> None:
-        command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("query -t 6 8".split()))
+        command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("-v 2 query -t 6 8".split()))
         response: str = self._proxy.query(command).result_string
         response1: str = command.execute(self._db).result_string
         self.assertEqual(response, "\n".join([str(self._jobs[0]), str(self._jobs[2])]))
         self.assertEqual(response1, "\n".join([str(self._jobs[0]), str(self._jobs[2])]))
 
     def test_query_owner(self) -> None:
-        command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("query --owner 9".split()))
+        command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("-v 2 query --owner 9".split()))
         response: str = self._proxy.query(command).result_string
         response1: str = command.execute(self._db).result_string
         self.assertEqual(response, "\n".join([str(self._jobs[1]), str(self._jobs[2]), str(self._jobs[3])]))
         self.assertEqual(response1, "\n".join([str(self._jobs[1]), str(self._jobs[2]), str(self._jobs[3])]))
 
     def test_query_label(self) -> None:
-        command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("query --label lab".split()))
+        command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("-v 2 query --label lab".split()))
         response: str = self._proxy.query(command).result_string
         response1: str = command.execute(self._db).result_string
         self.assertEqual(response, "\n".join([str(self._jobs[0]), str(self._jobs[1])]))
         self.assertEqual(response1, "\n".join([str(self._jobs[0]), str(self._jobs[1])]))
 
     def test_query_priority(self) -> None:
-        command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("query -p low".split()))
+        command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("-v 2 query -p low".split()))
         response: str = self._proxy.query(command).result_string
         response1: str = command.execute(self._db).result_string
         self.assertEqual(response, "\n".join([str(self._jobs[1]), str(self._jobs[2])]))
         self.assertEqual(response1, "\n".join([str(self._jobs[1]), str(self._jobs[2])]))
 
     def test_query_uid(self) -> None:
-        command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("query --uid 1 3".split()))
+        command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("-v 2 query --uid 1 3".split()))
         response: str = self._proxy.query(command).result_string
         response1: str = command.execute(self._db).result_string
         self.assertEqual(response, "\n".join([str(self._jobs[1]), str(self._jobs[3])]))
         self.assertEqual(response1, "\n".join([str(self._jobs[1]), str(self._jobs[3])]))
 
     def test_query_memory(self) -> None:
-        command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("query --memory 1 4".split()))
+        command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("-v 2 query --memory 1 4".split()))
         response: str = self._proxy.query(command).result_string
         response1: str = command.execute(self._db).result_string
         self.assertEqual(response, "\n".join([str(self._jobs[1]), str(self._jobs[2]), str(self._jobs[3])]))
         self.assertEqual(response1, "\n".join([str(self._jobs[1]), str(self._jobs[2]), str(self._jobs[3])]))
 
     def test_query_status(self) -> None:
-        command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("query --status running".split()))
+        command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("-v 2 query --status running".split()))
         response: str = self._proxy.query(command).result_string
         response1: str = command.execute(self._db).result_string
         self.assertEqual(response, "\n".join([str(self._jobs[1])]))
         self.assertEqual(response1, "\n".join([str(self._jobs[1])]))
 
     def test_query_memory_empty(self) -> None:
-        command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("query --memory 10 40".split()))
+        command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("-v 2 query --memory 10 40".split()))
         response: str = self._proxy.query(command).result_string
         response1: str = command.execute(self._db).result_string
         self.assertEqual(response, "No jobs satisfy these constraints.")
         self.assertEqual(response1, "No jobs satisfy these constraints.")
 
     def test_query_sresources(self) -> None:
-        command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("query --sr lic,lic1".split()))
+        command: QueryCommand = cast(QueryCommand, self._cli.get_server_command("-v 2 query --sr lic,lic1".split()))
         response: str = self._proxy.query(command).result_string
         response1: str = command.execute(self._db).result_string
         self.assertEqual(response, "\n".join([str(self._jobs[4])]))
