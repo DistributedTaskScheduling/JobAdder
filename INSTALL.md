@@ -1,24 +1,25 @@
 This file gives a detailed explanation of how to install JobAdder on user clients, the server, or worker clients.
 Note that all components of JobAdder were designed to be used exclusively on Linux.
 Furthermore, the server and the worker clients are assumed to be using central authentication (e.g. LDAP).
+To run the JobAdder test suite all of the steps listed for server, worker client, and user client need to be taken *on the same machine*.
 
 ## Installation Notes (Linux)
 Detailed step-by-step instructions to install JobAdder.
 
 ### 1. Pre-installation
 Steps to take before installing JobAdder.
-#### 1.1 Software requirements
-The following software is required to run JobAdder:
+#### 1.1 Pre-installation (Server)
+Steps to take before installing JobAdder on the server.
+##### 1.1.1 Software requirements
+The following software is required to run the JobAdder server:
 
-- Python, 3.7 or higher (user client, server, and worker clients)
-- PostgreSQL (server)
-- Docker, recent version (worker clients)
-
-In order to run the JobAdder test suite all of the above software needs to be installed.
+- Python 3.7+
+- PostgreSQL 9.5+, including server dev packages
+- The Python packages specified in dependencies_server.txt 
 
 When using a very minimalistic Linux distribution it might be necessary to install [additional packages](https://cryptography.io/en/latest/installation/)
-for the installation of the cryptography Python package (an indirect dependency). 
-#### 1.2 JobAdder system account
+for the installation of the cryptography Python package (an indirect dependency).
+#### 1.1.2 JobAdder system account
 On the server and the worker client the jobadder user needs to be created.
 Add the *jobadder* user and the corresponding group by running:
 
@@ -32,6 +33,21 @@ The jobadder user needs to be added to the docker group to run jobs:
     sudo usermod -a -G docker jobadder
 
 A user that intends to run JobAdder integration tests also needs to be a member of the docker group.
+#### 1.2 Pre-installation (Worker Client)
+Steps to take before installing JobAdder on the worker client.
+##### 1.2.1 Software requirements
+The following software is required to run the JobAdder worker:
+
+- Python 3.7+
+- Docker 18.09.7+ 
+
+#### 1.3 Pre-installation (User Client)
+Steps to take before installing JobAdder on the user client.
+##### 1.3.1 Software requirements
+The following software is required to run the JobAdder user client:
+
+- Python 3.7+
+
 ### 2. Install JobAdder
 The git repository can be cloned by running:
     
@@ -98,3 +114,17 @@ The configuration file must be in the YAML format (<arg_name>: <arg_value>) and 
 - key_path
 - passphrase
 - email
+#### 3.4 Post-Installation instructions (Test Suite)
+To run the test suite additional steps need to be taken.
+
+Add yourself to the jobadder group:
+
+    sudo usermod -a -G jobadder <your username here>
+
+Add yourself to the docker group:
+
+    sudo usermod -a -G docker <your username here>
+
+Create the jobadder-test database:
+
+    sudo -u postgres createdb --owner=jobadder jobadder-test
