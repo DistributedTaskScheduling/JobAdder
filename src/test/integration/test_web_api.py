@@ -1,6 +1,7 @@
 from ja.server.config import ServerConfig
 from test.integration.base import IntegrationTest
 from typing import Any, Dict, cast
+from getpass import getuser
 
 import requests
 import yaml
@@ -29,7 +30,7 @@ class TestWebAPI(IntegrationTest):
         machine = self._server._database.get_work_machines()[0]
 
         jobs_uid_dict = {"jobs": [{"job_id": job.job.uid} for job in jobs]}
-        self.run_query("v1/user/root/jobs", 200, jobs_uid_dict)
+        self.run_query("v1/user/%s/jobs" % getuser(), 200, jobs_uid_dict)
 
         workload = {
             "machines": [{

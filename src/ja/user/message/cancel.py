@@ -63,7 +63,7 @@ class CancelCommand(UserServerCommand):
         return CancelCommand(label=_label, uid=_uid, config=_config)
 
     def _cancel_job(self, database: ServerDatabase, job: Job, ignore_wrong_permissions: bool) -> bool:
-        has_permissions = (job.owner_id == self.effective_user or self.effective_user == 0)
+        has_permissions = (job.owner_id == self.effective_user or self.effective_user_is_admin)
         if not has_permissions:
             return ignore_wrong_permissions
 

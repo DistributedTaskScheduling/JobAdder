@@ -77,7 +77,8 @@ class ServerCommandHandler(CommandHandler):
 
         command = cast(Type[UserServerCommand], self._user_commands[type_name]).from_dict(command_dict)
         user_command: UserServerCommand = cast(UserServerCommand, command)
-        user_command.effective_user = 0 if self._user_is_admin(user) else pwd.getpwnam(user).pw_uid
+        user_command.effective_user = pwd.getpwnam(user).pw_uid
+        user_command.effective_user_is_admin = self._user_is_admin(user)
         return self._execute_command(user_command)
 
     def _process_command_dict(

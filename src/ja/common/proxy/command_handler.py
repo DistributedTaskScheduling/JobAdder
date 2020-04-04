@@ -64,6 +64,8 @@ class CommandHandler(ABC):
         return self._process_command_dict(command_dict, type_name, username)
 
     def _user_is_admin(self, user: str) -> bool:
+        if user == "root":
+            return True
         groups = [g.gr_name for g in grp.getgrall() if user in g.gr_mem]
         return self._admin_group in groups or user == self._admin_group
 
