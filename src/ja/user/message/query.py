@@ -1,6 +1,6 @@
 from ja.common.message.base import Response
 from ja.user.message.base import UserServerCommand
-from ja.user.config.base import UserConfig
+from ja.user.config.base import UserConfig, Verbosity
 from ja.common.job import JobPriority, JobStatus
 from datetime import datetime
 from typing import List, Tuple, Dict, Iterable, cast
@@ -253,6 +253,10 @@ class QueryCommand(UserServerCommand):
                          special_resources_list, cpu_threads, memory, before, after)
         return a
 
+    @staticmethod
+    def _pretty_print(uid: str, label: str, status: str, machine: str) -> str:
+        return "%-25s %-30s %-10s %-15s\n" % (uid, label, status, machine)
+
     def execute(self, database: ServerDatabase) -> Response:
         jobs: List[DatabaseJobEntry] = database.query_jobs(self.after, -1, None)  # Query all DatabaseJobEntries
         if self.uid is not None:
@@ -284,8 +288,17 @@ class QueryCommand(UserServerCommand):
             jobs = [entry for entry in jobs if entry.statistics.time_added <= self.before]
 
         message: str = ""
+        if self._config.verbosity != Verbosity.DETAILED:
+            message += self._pretty_print("UID", "Label", "Status", "Work machine")
+            message += self._pretty_print("___", "_____", "______", "____________")
+
         for entry in jobs:
-            message += str(entry.job) + "\n"
+            job = entry.job
+            if self._config.verbosity == Verbosity.DETAILED:
+                message += str(job) + "\n"
+            else:
+                wm_uid: str = None if entry.assigned_machine is None else entry.assigned_machine.uid
+                message += self._pretty_print(job.uid, str(job.label), job.status.name, str(wm_uid))
         message = message[:-1]
         if message == "":
             message = "No jobs satisfy these constraints."
