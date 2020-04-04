@@ -43,7 +43,7 @@
 #define SWITCHES_ALLOWED 0      /* Python switches, such as -i */
 
 #define NOBODY "nobody"
-#define PYTHON "python"
+#define PYTHON "python3"
 #define SAFE_PATH "PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:" \
                   "/usr/sbin:/usr/bin:/usr/X11R6/bin"
 
