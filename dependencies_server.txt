@@ -1,0 +1,3 @@
+sqlalchemy
+testing.postgresql
+psycopg2
