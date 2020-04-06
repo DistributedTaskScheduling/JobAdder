@@ -37,7 +37,7 @@ class AddCommand(UserServerCommand):
         if job.owner_id == -1:
             job.owner_id = self.effective_user
 
-        if self.effective_user != 0 and self.effective_user != job.owner_id:
+        if not self.effective_user_is_root and self.effective_user != job.owner_id:
             return Response(result_string="Cannot submit jobs for other users.", is_success=False)
 
         db_job_id: DatabaseJobEntry = database.find_job_by_id(job.uid)

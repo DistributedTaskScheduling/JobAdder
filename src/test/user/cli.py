@@ -50,6 +50,8 @@ class CLITest(TestCase):
             self._proxy.add_job(parsed_command)
             parsed_command_db: AddCommand = cast(AddCommand, self._cli.get_server_command(command))
             parsed_command_db.config.job.uid = str(i)
+            parsed_command_db.effective_user = 0
+            parsed_command_db.effective_user_is_admin = True
             parsed_command_db.execute(self._db)
             if i == 1:
                 parsed_command.config.job.status = JobStatus.RUNNING
@@ -125,6 +127,8 @@ class CLITest(TestCase):
 
     def test_cancel_label(self) -> None:
         command: CancelCommand = cast(CancelCommand, self._cli.get_server_command("cancel --label lab".split()))
+        command.effective_user = 0
+        command.effective_user_is_admin = True
         self._proxy.cancel_job(command)
         command.execute(self._db)
         self.assertEqual(self._db.find_job_by_id("0").job.status, JobStatus.CANCELLED)
@@ -137,6 +141,8 @@ class CLITest(TestCase):
 
     def test_cancel_uid(self) -> None:
         command: CancelCommand = cast(CancelCommand, self._cli.get_server_command("cancel --uid 2".split()))
+        command.effective_user = 0
+        command.effective_user_is_admin = True
         self._proxy.cancel_job(command)
         command.execute(self._db)
         self.assertEqual(self._proxy.jobs[2].status, JobStatus.CANCELLED)
