@@ -2,6 +2,7 @@
 This command will start a new job on the work machine
 """
 from typing import Dict
+from docker.errors import APIError  # type: ignore
 
 from ja.common.job import Job
 from ja.common.message.worker import WorkerCommand
@@ -41,6 +42,8 @@ class StartJobCommand(WorkerCommand):
             return Response(self.RESPONSE_SUCCESS % (self.job.uid, docker_interface.worker_uid), is_success=True)
         except ValueError:
             return Response(self.RESPONSE_DUPLICATE % (self.job.uid, docker_interface.worker_uid), is_success=False)
+        except APIError:
+            return Response("APIError", is_success=False)  # TODO replace
 
     def to_dict(self) -> Dict[str, object]:
         """!
