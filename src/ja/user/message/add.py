@@ -7,6 +7,9 @@ from ja.user.config.add import AddCommandConfig
 from ja.common.job import Job, JobStatus
 from ja.server.database.types.job_entry import DatabaseJobEntry
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class AddCommand(UserServerCommand):
     """
@@ -61,5 +64,6 @@ class AddCommand(UserServerCommand):
         if job.status == JobStatus.NEW:
             job.status = JobStatus.QUEUED
         job.uid = database.update_job(job)
+        logger.debug(str(job))
         return Response(result_string="Successfully added job with id: %s" % job.uid,
                         is_success=True, uid=job.uid)

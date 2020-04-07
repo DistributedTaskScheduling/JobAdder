@@ -30,10 +30,6 @@ class RegisterWorkerCommand(WorkerServerCommand):
         return self._work_machine
 
     def execute(self, database: ServerDatabase) -> Response:
-        work_machines = database.get_work_machines()
-        for x in work_machines:
-            if x.uid == self._work_machine.uid:
-                return Response("Work machine with uid: {} already exists!".format(self.work_machine.uid), False)
         database.update_work_machine(self._work_machine)
         return Response("Registered Work machine with uid: {}".format(self.work_machine.uid), True)
 
